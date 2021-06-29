@@ -10,6 +10,8 @@ $ npm install
 
 ## Running the app
 
+Start the database by running `docker-compose up -d`. Per default a web interface displaying the current state of the database is launched on `localhost:8081`. The credentials are defined in the docker-compose file.
+
 ```bash
 # development
 $ npm run start

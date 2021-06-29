@@ -11,15 +11,12 @@ import { DatabaseModule } from './database/database.module';
     ConfigModule.forRoot({
       envFilePath: ['.env.prod', '.env.local'], // If a variable is found in multiple files, the first one takes precedence.
     }),
-    MongooseModule.forRoot(
-      'mongodb://localhost:27017/test',
-      // {
-      //   auth: {
-      //     user: 'root',
-      //     password: 'pass12345',
-      //   },
-      // }
-    ),
+    MongooseModule.forRoot('mongodb://localhost:27017/test', {
+      auth: {
+        user: 'visuCodeDbService',
+        password: 'secretPW',
+      },
+    }),
 
     // MongooseModule.forRootAsync({
     //   imports: [ConfigModule],

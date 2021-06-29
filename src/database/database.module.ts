@@ -6,7 +6,13 @@ import { PullRequestSchema } from './schemas/pullRequest.schema';
 import { RepositorySchema } from './schemas/repository.schema';
 
 @Module({
-  imports: [MongooseModule.forFeature([{ name: 'Diff', schema: DiffSchema }])],
+  imports: [
+    MongooseModule.forFeature([
+      { name: 'Diff', schema: DiffSchema },
+      { name: 'PullRequest', schema: PullRequestSchema },
+      { name: 'Repository', schema: RepositorySchema },
+    ]),
+  ],
   providers: [DatabaseService],
   exports: [DatabaseService],
 })
