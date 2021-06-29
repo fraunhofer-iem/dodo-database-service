@@ -7,13 +7,13 @@ export class GithubApiController {
   constructor(private ghApiService: GithubApiService) {}
 
   @Post()
-  async createPullRequestDataForRepo(
-    @Body() createPullRequestDataDto: CreatePullRequestDataDto,
-  ) {
-    this.ghApiService.getDiffFromAllPullRequests(
-      createPullRequestDataDto.owner,
-      createPullRequestDataDto.repo,
-    );
+  async gatherPullRequestDiffs() {
+    // @Body() createPullRequestDataDto: CreatePullRequestDataDto,
+    // this.ghApiService.getDiffFromAllPullRequests(
+    //   createPullRequestDataDto.owner,
+    //   createPullRequestDataDto.repo,
+    // );
+    this.ghApiService.testDB();
     //TODO:  return a request id and enable to query updates for the running request
     // in order to not have polling we can just introduce a websocket here
     return 42;

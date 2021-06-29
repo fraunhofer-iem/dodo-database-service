@@ -40,6 +40,10 @@ export class GithubApiService {
     this.octokit = this.getOctokitClient();
   }
 
+  public async testDB() {
+    this.dbSerivce.savePullRequestDiff();
+  }
+
   public async printRateLimit() {
     const rateLimit = await this.octokit.request('GET /rate_limit');
     this.logger.log(rateLimit.data);

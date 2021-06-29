@@ -11,15 +11,25 @@ import { DatabaseModule } from './database/database.module';
     ConfigModule.forRoot({
       envFilePath: ['.env.prod', '.env.local'], // If a variable is found in multiple files, the first one takes precedence.
     }),
-    MongooseModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        uri: configService.get<string>('DB_URI'),
-      }),
-      inject: [ConfigService],
-    }),
-    GithubApiModule,
+    MongooseModule.forRoot(
+      'mongodb://localhost:27017/test',
+      // {
+      //   auth: {
+      //     user: 'root',
+      //     password: 'pass12345',
+      //   },
+      // }
+    ),
+
+    // MongooseModule.forRootAsync({
+    //   imports: [ConfigModule],
+    //   useFactory: async (configService: ConfigService) => ({
+    //     uri: configService.get<string>('DB_URI'),
+    //   }),
+    //   inject: [ConfigService],
+    // }),
     DatabaseModule,
+    GithubApiModule,
   ],
   controllers: [AppController],
   providers: [AppService],
