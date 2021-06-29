@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Octokit } from 'octokit';
+import { DatabaseService } from 'src/database/database.service';
 
 export interface Tree {
   path?: string;
@@ -34,7 +35,7 @@ export class GithubApiService {
     }
   }
 
-  constructor() {
+  constructor(private dbSerivce: DatabaseService) {
     // init octokit
     this.octokit = this.getOctokitClient();
   }
@@ -95,29 +96,25 @@ export class GithubApiService {
     pageNumber: number,
     allRequests: any[],
   ): Promise<any[]> {
-    if (pageNumber > 3) {
-      return allRequests;
+    const pullRequests = await this.octokit.rest.pulls.list({
+      owner: owner,
+      repo: repo,
+      state: 'all',
+      sort: 'created',
+      direction: 'asc',
+      per_page: 100,
+      page: pageNumber,
+    });
+    this.logger.log(
+      pullRequests.data.length +
+        ' pull requests received at number ' +
+        pageNumber,
+    );
+    const res = allRequests.concat(pullRequests.data);
+    if (pullRequests.data.length == 100) {
+      return this.getAdditionalPullRequests(owner, repo, pageNumber + 1, res);
     } else {
-      const pullRequests = await this.octokit.rest.pulls.list({
-        owner: owner,
-        repo: repo,
-        state: 'all',
-        sort: 'created',
-        direction: 'asc',
-        per_page: 100,
-        page: pageNumber,
-      });
-      this.logger.log(
-        pullRequests.data.length +
-          ' pull requests received at number ' +
-          pageNumber,
-      );
-      const res = allRequests.concat(pullRequests.data);
-      if (pullRequests.data.length == 100) {
-        return this.getAdditionalPullRequests(owner, repo, pageNumber + 1, res);
-      } else {
-        return res;
-      }
+      return res;
     }
   }
 
@@ -156,7 +153,7 @@ export class GithubApiService {
       repo,
       mergeTarget.sha,
     );
-
+    // TODO: write to db service here
     return {
       pullRequest: pullRequest,
       featFiles: featFiles,
