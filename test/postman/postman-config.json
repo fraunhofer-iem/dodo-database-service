@@ -1,0 +1,43 @@
+{
+	"info": {
+		"_postman_id": "9257336c-0ab9-47ba-abf5-b99ddda83917",
+		"name": "visu-code-db-service",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Query octokit/rest.js",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "owner",
+							"value": "octokit",
+							"type": "text"
+						},
+						{
+							"key": "repo",
+							"value": "rest.js",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "localhost:3000/github-api",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"github-api"
+					]
+				},
+				"description": "Small example for easy debugging - roughly 22 pull requests"
+			},
+			"response": []
+		}
+	]
+}
