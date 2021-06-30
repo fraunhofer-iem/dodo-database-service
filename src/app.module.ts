@@ -19,6 +19,8 @@ import { DatabaseModule } from './database/database.module';
           user: configService.get<string>('DB_USER'),
           password: configService.get<string>('DB_USER_PASSWORD'),
         },
+        useNewUrlParser: true,
+        useFindAndModify: false, //https://mongoosejs.com/docs/deprecations.html#findandmodify
       }),
       inject: [ConfigService],
     }),

@@ -79,7 +79,7 @@ export class GithubApiService {
       per_page: 100,
     });
 
-    let allPullRequests = pullRequests.data;
+    const allPullRequests: PullRequest[] = pullRequests.data;
     if (allPullRequests.length == 100) {
       const additionalPullRequests = await this.getAdditionalPullRequests(
         owner,
@@ -87,7 +87,7 @@ export class GithubApiService {
         2,
         allPullRequests,
       );
-      allPullRequests = allPullRequests.concat(additionalPullRequests);
+      allPullRequests.push(...additionalPullRequests);
     }
 
     this.logger.log(allPullRequests.length + ' pull requests received');
@@ -104,7 +104,7 @@ export class GithubApiService {
     repo: string,
     pageNumber: number,
     allRequests: any[],
-  ): Promise<any[]> {
+  ): Promise<PullRequest[]> {
     const pullRequests = await this.octokit.rest.pulls.list({
       owner: owner,
       repo: repo,
