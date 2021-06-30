@@ -10,12 +10,11 @@ export class GithubApiController {
   async gatherPullRequestDiffs(
     @Body() createPullRequestDataDto: CreatePullRequestDataDto,
   ) {
-    this.ghApiService.getDiffFromAllPullRequests(
+    //TODO:  return a request id and enable to query updates for the running request
+    // in order to not have polling we can just introduce a websocket here
+    return this.ghApiService.storePullRequestDiffsForRepo(
       createPullRequestDataDto.owner,
       createPullRequestDataDto.repo,
     );
-    //TODO:  return a request id and enable to query updates for the running request
-    // in order to not have polling we can just introduce a websocket here
-    return 42;
   }
 }

@@ -50,16 +50,22 @@ export class GithubApiService {
     this.logger.log(rateLimit.data);
   }
 
+  public async testGithubApi() {
+    return this.dbSerivce.createRepo('myAwesomeRepo2', 'me myself and I ');
+  }
+
   /**
    *
    * Queries all pull requests for the repository. For each pull request the changed files are queried.
    * Additionally, the content of the main branch is queried and stored alongside the changes.
    *
-   * @returns featureFiles contain all files changed/added/removed in the pull request.
-   *          mergeTargetFiles contain all files in the main branch at the point of the pull request.
+   * @returns the id of the repository
+   *
    */
-  public async getDiffFromAllPullRequests(owner: string, repo: string) {
-    this.logger.log('querying pull requests');
+  public async storePullRequestDiffsForRepo(owner: string, repo: string) {
+    const repoId = await this.dbSerivce.createRepo(owner, repo);
+
+    this.logger.log(`querying pull requests for ${owner}/${repo}`);
     //TODO: this gets the first 100 pull requests. we need to figure out how many
     // pull requests there are in total and iterate through them. Maybe the API
     // provides an iterator itself, else just repeat the call until the retrived
@@ -86,13 +92,11 @@ export class GithubApiService {
 
     this.logger.log(allPullRequests.length + ' pull requests received');
 
-    return Promise.all(
-      // TODO: this used to be flatmap in the original nextjs implementation
-      // need to  check if map also works
-      allPullRequests.map((pullRequest) => {
-        return this.getFeatAndTargetFiles(owner, repo, pullRequest);
-      }),
-    );
+    allPullRequests.forEach((pullRequest) => {
+      this.storePullRequestDiff(owner, repo, pullRequest, repoId);
+    });
+
+    return repoId;
   }
 
   private async getAdditionalPullRequests(
@@ -123,10 +127,11 @@ export class GithubApiService {
     }
   }
 
-  private async getFeatAndTargetFiles(
+  private async storePullRequestDiff(
     owner: string,
     repo: string,
     pullRequest: PullRequest,
+    repoId: string,
   ) {
     const mergeTarget = pullRequest.base;
 
@@ -155,11 +160,11 @@ export class GithubApiService {
       mergeTarget.sha,
     );
     // TODO: write to db service here
-    return {
+    this.dbSerivce.savePullRequestDiff(repoId, {
       pullRequest: pullRequest,
-      featFiles: featFiles,
-      mergeTargetFiles: mergeTargetFiles,
-    };
+      changedFiles: featFiles,
+      repoFiles: mergeTargetFiles,
+    });
   }
 
   private async getAllFilesFromTree(

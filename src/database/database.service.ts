@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Diff } from 'src/github-api/model/PullRequest';
@@ -10,6 +10,8 @@ import { RepositoryFileDocument } from './schemas/repositoryFile.schema';
 
 @Injectable()
 export class DatabaseService {
+  private readonly logger = new Logger(DatabaseService.name);
+
   constructor(
     @InjectModel('Repository')
     private readonly repoModel: Model<RepositoryDocument>,
@@ -29,19 +31,28 @@ export class DatabaseService {
    * @param owner
    * @returns id
    */
-  async createRepo(repo: string, owner: string): Promise<string> {
-    if (await this.repoModel.exists({ repo, owner })) {
-      return (await this.repoModel.findOne({ repo, owner }).exec())._id;
+  async createRepo(owner: string, repo: string): Promise<string> {
+    if (await this.repoModel.exists({ repo: repo, owner: owner })) {
+      const repoM = await this.repoModel
+        .findOne({ repo: repo, owner: owner })
+        .exec();
+
+      this.logger.debug('Model already exists ' + repoM);
+      return repoM._id;
     } else {
-      const repoInstance = new this.repoModel();
-      repoInstance.owner = owner;
-      repoInstance.repo = repo;
-      const saved = await repoInstance.save();
-      return saved._id;
+      this.logger.debug(`Creating new model for ${repo} with owner ${owner}`);
+      const repoInstance = await new this.repoModel({
+        owner: owner,
+        repo: repo,
+        diffs: [],
+      }).save();
+
+      this.logger.debug('Instance created ' + repoInstance);
+      return repoInstance._id;
     }
   }
 
-  async savePullRequestDiff(repo: string, pullRequestDiff: Diff) {
+  async savePullRequestDiff(repoId: string, pullRequestDiff: Diff) {
     const createdDiff = new this.diffModel();
     const pullRequest = await new this.pullRequestModel(
       pullRequestDiff.pullRequest,
@@ -58,20 +69,11 @@ export class DatabaseService {
 
     createdDiff.repositoryFiles = repoFiles;
     createdDiff.pullRequest = pullRequest;
-    return createdDiff.save();
-    // promises.push(pullRequest.save());
-    // const changedFiles = pullRequestDiff.changedFiles.map((file) => {
-    //   const changedFile = new this.pullFileModel(file);
-    //   promises.push(changedFile.save());
-    //   return changedFile;
-    // });
-    // const repoFiles = pullRequestDiff.repoFiles.map((file) => {
-    //   const repoFile = new this.repoFileModel(file);
-    //   promises.push(repoFile.save());
-    //   return repoFile;
-    // });
-    // promises.push(pullRequest.save());
-
-    // return Promise.all(promises);
+    const savedDiff = await createdDiff.save();
+    return this.repoModel
+      .findByIdAndUpdate(repoId, {
+        $push: { diffs: [savedDiff] },
+      })
+      .exec();
   }
 }

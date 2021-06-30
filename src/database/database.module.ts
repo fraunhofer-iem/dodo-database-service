@@ -4,12 +4,13 @@ import { DatabaseService } from './database.service';
 import { DiffSchema } from './schemas/diff.schema';
 import { PullRequestSchema } from './schemas/pullRequest.schema';
 import { PullRequestFileSchema } from './schemas/pullRequestFile.schema';
+import { RepositorySchema } from './schemas/repository.schema';
 import { RepositoryFileSchema } from './schemas/repositoryFile.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
-      { name: 'Repository', schema: RepositoryFileSchema },
+      { name: 'Repository', schema: RepositorySchema },
       { name: 'Diff', schema: DiffSchema },
       { name: 'PullRequest', schema: PullRequestSchema },
       { name: 'PullRequestFiles', schema: PullRequestFileSchema },
