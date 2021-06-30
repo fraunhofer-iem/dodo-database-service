@@ -41,6 +41,12 @@ $ npm run test:cov
 Create local `.env.local` file in which you store a GitHub access token under the `GITHUB_ACCESS_TOKEN` key. The GitHub REST API is restricted to 60 requests per hour if you don't use any access token and this will be exceeded by one of the predefined queries. For more details of the limited rates see the GitHub [documentation](https://docs.github.com/en/rest/overview/resources-in-the-rest-api#rate-limiting).
 
 ## Database
+Add the `URI` and user credentials for your database to the `.env.local` file.
 
-Use the `startDb.sh` script to spin up a docker container with a mongoDB database, which will be used to store your query results. Add the `URI` for your database to the .env.local file.
-This should look like this: `DB_URI=mongodb+srv://dbUser:<dbpassword>@cluster0.dcu5m.mongodb.net/sample_airbnb?retryWrites=true&w=majority`.
+```bash
+DB_URI=mongodb://localhost:27017/test
+DB_USER=visuCodeDbService
+DB_USER_PASSWORD=changeMe
+```
+
+The user credentials have to match the ones defined in the `docker-compose.yml`.

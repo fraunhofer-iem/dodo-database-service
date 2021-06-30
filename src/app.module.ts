@@ -11,20 +11,17 @@ import { DatabaseModule } from './database/database.module';
     ConfigModule.forRoot({
       envFilePath: ['.env.prod', '.env.local'], // If a variable is found in multiple files, the first one takes precedence.
     }),
-    MongooseModule.forRoot('mongodb://localhost:27017/test', {
-      auth: {
-        user: 'visuCodeDbService',
-        password: 'secretPW',
-      },
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        uri: configService.get<string>('DB_URI'),
+        auth: {
+          user: configService.get<string>('DB_USER'),
+          password: configService.get<string>('DB_USER_PASSWORD'),
+        },
+      }),
+      inject: [ConfigService],
     }),
-
-    // MongooseModule.forRootAsync({
-    //   imports: [ConfigModule],
-    //   useFactory: async (configService: ConfigService) => ({
-    //     uri: configService.get<string>('DB_URI'),
-    //   }),
-    //   inject: [ConfigService],
-    // }),
     DatabaseModule,
     GithubApiModule,
   ],
