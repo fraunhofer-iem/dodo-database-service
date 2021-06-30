@@ -44,9 +44,9 @@ Create local `.env.local` file in which you store a GitHub access token under th
 Add the `URI` and user credentials for your database to the `.env.local` file.
 
 ```bash
-DB_URI=mongodb://localhost:27017/test
-DB_USER=visuCodeDbService
-DB_USER_PASSWORD=changeMe
+DB_URI=mongodb://localhost:27017/<shouldReflectYourDatabaseDefinedInDockerCompose>
+DB_USER=<userName as defined in docker-compose>
+DB_USER_PASSWORD=<password as defined in docker-compose>
 ```
 
 The user credentials have to match the ones defined in the `docker-compose.yml`.
