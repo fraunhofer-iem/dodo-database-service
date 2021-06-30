@@ -1,6 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Octokit } from 'octokit';
 import { DatabaseService } from 'src/database/database.service';
+import {
+  PullRequest,
+  PullRequestFile,
+  RepositoryFile,
+} from './model/PullRequest';
 
 export interface Tree {
   path?: string;
@@ -38,10 +43,6 @@ export class GithubApiService {
   constructor(private dbSerivce: DatabaseService) {
     // init octokit
     this.octokit = this.getOctokitClient();
-  }
-
-  public async testDB() {
-    this.dbSerivce.savePullRequestDiff();
   }
 
   public async printRateLimit() {
@@ -125,11 +126,7 @@ export class GithubApiService {
   private async getFeatAndTargetFiles(
     owner: string,
     repo: string,
-    pullRequest: {
-      title: string;
-      base: { sha: string; ref: string; repo: { default_branch: string } };
-      number: number;
-    },
+    pullRequest: PullRequest,
   ) {
     const mergeTarget = pullRequest.base;
 
@@ -138,7 +135,7 @@ export class GithubApiService {
     );
     //TODO: These two requests can be done simultaniously.
     // Use Promise.all and wait for the completion of both at the same time
-    const featFiles = await this.octokit.rest.pulls
+    const featFiles: PullRequestFile[] = await this.octokit.rest.pulls
       .listFiles({
         owner: owner,
         repo: repo,
@@ -152,7 +149,7 @@ export class GithubApiService {
         pullRequest.number,
     );
 
-    const mergeTargetFiles = await this.getAllFilesFromTree(
+    const mergeTargetFiles: RepositoryFile[] = await this.getAllFilesFromTree(
       owner,
       repo,
       mergeTarget.sha,
@@ -169,7 +166,7 @@ export class GithubApiService {
     owner: string,
     repo: string,
     treeSha: string,
-  ) {
+  ): Promise<RepositoryFile[]> {
     this.logger.log('Querying the tree for sha ' + treeSha);
     const baseTree = await this.octokit.rest.git.getTree({
       tree_sha: treeSha,

@@ -7,6 +7,9 @@ export type PullRequestDocument = PullRequest & Document;
 export class PullRequest {
   @Prop()
   number: number;
+
+  @Prop()
+  title: string;
 }
 
 export const PullRequestSchema = SchemaFactory.createForClass(PullRequest);
