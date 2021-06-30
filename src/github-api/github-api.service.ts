@@ -40,7 +40,7 @@ export class GithubApiService {
     }
   }
 
-  constructor(private dbSerivce: DatabaseService) {
+  constructor(private dbService: DatabaseService) {
     // init octokit
     this.octokit = this.getOctokitClient();
   }
@@ -51,7 +51,7 @@ export class GithubApiService {
   }
 
   public async testGithubApi() {
-    return this.dbSerivce.createRepo('myAwesomeRepo2', 'me myself and I ');
+    return this.dbService.createRepo('myAwesomeRepo2', 'me myself and I ');
   }
 
   /**
@@ -63,13 +63,14 @@ export class GithubApiService {
    *
    */
   public async storePullRequestDiffsForRepo(owner: string, repo: string) {
-    const repoId = await this.dbSerivce.createRepo(owner, repo);
+    const repoId = await this.dbService.createRepo(owner, repo);
 
     this.logger.log(`querying pull requests for ${owner}/${repo}`);
     //TODO: this gets the first 100 pull requests. we need to figure out how many
     // pull requests there are in total and iterate through them. Maybe the API
     // provides an iterator itself, else just repeat the call until the retrived
     // result.length is < 100
+    // TODO: refactor this and use the recursive method right from the start
     const pullRequests = await this.octokit.rest.pulls.list({
       owner: owner,
       repo: repo,
@@ -159,8 +160,8 @@ export class GithubApiService {
       repo,
       mergeTarget.sha,
     );
-    // TODO: write to db service here
-    this.dbSerivce.savePullRequestDiff(repoId, {
+
+    this.dbService.savePullRequestDiff(repoId, {
       pullRequest: pullRequest,
       changedFiles: featFiles,
       repoFiles: mergeTargetFiles,

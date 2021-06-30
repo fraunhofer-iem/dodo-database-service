@@ -54,6 +54,7 @@ export class DatabaseService {
 
   async savePullRequestDiff(repoId: string, pullRequestDiff: Diff) {
     const createdDiff = new this.diffModel();
+
     const pullRequest = await new this.pullRequestModel(
       pullRequestDiff.pullRequest,
     ).save();

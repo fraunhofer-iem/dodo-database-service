@@ -6,6 +6,7 @@ import { PullRequestSchema } from './schemas/pullRequest.schema';
 import { PullRequestFileSchema } from './schemas/pullRequestFile.schema';
 import { RepositorySchema } from './schemas/repository.schema';
 import { RepositoryFileSchema } from './schemas/repositoryFile.schema';
+import { StatisticService } from './statistic.service';
 
 @Module({
   imports: [
@@ -17,7 +18,7 @@ import { RepositoryFileSchema } from './schemas/repositoryFile.schema';
       { name: 'RepositoryFiles', schema: RepositoryFileSchema },
     ]),
   ],
-  providers: [DatabaseService],
-  exports: [DatabaseService],
+  providers: [DatabaseService, StatisticService],
+  exports: [DatabaseService, StatisticService],
 })
 export class DatabaseModule {}
