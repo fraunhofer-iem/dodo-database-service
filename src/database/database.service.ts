@@ -61,6 +61,7 @@ export class DatabaseService {
   }
 
   async savePullRequestDiff(repoId: string, pullRequestDiff: Diff) {
+    this.logger.debug('saving diff to database');
     const createdDiff = new this.diffModel();
 
     const pullRequest = await new this.pullRequestModel(
@@ -79,7 +80,7 @@ export class DatabaseService {
     createdDiff.repositoryFiles = repoFiles;
     createdDiff.pullRequest = pullRequest;
     const savedDiff = await createdDiff.save();
-    return this.repoModel
+    await this.repoModel
       .findByIdAndUpdate(repoId, {
         $push: { diffs: [savedDiff] },
       })

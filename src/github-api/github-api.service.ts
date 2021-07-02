@@ -76,33 +76,28 @@ export class GithubApiService {
       `querying pull requests for ${repoIdent.owner}/${repoIdent.repo}`,
     );
 
-    const allPullRequests = await this.getAdditionalPullRequests(
-      repoIdent.owner,
-      repoIdent.repo,
-      1,
-      [],
-    );
+    this.processPullRequests(repoIdent.owner, repoIdent.repo, repoId, 1);
 
-    this.logger.log(allPullRequests.length + ' pull requests received');
+    // this.logger.log(allPullRequests.length + ' pull requests received');
 
-    allPullRequests.forEach((pullRequest) => {
-      this.storePullRequestDiff(
-        repoIdent.owner,
-        repoIdent.repo,
-        pullRequest,
-        repoId,
-      );
-    });
+    // allPullRequests.forEach((pullRequest) => {
+    //   this.storePullRequestDiff(
+    //     repoIdent.owner,
+    //     repoIdent.repo,
+    //     pullRequest,
+    //     repoId,
+    //   );
+    // });
 
     return repoId;
   }
 
-  private async getAdditionalPullRequests(
+  private async processPullRequests(
     owner: string,
     repo: string,
+    repoId: string,
     pageNumber: number,
-    allRequests: PullRequest[],
-  ): Promise<PullRequest[]> {
+  ) {
     const pullRequests = await this.octokit.rest.pulls.list({
       owner: owner,
       repo: repo,
@@ -117,16 +112,13 @@ export class GithubApiService {
         ' pull requests received at number ' +
         pageNumber,
     );
-    allRequests.push(...pullRequests.data);
+
+    pullRequests.data.forEach(async (pullRequest) => {
+      await this.storePullRequestDiff(owner, repo, pullRequest, repoId);
+    });
+
     if (pullRequests.data.length == 100) {
-      return this.getAdditionalPullRequests(
-        owner,
-        repo,
-        pageNumber + 1,
-        allRequests,
-      );
-    } else {
-      return allRequests;
+      this.processPullRequests(owner, repo, repoId, pageNumber + 1);
     }
   }
 
@@ -153,22 +145,24 @@ export class GithubApiService {
     const mergeTargetFilesPromise: Promise<RepositoryFile[]> =
       this.getAllFilesFromTree(owner, repo, mergeTarget.sha);
 
-    Promise.all([featFilesPromise, mergeTargetFilesPromise]).then((res) => {
-      const featFiles = res[0];
-      const mergeTargetFiles = res[1];
+    return Promise.all([featFilesPromise, mergeTargetFilesPromise]).then(
+      (res) => {
+        const featFiles = res[0];
+        const mergeTargetFiles = res[1];
 
-      this.logger.log(
-        featFiles.length +
-          ' Files were changed in pull request number ' +
-          pullRequest.number,
-      );
+        this.logger.log(
+          featFiles.length +
+            ' Files were changed in pull request number ' +
+            pullRequest.number,
+        );
 
-      this.dbService.savePullRequestDiff(repoId, {
-        pullRequest: pullRequest,
-        changedFiles: featFiles,
-        repoFiles: mergeTargetFiles,
-      });
-    });
+        this.dbService.savePullRequestDiff(repoId, {
+          pullRequest: pullRequest,
+          changedFiles: featFiles,
+          repoFiles: mergeTargetFiles,
+        });
+      },
+    );
   }
 
   private async getAllFilesFromTree(
