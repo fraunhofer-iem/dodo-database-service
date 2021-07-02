@@ -137,9 +137,8 @@ export class GithubApiService {
     this.logger.log(
       'Querying all files of pull request number ' + pullRequest.number,
     );
-    //TODO: These two requests can be done simultaniously.
-    // Use Promise.all and wait for the completion of both at the same time
-    const featFiles: PullRequestFile[] = await this.octokit.rest.pulls
+
+    const featFilesPromise: Promise<PullRequestFile[]> = this.octokit.rest.pulls
       .listFiles({
         owner: owner,
         repo: repo,
@@ -147,22 +146,24 @@ export class GithubApiService {
       })
       .then((res) => res.data);
 
-    this.logger.log(
-      featFiles.length +
-        ' Files were changed in pull request number ' +
-        pullRequest.number,
-    );
+    const mergeTargetFilesPromise: Promise<RepositoryFile[]> =
+      this.getAllFilesFromTree(owner, repo, mergeTarget.sha);
 
-    const mergeTargetFiles: RepositoryFile[] = await this.getAllFilesFromTree(
-      owner,
-      repo,
-      mergeTarget.sha,
-    );
+    Promise.all([featFilesPromise, mergeTargetFilesPromise]).then((res) => {
+      const featFiles = res[0];
+      const mergeTargetFiles = res[1];
 
-    this.dbService.savePullRequestDiff(repoId, {
-      pullRequest: pullRequest,
-      changedFiles: featFiles,
-      repoFiles: mergeTargetFiles,
+      this.logger.log(
+        featFiles.length +
+          ' Files were changed in pull request number ' +
+          pullRequest.number,
+      );
+
+      this.dbService.savePullRequestDiff(repoId, {
+        pullRequest: pullRequest,
+        changedFiles: featFiles,
+        repoFiles: mergeTargetFiles,
+      });
     });
   }
 
