@@ -6,7 +6,7 @@ import { RepositoryIdentifierDto } from './model/RepositoryIdentifierDto';
 export class GithubApiController {
   constructor(private ghApiService: GithubApiService) {}
 
-  @Post()
+  @Post('diffs')
   async gatherPullRequestDiffs(
     @Body() createPullRequestDataDto: RepositoryIdentifierDto,
   ) {
@@ -15,5 +15,12 @@ export class GithubApiController {
     return this.ghApiService.storePullRequestDiffsForRepo(
       createPullRequestDataDto,
     );
+  }
+
+  @Post('statistics')
+  async pullRequestDiffsStatistic(
+    @Body() createPullRequestDataDto: RepositoryIdentifierDto,
+  ) {
+    return this.ghApiService.getStatistics(createPullRequestDataDto);
   }
 }

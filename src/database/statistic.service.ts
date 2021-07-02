@@ -24,13 +24,55 @@ export class StatisticService {
     @InjectModel('Diff') private readonly diffModel: Model<DiffDocument>,
   ) {}
 
-  async getMostChangedFiles(repoIdent: RepositoryIdentifierDto) {
-    const repo = await this.repoFileModel
-      .findOne({
-        repo: repoIdent.repo,
-        owner: repoIdent.owner,
-      })
+  /**
+   *
+   * @param repoIdent
+   * @param limit a maximum of 100 files is returned
+   */
+  async getMostChangedFiles(
+    repoIdent: RepositoryIdentifierDto,
+    userLimit?: number,
+  ) {
+    const limit = userLimit ? userLimit : 100;
+
+    const filter = {
+      repo: repoIdent.repo,
+      owner: repoIdent.owner,
+    };
+
+    const group = {
+      _id: '$pullFiles.filename',
+      count: { $sum: 1 },
+    };
+
+    const getDiffs = {
+      from: 'diffs',
+      localField: 'diffs',
+      foreignField: '_id',
+      as: 'expandedDiffs',
+    };
+
+    const getPullFiles = {
+      from: 'pullrequestfiles',
+      localField: 'expandedDiffs.pullRequestFiles',
+      foreignField: '_id',
+      as: 'pullFiles',
+    };
+
+    const res: { _id: string; count: number }[] = await this.repoModel
+      .aggregate()
+      .match(filter)
+      .unwind('$diffs')
+      .lookup(getDiffs)
+      .lookup(getPullFiles)
+      .unwind('$pullFiles')
+      .group(group)
+      .limit(limit)
+      .sort({ count: -1 })
       .exec();
+    res.forEach((e) => {
+      this.logger.debug(e);
+    });
   }
 }
 

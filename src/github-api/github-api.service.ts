@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Octokit } from 'octokit';
 import { DatabaseService } from 'src/database/database.service';
+import { StatisticService } from 'src/database/statistic.service';
 import {
   PullRequest,
   PullRequestFile,
@@ -41,7 +42,10 @@ export class GithubApiService {
     }
   }
 
-  constructor(private dbService: DatabaseService) {
+  constructor(
+    private statisticService: StatisticService,
+    private dbService: DatabaseService,
+  ) {
     // init octokit
     this.octokit = this.getOctokitClient();
   }
@@ -51,8 +55,8 @@ export class GithubApiService {
     this.logger.log(rateLimit.data);
   }
 
-  public async testGithubApi() {
-    // return this.dbService.createRepo('myAwesomeRepo2', 'me myself and I ');
+  public async getStatistics(repoIdent: RepositoryIdentifierDto) {
+    this.statisticService.getMostChangedFiles(repoIdent);
   }
 
   /**
