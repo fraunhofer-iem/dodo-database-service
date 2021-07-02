@@ -6,8 +6,6 @@ import {
 } from 'src/github-api/model/PullRequest';
 import { PullRequest } from './pullRequest.schema';
 
-export type DiffDocument = Diff & Document;
-
 @Schema()
 export class Diff {
   @Prop([{ type: mSchema.Types.ObjectId, ref: 'PullRequestFiles' }])
@@ -18,6 +16,14 @@ export class Diff {
 
   @Prop({ type: mSchema.Types.ObjectId, ref: 'PullRequest' })
   pullRequest: PullRequest;
+
+  changePercentage: number;
 }
 
+export type DiffDocument = Diff & Document;
+
 export const DiffSchema = SchemaFactory.createForClass(Diff);
+
+DiffSchema.virtual('changePercentage').get(function (this: DiffDocument) {
+  return this.pullRequestFiles.length / this.repositoryFiles.length;
+});

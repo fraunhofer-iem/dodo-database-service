@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { RepositoryIdentifierDto } from 'src/github-api/model/RepositoryIdentifierDto';
 import { DiffDocument } from './schemas/diff.schema';
 import { PullRequestDocument } from './schemas/pullRequest.schema';
 import { PullRequestFileDocument } from './schemas/pullRequestFile.schema';
@@ -22,6 +23,15 @@ export class StatisticService {
     private readonly pullRequestModel: Model<PullRequestDocument>,
     @InjectModel('Diff') private readonly diffModel: Model<DiffDocument>,
   ) {}
+
+  async getMostChangedFiles(repoIdent: RepositoryIdentifierDto) {
+    const repo = await this.repoFileModel
+      .findOne({
+        repo: repoIdent.repo,
+        owner: repoIdent.owner,
+      })
+      .exec();
+  }
 }
 
 // const filesChangeCount = diffs.reduce((acc, curr) => {

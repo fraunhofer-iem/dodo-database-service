@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Diff } from 'src/github-api/model/PullRequest';
+import { RepositoryIdentifierDto } from 'src/github-api/model/RepositoryIdentifierDto';
 import { DiffDocument } from './schemas/diff.schema';
 import { PullRequestDocument } from './schemas/pullRequest.schema';
 import { PullRequestFileDocument } from './schemas/pullRequestFile.schema';
@@ -31,19 +32,26 @@ export class DatabaseService {
    * @param owner
    * @returns id
    */
-  async createRepo(owner: string, repo: string): Promise<string> {
-    if (await this.repoModel.exists({ repo: repo, owner: owner })) {
+  async createRepo(repoIdent: RepositoryIdentifierDto): Promise<string> {
+    if (
+      await this.repoModel.exists({
+        repo: repoIdent.repo,
+        owner: repoIdent.owner,
+      })
+    ) {
       const repoM = await this.repoModel
-        .findOne({ repo: repo, owner: owner })
+        .findOne({ repo: repoIdent.repo, owner: repoIdent.owner })
         .exec();
 
       this.logger.debug('Model already exists ' + repoM);
       return repoM._id;
     } else {
-      this.logger.debug(`Creating new model for ${repo} with owner ${owner}`);
+      this.logger.debug(
+        `Creating new model for ${repoIdent.repo} with owner ${repoIdent.owner}`,
+      );
       const repoInstance = await new this.repoModel({
-        owner: owner,
-        repo: repo,
+        owner: repoIdent.owner,
+        repo: repoIdent.repo,
         diffs: [],
       }).save();
 

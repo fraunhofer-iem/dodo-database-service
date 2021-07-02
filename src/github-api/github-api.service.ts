@@ -6,6 +6,7 @@ import {
   PullRequestFile,
   RepositoryFile,
 } from './model/PullRequest';
+import { RepositoryIdentifierDto } from './model/RepositoryIdentifierDto';
 
 export interface Tree {
   path?: string;
@@ -51,7 +52,7 @@ export class GithubApiService {
   }
 
   public async testGithubApi() {
-    return this.dbService.createRepo('myAwesomeRepo2', 'me myself and I ');
+    // return this.dbService.createRepo('myAwesomeRepo2', 'me myself and I ');
   }
 
   /**
@@ -62,39 +63,31 @@ export class GithubApiService {
    * @returns the id of the repository
    *
    */
-  public async storePullRequestDiffsForRepo(owner: string, repo: string) {
-    const repoId = await this.dbService.createRepo(owner, repo);
+  public async storePullRequestDiffsForRepo(
+    repoIdent: RepositoryIdentifierDto,
+  ) {
+    const repoId = await this.dbService.createRepo(repoIdent);
 
-    this.logger.log(`querying pull requests for ${owner}/${repo}`);
-    //TODO: this gets the first 100 pull requests. we need to figure out how many
-    // pull requests there are in total and iterate through them. Maybe the API
-    // provides an iterator itself, else just repeat the call until the retrived
-    // result.length is < 100
-    // TODO: refactor this and use the recursive method right from the start
-    const pullRequests = await this.octokit.rest.pulls.list({
-      owner: owner,
-      repo: repo,
-      state: 'all',
-      sort: 'created',
-      direction: 'asc',
-      per_page: 100,
-    });
+    this.logger.log(
+      `querying pull requests for ${repoIdent.owner}/${repoIdent.repo}`,
+    );
 
-    const allPullRequests: PullRequest[] = pullRequests.data;
-    if (allPullRequests.length == 100) {
-      const additionalPullRequests = await this.getAdditionalPullRequests(
-        owner,
-        repo,
-        2,
-        allPullRequests,
-      );
-      allPullRequests.push(...additionalPullRequests);
-    }
+    const allPullRequests = await this.getAdditionalPullRequests(
+      repoIdent.owner,
+      repoIdent.repo,
+      1,
+      [],
+    );
 
     this.logger.log(allPullRequests.length + ' pull requests received');
 
     allPullRequests.forEach((pullRequest) => {
-      this.storePullRequestDiff(owner, repo, pullRequest, repoId);
+      this.storePullRequestDiff(
+        repoIdent.owner,
+        repoIdent.repo,
+        pullRequest,
+        repoId,
+      );
     });
 
     return repoId;
@@ -104,7 +97,7 @@ export class GithubApiService {
     owner: string,
     repo: string,
     pageNumber: number,
-    allRequests: any[],
+    allRequests: PullRequest[],
   ): Promise<PullRequest[]> {
     const pullRequests = await this.octokit.rest.pulls.list({
       owner: owner,
@@ -120,11 +113,16 @@ export class GithubApiService {
         ' pull requests received at number ' +
         pageNumber,
     );
-    const res = allRequests.concat(pullRequests.data);
+    allRequests.push(...pullRequests.data);
     if (pullRequests.data.length == 100) {
-      return this.getAdditionalPullRequests(owner, repo, pageNumber + 1, res);
+      return this.getAdditionalPullRequests(
+        owner,
+        repo,
+        pageNumber + 1,
+        allRequests,
+      );
     } else {
-      return res;
+      return allRequests;
     }
   }
 
