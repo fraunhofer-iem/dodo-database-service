@@ -34,7 +34,9 @@ export class StatisticService {
     userLimit?: number,
   ) {
     const limit = userLimit ? userLimit : 100;
-
+    this.logger.log(
+      `getting the ${limit} most changed files for ${repoIdent.owner}/${repoIdent.repo}`,
+    );
     const filter = {
       repo: repoIdent.repo,
       owner: repoIdent.owner,
@@ -67,12 +69,19 @@ export class StatisticService {
       .lookup(getPullFiles)
       .unwind('$pullFiles')
       .group(group)
-      .limit(limit)
       .sort({ count: -1 })
+      .limit(limit)
       .exec();
+
+    let avg = 0;
     res.forEach((e) => {
       this.logger.debug(e);
+      avg += e.count;
     });
+    avg = avg / res.length;
+    this.logger.log(
+      `Calculation of most changed files for ${repoIdent.owner}/${repoIdent.repo} finished. Retrieved ${res.length} files. Average changes to the first files: ${avg}`,
+    );
   }
 }
 

@@ -85,5 +85,6 @@ export class DatabaseService {
         $push: { diffs: [savedDiff] },
       })
       .exec();
+    this.logger.debug('saving diff to database finished');
   }
 }

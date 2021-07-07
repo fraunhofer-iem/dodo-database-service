@@ -2,11 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Octokit } from 'octokit';
 import { DatabaseService } from 'src/database/database.service';
 import { StatisticService } from 'src/database/statistic.service';
-import {
-  PullRequest,
-  PullRequestFile,
-  RepositoryFile,
-} from './model/PullRequest';
+import { PullRequest, RepositoryFile } from './model/PullRequest';
 import { RepositoryIdentifierDto } from './model/RepositoryIdentifierDto';
 
 export interface Tree {
@@ -78,17 +74,6 @@ export class GithubApiService {
 
     this.processPullRequests(repoIdent.owner, repoIdent.repo, repoId, 1);
 
-    // this.logger.log(allPullRequests.length + ' pull requests received');
-
-    // allPullRequests.forEach((pullRequest) => {
-    //   this.storePullRequestDiff(
-    //     repoIdent.owner,
-    //     repoIdent.repo,
-    //     pullRequest,
-    //     repoId,
-    //   );
-    // });
-
     return repoId;
   }
 
@@ -98,26 +83,28 @@ export class GithubApiService {
     repoId: string,
     pageNumber: number,
   ) {
-    const pullRequests = await this.octokit.rest.pulls.list({
-      owner: owner,
-      repo: repo,
-      state: 'all',
-      sort: 'created',
-      direction: 'asc',
-      per_page: 100,
-      page: pageNumber,
-    });
+    const pullRequests = await this.octokit.rest.pulls
+      .list({
+        owner: owner,
+        repo: repo,
+        state: 'all',
+        sort: 'created',
+        direction: 'asc',
+        per_page: 100,
+        page: pageNumber,
+      })
+      .then((res) => res.data);
     this.logger.log(
-      pullRequests.data.length +
-        ' pull requests received at number ' +
-        pageNumber,
+      pullRequests.length + ' pull requests received at number ' + pageNumber,
     );
 
-    pullRequests.data.forEach(async (pullRequest) => {
+    for (const pullRequest of pullRequests) {
+      this.logger.log('First request diff started');
       await this.storePullRequestDiff(owner, repo, pullRequest, repoId);
-    });
+      this.logger.log('First request diff finished');
+    }
 
-    if (pullRequests.data.length == 100) {
+    if (pullRequests.length == 100) {
       this.processPullRequests(owner, repo, repoId, pageNumber + 1);
     }
   }
@@ -134,7 +121,7 @@ export class GithubApiService {
       'Querying all files of pull request number ' + pullRequest.number,
     );
 
-    const featFilesPromise: Promise<PullRequestFile[]> = this.octokit.rest.pulls
+    const featFiles = await this.octokit.rest.pulls
       .listFiles({
         owner: owner,
         repo: repo,
@@ -142,27 +129,25 @@ export class GithubApiService {
       })
       .then((res) => res.data);
 
-    const mergeTargetFilesPromise: Promise<RepositoryFile[]> =
-      this.getAllFilesFromTree(owner, repo, mergeTarget.sha);
-
-    return Promise.all([featFilesPromise, mergeTargetFilesPromise]).then(
-      (res) => {
-        const featFiles = res[0];
-        const mergeTargetFiles = res[1];
-
-        this.logger.log(
-          featFiles.length +
-            ' Files were changed in pull request number ' +
-            pullRequest.number,
-        );
-
-        this.dbService.savePullRequestDiff(repoId, {
-          pullRequest: pullRequest,
-          changedFiles: featFiles,
-          repoFiles: mergeTargetFiles,
-        });
-      },
+    const mergeTargetFiles = await this.getAllFilesFromTree(
+      owner,
+      repo,
+      mergeTarget.sha,
     );
+
+    this.logger.log(
+      featFiles.length +
+        ' Files were changed in pull request number ' +
+        pullRequest.number,
+    );
+
+    await this.dbService.savePullRequestDiff(repoId, {
+      pullRequest: pullRequest,
+      changedFiles: featFiles,
+      repoFiles: mergeTargetFiles,
+    });
+
+    this.logger.log(`Diff for pull request ${pullRequest.number} was stored`);
   }
 
   private async getAllFilesFromTree(
