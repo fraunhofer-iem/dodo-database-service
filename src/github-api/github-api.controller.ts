@@ -23,4 +23,11 @@ export class GithubApiController {
   ) {
     return this.ghApiService.getStatistics(createPullRequestDataDto);
   }
+
+  @Post('tickets')
+  async gatherTickets(
+    @Body() createPullRequestDataDto: RepositoryIdentifierDto,
+  ) {
+    return this.ghApiService.getTickets(createPullRequestDataDto);
+  }
 }
