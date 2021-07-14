@@ -85,32 +85,3 @@ export class StatisticService {
     );
   }
 }
-
-// const filesChangeCount = diffs.reduce((acc, curr) => {
-//     curr.featFiles.forEach((featFile) => {
-//       if (acc.has(featFile.filename)) {
-//         const counter = acc.get(featFile.filename)! + 1;
-//         acc.set(featFile.filename, counter);
-//       } else {
-//         acc.set(featFile.filename, 1);
-//       }
-//     });
-//     return acc;
-//   }, new Map<string, number>());
-
-//   let averageChanges = 0;
-//   let mostChangedFile: [string, number] = ["empty", 0];
-//   filesChangeCount.forEach((v, k) => {
-//     averageChanges = averageChanges + v;
-//     if (v > mostChangedFile[1]) {
-//       mostChangedFile = [k, v];
-//     }
-//   });
-//   averageChanges = averageChanges / filesChangeCount.size;
-//   const res = diffs.map((diff) => {
-//     return {
-//       ...diff,
-//       percentageChangedFiles:
-//         diff.featFiles.length / diff.mergeTargetFiles.length,
-//     };
-//   });
