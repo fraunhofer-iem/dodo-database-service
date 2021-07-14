@@ -55,6 +55,47 @@ export class GithubApiService {
     this.statisticService.getMostChangedFiles(repoIdent);
   }
 
+  public async getTickets(repoIdent: RepositoryIdentifierDto) {
+    this.processTickets(repoIdent.owner, repoIdent.repo, 'NULL', 1);
+  }
+
+  private async processTickets(
+    owner: string,
+    repo: string,
+    repoId: string,
+    pageNumber: number,
+  ) {
+    const issues = await this.octokit.rest.issues
+      .listForRepo({
+        owner: owner,
+        repo: repo,
+        filter: 'assigned',
+        state: 'all',
+        per_page: 100,
+        page: pageNumber,
+      })
+      .then((res) => res.data);
+    for (const issue of issues) {
+      if (issue.assignee != null && issue.assignees) {
+        this.logger.log('issue');
+        this.logger.log(issue);
+        this.logger.log('issue assignee');
+
+        this.logger.log(issue.assignee);
+        this.logger.log(
+          `We got ${issue.assignees.length} elements in the array`,
+        );
+        for (const assignee of issue.assignees) {
+          this.logger.log('assignee in array: ');
+          this.logger.log(assignee);
+        }
+      }
+    }
+    if (issues.length == 100) {
+      this.processTickets(owner, repo, repoId, pageNumber + 1);
+    }
+  }
+
   /**
    *
    * Queries all pull requests for the repository. For each pull request the changed files are queried.
