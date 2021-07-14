@@ -1,6 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { count } from 'console';
 import { Model } from 'mongoose';
 import { RepositoryIdentifierDto } from 'src/github-api/model/RepositoryIdentifierDto';
 import { DiffDocument } from './schemas/diff.schema';
