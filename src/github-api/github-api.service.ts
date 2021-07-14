@@ -118,6 +118,30 @@ export class GithubApiService {
     return repoId;
   }
 
+  /**
+   *
+   * @param repoIdent
+   * @returns
+   * Status: 200 exists
+   * Status: 301 Moved Permanently
+   * Status: 403 Forbidden
+   * Status: 404 Not Found
+   */
+  public async getStatus(repoIdent: RepositoryIdentifierDto): Promise<number> {
+    return this.octokit.rest.repos
+      .get({
+        owner: repoIdent.owner,
+        repo: repoIdent.repo,
+      })
+      .catch((r) => {
+        if ('status' in r) {
+          return r.status;
+        } else {
+          return 500;
+        }
+      });
+  }
+
   private async processPullRequests(
     owner: string,
     repo: string,
