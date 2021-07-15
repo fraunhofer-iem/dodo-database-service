@@ -43,45 +43,73 @@ export class StatisticService {
     };
 
     const group = {
-      _id: '$pullFiles.filename',
-      count: { $sum: 1 },
+      _id: null,
+      count: { $count: {} },
     };
-
+/**
+ * //{_id: ObjectId(''), diffs: [ObjectID('')], owner: 'octokit', repo: 'rest.js', __v :0 , 
+ * expandeddiffs: [{_id : 60ed..., repositoryFiles : , pullRequestFiles}]}
+ */
     const getDiffs = {
       from: 'diffs',
       localField: 'diffs',
       foreignField: '_id',
-      as: 'expandedDiffs',
+      as: 'expandedDiffs', 
     };
-
+/**
+ * {_id: ObjectId(''), diffs: [ObjectID('')], owner: 'octokit', repo: 'rest.js', __v :0 ,
+ * expandeddiffs: [{_id : 60ed..., repositoryFiles : , pullRequestFiles}],
+ * pullFiles: [{_id : , sha : , filename, status, additions, deleteyions, changes, bloburl}]}
+ */
     const getPullFiles = {
       from: 'pullrequestfiles',
       localField: 'expandedDiffs.pullRequestFiles',
       foreignField: '_id',
       as: 'pullFiles',
     };
+   // const file = ['package.json', 'package-lock.json'];
+
+    // const filenames = {
+    //   '$in' : 
+
+    //   ]
+    // };
+
 
     const res: { _id: string; count: number }[] = await this.repoModel
       .aggregate()
       .match(filter)
-      .unwind('$diffs')
+      .unwind('$diffs') // {_id: , diffs : object id(), owner: , repo: , _v:  }
       .lookup(getDiffs)
-      .lookup(getPullFiles)
-      .unwind('$pullFiles')
-      .group(group)
-      .sort({ count: -1 })
-      .limit(limit)
+      .lookup(getPullFiles) //how are they matching as pullreqest id in diff is 2 and only one ID
+      .match({'$expandedDiffs.pullRequest' : {$cond : {$if:{'$pullFiles.filename' : {$in : ['package.json', 'package-lock.json']} }}}})
+    //   .unwind('$pullFiles') // {_id: ObjectId(''), diffs: [ObjectID('')], owner: 'octokit', repo: 'rest.js', __v :0 , expandeddiffs: {_id : 60ed..., repositoryFiles : , pullRequestFiles}],pullFiles: {_id : , sha : , filename, status, additions, deleteyions, changes, bloburl}}
+    //   .match({'$pullFiles.filename': {$in : ['package.json', 'package-lock.json']}})
+    //  // .match({$expr : {$and: []}})
+    //   .match({$cond : {$if :{'$pullFiles.filename'}}})
+    //   .group({_id: '$expandedDiffs.pullRequest', unique: {}})
+    //   .group(group)
+    //   .sort({ count: -1 })
+    //   .limit(limit)
       .exec();
 
+    this.logger.log(`values of res length ${res.length}.`);
     let avg = 0;
     res.forEach((e) => {
       this.logger.debug(e);
       avg += e.count;
     });
-    avg = avg / res.length;
-    this.logger.log(
-      `Calculation of most changed files for ${repoIdent.owner}/${repoIdent.repo} finished. Retrieved ${res.length} files. Average changes to the first files: ${avg}`,
-    );
+
+    this.logger.log(`values of res length ${avg}.`);
+    //avg = avg / res.length;
+    // this.logger.log(
+    //   `Calculation of most changed files for ${repoIdent.owner}/${repoIdent.repo} finished. Retrieved ${res.length} files. Average changes to the first files: ${avg}`,
+    // );
+
+
+  /**
+   * 
+   */
   }
 }
 

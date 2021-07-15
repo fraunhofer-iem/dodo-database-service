@@ -33,12 +33,13 @@ export class DatabaseService {
    * @returns id
    */
   async createRepo(repoIdent: RepositoryIdentifierDto): Promise<string> {
-    if (
-      await this.repoModel.exists({
-        repo: repoIdent.repo,
-        owner: repoIdent.owner,
-      })
-    ) {
+    
+    const exists = await this.repoModel.exists({
+      repo: repoIdent.repo,
+      owner: repoIdent.owner,
+    });
+
+    if (exists) {
       const repoM = await this.repoModel
         .findOne({ repo: repoIdent.repo, owner: repoIdent.owner })
         .exec();
