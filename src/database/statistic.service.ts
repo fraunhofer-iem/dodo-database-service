@@ -78,7 +78,9 @@ export class StatisticService {
 
     //   ]
     // };
-  
+    const getFilesNames = {
+      $and : [{'pullFiles.filename': {$in : ['package.json']}}, {'pullFiles.filename': {$in : ['package-lock.json']}}]
+    };
 
     const res: { _id: string; count: number }[] = await this.repoModel
       .aggregate()
@@ -86,8 +88,14 @@ export class StatisticService {
       .unwind('$diffs') // {_id: , diffs : object id(), owner: , repo: , _v:  }
       .lookup(getDiffs)
       .lookup(getPullFiles) 
-      .match({$and : [{'pullFiles.filename': {$in : ['package.json']}}, {'pullFiles.filename': {$in : ['package-lock.json']}}]})
-      //.match({$and : [{'pullFiles.filename': {$in : ['package.json']}}, {'pullFiles.filename': {$in : ['package-lock.json']}}]})
+      .match(getFilesNames)
+      .exec();
+    
+      this.logger.log(`The files are repeatedly changed together ${res.length} times.`);
+    }
+  }
+  
+      //.match({'pullFiles.filename': {$and : [{$in : ['package.json']}, {$in : ['package.json']}}}
 
       //how are they matching as pullreqest id in diff is 2 and only one ID
      // .match({'$expandedDiffs.pullRequest' : {$cond : {$if:{'$pullFiles.filename' : {$in : ['package.json', 'package-lock.json']} }}}})
@@ -99,12 +107,10 @@ export class StatisticService {
     //   .group(group)
     //   .sort({ count: -1 })
     //   .limit(limit)
-      .exec();
 
     //  res.forEach(e => {
     //    this.logger.log(e);
     //  });
-      this.logger.log(`The files are repeatedly changed together ${res.length} times.`);
     // let avg = 0;
     // res.forEach((e) => {
     //   this.logger.debug(e);
@@ -121,9 +127,7 @@ export class StatisticService {
   /**
    * 
    */
-  }
-}
-
+  
 // const filesChangeCount = diffs.reduce((acc, curr) => {
 //     curr.featFiles.forEach((featFile) => {
 //       if (acc.has(featFile.filename)) {
