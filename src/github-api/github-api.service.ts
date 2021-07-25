@@ -53,6 +53,8 @@ export class GithubApiService {
 
   public async getStatistics(repoIdent: RepositoryIdentifierDto) {
     this.statisticService.getMostChangedFiles(repoIdent);
+    this.statisticService.getFilesChangedTogether(repoIdent);
+    this.statisticService.sizeOfPullRequest(repoIdent);
   }
 
   /**
