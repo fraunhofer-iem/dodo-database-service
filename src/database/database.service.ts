@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Diff } from 'src/github-api/model/PullRequest';
-import { RepositoryIdentifierDto } from 'src/github-api/model/RepositoryIdentifierDto';
+import { RepositoryNameDto } from 'src/github-api/model/Repository';
 import { DiffDocument } from './schemas/diff.schema';
 import { PullRequestDocument } from './schemas/pullRequest.schema';
 import { PullRequestFileDocument } from './schemas/pullRequestFile.schema';
@@ -32,7 +32,7 @@ export class DatabaseService {
    * @param owner
    * @returns id
    */
-  async createRepo(repoIdent: RepositoryIdentifierDto): Promise<string> {
+  async createRepo(repoIdent: RepositoryNameDto): Promise<string> {
     if (
       await this.repoModel.exists({
         repo: repoIdent.repo,
@@ -59,6 +59,9 @@ export class DatabaseService {
       return repoInstance._id;
     }
   }
+
+  async getRepoByName(owner: string, repo: string) {}
+  async getRepoById(id: string) {}
 
   async savePullRequestDiff(repoId: string, pullRequestDiff: Diff) {
     this.logger.debug('saving diff to database');

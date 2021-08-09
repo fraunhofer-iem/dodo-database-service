@@ -3,7 +3,7 @@ import { Octokit } from 'octokit';
 import { DatabaseService } from 'src/database/database.service';
 import { StatisticService } from 'src/database/statistic.service';
 import { PullRequest, RepositoryFile } from './model/PullRequest';
-import { RepositoryIdentifierDto } from './model/RepositoryIdentifierDto';
+import { CreateRepositoryDto, RepositoryNameDto } from './model/Repository';
 
 export interface Tree {
   path?: string;
@@ -51,11 +51,11 @@ export class GithubApiService {
     this.logger.log(rateLimit.data);
   }
 
-  public async getStatistics(repoIdent: RepositoryIdentifierDto) {
+  public async getStatistics(repoIdent: RepositoryNameDto) {
     this.statisticService.getMostChangedFiles(repoIdent);
   }
 
-  public async getTickets(repoIdent: RepositoryIdentifierDto) {
+  public async getTickets(repoIdent: RepositoryNameDto) {
     this.processTickets(repoIdent.owner, repoIdent.repo, 'NULL', 1);
   }
 
@@ -96,6 +96,10 @@ export class GithubApiService {
     }
   }
 
+  public async createRepo(repo: CreateRepositoryDto) {
+    return this.dbService.createRepo(repo);
+  }
+
   /**
    *
    * Queries all pull requests for the repository. For each pull request the changed files are queried.
@@ -104,9 +108,7 @@ export class GithubApiService {
    * @returns the id of the repository
    *
    */
-  public async storePullRequestDiffsForRepo(
-    repoIdent: RepositoryIdentifierDto,
-  ) {
+  public async storePullRequestDiffsForRepo(repoIdent: RepositoryNameDto) {
     const repoId = await this.dbService.createRepo(repoIdent);
 
     this.logger.log(
@@ -127,7 +129,7 @@ export class GithubApiService {
    * Status: 403 Forbidden
    * Status: 404 Not Found
    */
-  public async getStatus(repoIdent: RepositoryIdentifierDto): Promise<number> {
+  public async getStatus(repoIdent: RepositoryNameDto): Promise<number> {
     return this.octokit.rest.repos
       .get({
         owner: repoIdent.owner,
