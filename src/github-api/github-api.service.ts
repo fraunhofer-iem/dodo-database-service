@@ -55,8 +55,8 @@ export class GithubApiService {
     this.statisticService.getMostChangedFiles(repoIdent);
   }
 
-  public async getTickets(repoIdent: RepositoryNameDto) {
-    this.processTickets(
+  public async storeIssues(repoIdent: RepositoryNameDto) {
+    this.processIssues(
       repoIdent.owner,
       repoIdent.repo,
       await this.dbService.getRepoByName(repoIdent.owner, repoIdent.repo),
@@ -64,7 +64,7 @@ export class GithubApiService {
     );
   }
 
-  private async processTickets(
+  private async processIssues(
     owner: string,
     repo: string,
     repoId: string,
@@ -81,10 +81,10 @@ export class GithubApiService {
       })
       .then((res) => res.data);
 
-    this.dbService.saveTickets(issues, repoId);
+    await this.dbService.saveIssues(issues, repoId);
 
     if (issues.length == 100) {
-      this.processTickets(owner, repo, repoId, pageNumber + 1);
+      this.processIssues(owner, repo, repoId, pageNumber + 1);
     }
   }
 

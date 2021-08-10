@@ -40,8 +40,8 @@ export class GithubApiController {
     return this.ghApiService.getStatistics(repoName);
   }
 
-  @Post('tickets')
+  @Post('issues')
   async gatherTickets(@Body() repoIdent: RepositoryNameDto) {
-    return this.ghApiService.getTickets(repoIdent);
+    return this.ghApiService.storeIssues(repoIdent);
   }
 }

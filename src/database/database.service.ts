@@ -69,10 +69,14 @@ export class DatabaseService {
   }
 
   async saveIssues(issues: any[], repoId: string) {
-
     const issueModelsPromises = issues.map((issue) => {
       const issueModel = new this.issueModel();
       // TODO: map information from issue
+      this.logger.debug(issue);
+      issueModel.issueId = issue.id;
+      issueModel.state = issue.state;
+      issueModel.labels = issue.lables;
+      issueModel.title = issue.title;
       return issueModel.save();
     });
     const issueModels = await Promise.all(issueModelsPromises);
