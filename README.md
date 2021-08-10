@@ -23,6 +23,9 @@ $ npm run start:dev
 $ npm run start:prod
 ```
 
+## OpenApi
+The OpenApi description of this API is reachable on the `/api` endpoint.
+
 ## Test
 
 ```bash

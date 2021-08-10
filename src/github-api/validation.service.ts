@@ -1,19 +1,14 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { GithubApiService } from './github-api.service';
-import { RepositoryIdentifierDto } from './model/RepositoryIdentifierDto';
 
 @Injectable()
 export class ValidationService {
-  constructor(private ghApiService: GithubApiService) {}
-
   /**
    *
    * @param repoIdent
    * @returns true if the repository exists
    * @throws HTTP Exception with the status code provided from the GitHub api
    */
-  public async verify(repoIdent: RepositoryIdentifierDto) {
-    const repoStatus = await this.ghApiService.getStatus(repoIdent);
+  public async verify(repoStatus: number) {
     switch (repoStatus) {
       case 200:
         return true;

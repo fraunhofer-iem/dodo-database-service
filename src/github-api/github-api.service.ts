@@ -3,7 +3,7 @@ import { Octokit } from 'octokit';
 import { DatabaseService } from 'src/database/database.service';
 import { StatisticService } from 'src/database/statistic.service';
 import { PullRequest, RepositoryFile } from './model/PullRequest';
-import { RepositoryIdentifierDto } from './model/RepositoryIdentifierDto';
+import { CreateRepositoryDto, RepositoryNameDto } from './model/Repository';
 
 export interface Tree {
   path?: string;
@@ -51,15 +51,20 @@ export class GithubApiService {
     this.logger.log(rateLimit.data);
   }
 
-  public async getStatistics(repoIdent: RepositoryIdentifierDto) {
+  public async getStatistics(repoIdent: RepositoryNameDto) {
     this.statisticService.getMostChangedFiles(repoIdent);
   }
 
-  public async getTickets(repoIdent: RepositoryIdentifierDto) {
-    this.processTickets(repoIdent.owner, repoIdent.repo, 'NULL', 1);
+  public async storeIssues(repoIdent: RepositoryNameDto) {
+    this.processIssues(
+      repoIdent.owner,
+      repoIdent.repo,
+      await this.dbService.getRepoByName(repoIdent.owner, repoIdent.repo),
+      1,
+    );
   }
 
-  private async processTickets(
+  private async processIssues(
     owner: string,
     repo: string,
     repoId: string,
@@ -75,25 +80,16 @@ export class GithubApiService {
         page: pageNumber,
       })
       .then((res) => res.data);
-    for (const issue of issues) {
-      if (issue.assignee != null && issue.assignees) {
-        this.logger.log('issue');
-        this.logger.log(issue);
-        this.logger.log('issue assignee');
 
-        this.logger.log(issue.assignee);
-        this.logger.log(
-          `We got ${issue.assignees.length} elements in the array`,
-        );
-        for (const assignee of issue.assignees) {
-          this.logger.log('assignee in array: ');
-          this.logger.log(assignee);
-        }
-      }
-    }
+    await this.dbService.saveIssues(issues, repoId);
+
     if (issues.length == 100) {
-      this.processTickets(owner, repo, repoId, pageNumber + 1);
+      this.processIssues(owner, repo, repoId, pageNumber + 1);
     }
+  }
+
+  public async createRepo(repo: CreateRepositoryDto) {
+    return this.dbService.createRepo(repo);
   }
 
   /**
@@ -104,9 +100,7 @@ export class GithubApiService {
    * @returns the id of the repository
    *
    */
-  public async storePullRequestDiffsForRepo(
-    repoIdent: RepositoryIdentifierDto,
-  ) {
+  public async storePullRequestDiffsForRepo(repoIdent: RepositoryNameDto) {
     const repoId = await this.dbService.createRepo(repoIdent);
 
     this.logger.log(
@@ -127,7 +121,7 @@ export class GithubApiService {
    * Status: 403 Forbidden
    * Status: 404 Not Found
    */
-  public async getStatus(repoIdent: RepositoryIdentifierDto): Promise<number> {
+  public async getStatus(repoIdent: RepositoryNameDto): Promise<number> {
     return this.octokit.rest.repos
       .get({
         owner: repoIdent.owner,

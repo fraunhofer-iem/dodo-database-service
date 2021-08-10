@@ -5,7 +5,7 @@ import { DatabaseModule } from 'src/database/database.module';
 import { ValidationService } from './validation.service';
 
 @Module({
-  providers: [GithubApiService, ValidationService],
+  providers: [ValidationService, GithubApiService],
   imports: [DatabaseModule],
   controllers: [GithubApiController],
 })

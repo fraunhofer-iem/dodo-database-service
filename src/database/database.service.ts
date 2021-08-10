@@ -2,8 +2,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Diff } from 'src/github-api/model/PullRequest';
-import { RepositoryIdentifierDto } from 'src/github-api/model/RepositoryIdentifierDto';
+import { RepositoryNameDto } from 'src/github-api/model/Repository';
 import { DiffDocument } from './schemas/diff.schema';
+import { IssueDocument } from './schemas/issue.schema';
 import { PullRequestDocument } from './schemas/pullRequest.schema';
 import { PullRequestFileDocument } from './schemas/pullRequestFile.schema';
 import { RepositoryDocument } from './schemas/repository.schema';
@@ -23,6 +24,7 @@ export class DatabaseService {
     @InjectModel('PullRequest')
     private readonly pullRequestModel: Model<PullRequestDocument>,
     @InjectModel('Diff') private readonly diffModel: Model<DiffDocument>,
+    @InjectModel('Issue') private readonly issueModel: Model<IssueDocument>,
   ) {}
 
   /**
@@ -32,7 +34,7 @@ export class DatabaseService {
    * @param owner
    * @returns id
    */
-  async createRepo(repoIdent: RepositoryIdentifierDto): Promise<string> {
+  async createRepo(repoIdent: RepositoryNameDto): Promise<string> {
     if (
       await this.repoModel.exists({
         repo: repoIdent.repo,
@@ -58,6 +60,32 @@ export class DatabaseService {
       this.logger.debug('Instance created ' + repoInstance);
       return repoInstance._id;
     }
+  }
+
+  async getRepoByName(owner: string, repo: string): Promise<string> {
+    const repoM = await this.repoModel.findOne({ repo: repo, owner }).exec();
+
+    return repoM._id;
+  }
+
+  async saveIssues(issues: any[], repoId: string) {
+    const issueModelsPromises = issues.map((issue) => {
+      const issueModel = new this.issueModel();
+      // TODO: map information from issue
+      this.logger.debug(issue);
+      issueModel.issueId = issue.id;
+      issueModel.state = issue.state;
+      issueModel.labels = issue.lables;
+      issueModel.title = issue.title;
+      return issueModel.save();
+    });
+    const issueModels = await Promise.all(issueModelsPromises);
+
+    await this.repoModel
+      .findByIdAndUpdate(repoId, {
+        $push: { issues: issueModels },
+      })
+      .exec();
   }
 
   async savePullRequestDiff(repoId: string, pullRequestDiff: Diff) {
