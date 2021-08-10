@@ -4,6 +4,7 @@ import { Model } from 'mongoose';
 import { Diff } from 'src/github-api/model/PullRequest';
 import { RepositoryNameDto } from 'src/github-api/model/Repository';
 import { DiffDocument } from './schemas/diff.schema';
+import { IssueDocument } from './schemas/issue.schema';
 import { PullRequestDocument } from './schemas/pullRequest.schema';
 import { PullRequestFileDocument } from './schemas/pullRequestFile.schema';
 import { RepositoryDocument } from './schemas/repository.schema';
@@ -23,6 +24,7 @@ export class DatabaseService {
     @InjectModel('PullRequest')
     private readonly pullRequestModel: Model<PullRequestDocument>,
     @InjectModel('Diff') private readonly diffModel: Model<DiffDocument>,
+    @InjectModel('Issue') private readonly issueModel: Model<IssueDocument>,
   ) {}
 
   /**
@@ -60,8 +62,27 @@ export class DatabaseService {
     }
   }
 
-  async getRepoByName(owner: string, repo: string) {}
-  async getRepoById(id: string) {}
+  async getRepoByName(owner: string, repo: string): Promise<string> {
+    const repoM = await this.repoModel.findOne({ repo: repo, owner }).exec();
+
+    return repoM._id;
+  }
+
+  async saveIssues(issues: any[], repoId: string) {
+
+    const issueModelsPromises = issues.map((issue) => {
+      const issueModel = new this.issueModel();
+      // TODO: map information from issue
+      return issueModel.save();
+    });
+    const issueModels = await Promise.all(issueModelsPromises);
+
+    await this.repoModel
+      .findByIdAndUpdate(repoId, {
+        $push: { issues: issueModels },
+      })
+      .exec();
+  }
 
   async savePullRequestDiff(repoId: string, pullRequestDiff: Diff) {
     this.logger.debug('saving diff to database');

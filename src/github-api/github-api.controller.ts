@@ -36,10 +36,8 @@ export class GithubApiController {
   }
 
   @Post('statistics')
-  async pullRequestDiffsStatistic(
-    @Body() createPullRequestDataDto: RepositoryNameDto,
-  ) {
-    return this.ghApiService.getStatistics(createPullRequestDataDto);
+  async pullRequestDiffsStatistic(@Body() repoName: RepositoryNameDto) {
+    return this.ghApiService.getStatistics(repoName);
   }
 
   @Post('tickets')
