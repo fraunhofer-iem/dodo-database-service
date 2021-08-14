@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { RepositoryIdentifierDto } from 'src/github-api/model/RepositoryIdentifierDto';
+import { RepositoryNameDto } from 'src/github-api/model/Repository';
 import { DiffDocument } from './schemas/diff.schema';
 import { PullRequestDocument } from './schemas/pullRequest.schema';
 import { PullRequestFileDocument } from './schemas/pullRequestFile.schema';
@@ -29,10 +29,7 @@ export class StatisticService {
    * @param repoIdent
    * @param limit a maximum of 100 files is returned
    */
-  async getMostChangedFiles(
-    repoIdent: RepositoryIdentifierDto,
-    userLimit?: number,
-  ) {
+  async getMostChangedFiles(repoIdent: RepositoryNameDto, userLimit?: number) {
     const limit = userLimit ? userLimit : 100;
     this.logger.log(
       `getting the ${limit} most changed files for ${repoIdent.owner}/${repoIdent.repo}`,
@@ -214,6 +211,7 @@ async sizeOfPullRequest(
   this.logger.log(`There is a ${percent} % change or ${Math.abs(percent)} % ${change} in the size of pull requests.`)
   }
 }
+<<<<<<< HEAD
 // const filesChangeCount = diffs.reduce((acc, curr) => {
 //     curr.featFiles.forEach((featFile) => {
 //       if (acc.has(featFile.filename)) {
@@ -402,3 +400,5 @@ async sizeOfPullRequest(
 //         diff.featFiles.length / diff.mergeTargetFiles.length,
 //     };
 //   });
+=======
+>>>>>>> main

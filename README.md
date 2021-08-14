@@ -23,6 +23,9 @@ $ npm run start:dev
 $ npm run start:prod
 ```
 
+## OpenApi
+The OpenApi description of this API is reachable on the `/api` endpoint.
+
 ## Test
 
 ```bash
@@ -52,3 +55,6 @@ DB_USER_PASSWORD=<password as defined in docker-compose>
 The user credentials have to match the ones defined in the `docker-compose.yml`.
 
 In order to get a clean setup you have to remove the docker volume! Use `docker volume rm visu-code-db-service_mongodb-data` for that.
+
+## Windows Only
+Make sure the `mongo-init.sh` is stored with LF line endings!

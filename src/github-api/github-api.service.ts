@@ -3,7 +3,7 @@ import { Octokit } from 'octokit';
 import { DatabaseService } from 'src/database/database.service';
 import { StatisticService } from 'src/database/statistic.service';
 import { PullRequest, RepositoryFile } from './model/PullRequest';
-import { RepositoryIdentifierDto } from './model/RepositoryIdentifierDto';
+import { CreateRepositoryDto, RepositoryNameDto } from './model/Repository';
 
 export interface Tree {
   path?: string;
@@ -51,10 +51,47 @@ export class GithubApiService {
     this.logger.log(rateLimit.data);
   }
 
-  public async getStatistics(repoIdent: RepositoryIdentifierDto) {
+  public async getStatistics(repoIdent: RepositoryNameDto) {
     this.statisticService.getMostChangedFiles(repoIdent);
     this.statisticService.getFilesChangedTogether(repoIdent);
     this.statisticService.sizeOfPullRequest(repoIdent);
+  }
+
+  public async storeIssues(repoIdent: RepositoryNameDto) {
+    this.processIssues(
+      repoIdent.owner,
+      repoIdent.repo,
+      await this.dbService.getRepoByName(repoIdent.owner, repoIdent.repo),
+      1,
+    );
+  }
+
+  private async processIssues(
+    owner: string,
+    repo: string,
+    repoId: string,
+    pageNumber: number,
+  ) {
+    const issues = await this.octokit.rest.issues
+      .listForRepo({
+        owner: owner,
+        repo: repo,
+        filter: 'assigned',
+        state: 'all',
+        per_page: 100,
+        page: pageNumber,
+      })
+      .then((res) => res.data);
+
+    await this.dbService.saveIssues(issues, repoId);
+
+    if (issues.length == 100) {
+      this.processIssues(owner, repo, repoId, pageNumber + 1);
+    }
+  }
+
+  public async createRepo(repo: CreateRepositoryDto) {
+    return this.dbService.createRepo(repo);
   }
 
   /**
@@ -65,9 +102,7 @@ export class GithubApiService {
    * @returns the id of the repository
    *
    */
-  public async storePullRequestDiffsForRepo(
-    repoIdent: RepositoryIdentifierDto,
-  ) {
+  public async storePullRequestDiffsForRepo(repoIdent: RepositoryNameDto) {
     const repoId = await this.dbService.createRepo(repoIdent);
 
     this.logger.log(
@@ -77,6 +112,30 @@ export class GithubApiService {
     this.processPullRequests(repoIdent.owner, repoIdent.repo, repoId, 1);
 
     return repoId;
+  }
+
+  /**
+   *
+   * @param repoIdent
+   * @returns
+   * Status: 200 exists
+   * Status: 301 Moved Permanently
+   * Status: 403 Forbidden
+   * Status: 404 Not Found
+   */
+  public async getStatus(repoIdent: RepositoryNameDto): Promise<number> {
+    return this.octokit.rest.repos
+      .get({
+        owner: repoIdent.owner,
+        repo: repoIdent.repo,
+      })
+      .catch((r) => {
+        if ('status' in r) {
+          return r.status;
+        } else {
+          return 500;
+        }
+      });
   }
 
   private async processPullRequests(
