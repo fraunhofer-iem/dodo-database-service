@@ -211,7 +211,6 @@ async sizeOfPullRequest(
   this.logger.log(`There is a ${percent} % change or ${Math.abs(percent)} % ${change} in the size of pull requests.`)
   }
 }
-<<<<<<< HEAD
 // const filesChangeCount = diffs.reduce((acc, curr) => {
 //     curr.featFiles.forEach((featFile) => {
 //       if (acc.has(featFile.filename)) {
@@ -400,5 +399,3 @@ async sizeOfPullRequest(
 //         diff.featFiles.length / diff.mergeTargetFiles.length,
 //     };
 //   });
-=======
->>>>>>> main
