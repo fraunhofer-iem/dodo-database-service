@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Octokit } from 'octokit';
 import { DatabaseService } from 'src/database/database.service';
 import { StatisticService } from 'src/database/statistic.service';
-import { PullRequest, RepositoryFile } from './model/PullRequest';
+import { PullRequest, RepositoryFile, Issue } from './model/PullRequest';
 import { CreateRepositoryDto, RepositoryNameDto } from './model/Repository';
 
 export interface Tree {
@@ -55,13 +55,18 @@ export class GithubApiService {
     this.statisticService.getMostChangedFiles(repoIdent);
     this.statisticService.getFilesChangedTogether(repoIdent);
     this.statisticService.sizeOfPullRequest(repoIdent);
+    this.statisticService.numberOfAssignee(repoIdent);
+    this.statisticService.numberOfOpenTickets(repoIdent); 
+    this.statisticService.avgNumberOfAssigneeUntilTicketCloses(repoIdent); 
   }
 
   public async storeIssues(repoIdent: RepositoryNameDto) {
+    // const repoId =  await this.dbService.getRepoByName(repoIdent.owner, repoIdent.repo);
+    // const issuesss = await this.dbService.saveIssues( issue, repoId)
     this.processIssues(
       repoIdent.owner,
       repoIdent.repo,
-      await this.dbService.getRepoByName(repoIdent.owner, repoIdent.repo),
+      await this.dbService.getRepoByName(repoIdent.owner, repoIdent.repo), 
       1,
     );
   }
@@ -70,9 +75,10 @@ export class GithubApiService {
     owner: string,
     repo: string,
     repoId: string,
+  //  issues: Issue,
     pageNumber: number,
   ) {
-    const issues = await this.octokit.rest.issues
+    const issuess = await this.octokit.rest.issues
       .listForRepo({
         owner: owner,
         repo: repo,
@@ -83,9 +89,19 @@ export class GithubApiService {
       })
       .then((res) => res.data);
 
-    await this.dbService.saveIssues(issues, repoId);
+      for (const issu of issuess) {
 
-    if (issues.length == 100) {
+        // if(issu.assignees == undefined)
+        // {
+        //   issu.assignees = [];
+        // }
+       // this.logger.log('First request diff started');
+        await this.storeIssuesss(owner, repo, issu, repoId);
+    //    this.logger.log('First request diff finished');
+      }
+//    await this.dbService.saveIssues(issuess, repoId);
+
+    if (issuess.length == 100) {
       this.processIssues(owner, repo, repoId, pageNumber + 1);
     }
   }
@@ -93,6 +109,19 @@ export class GithubApiService {
   public async createRepo(repo: CreateRepositoryDto) {
     return this.dbService.createRepo(repo);
   }
+
+  private async storeIssuesss(
+    owner: string,
+    repo: string,
+    iss: Issue,
+    repoId: string,
+  ) {
+    
+    await this.dbService.saveIssues(iss, repoId);
+
+   // this.logger.log(`Diff for pull request ${pullRequest.number} was stored`);
+  }
+
 
   /**
    *

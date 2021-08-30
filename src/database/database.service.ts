@@ -5,6 +5,11 @@ import { Diff, Issue } from 'src/github-api/model/PullRequest';
 import { RepositoryNameDto } from 'src/github-api/model/Repository';
 import { DiffDocument } from './schemas/diff.schema';
 import { IssueDocument } from './schemas/issue.schema';
+import { LabelDocument } from './schemas/labels.schema';
+import { AssigneeDocument } from './schemas/assignee.schema';
+import { AssigneesDocument } from './schemas/assignees.schema';
+import { MilestoneDocument } from './schemas/milestone.schema';
+import { Pull_requestDocument } from './schemas/pull_request.schema';
 import { PullRequestDocument } from './schemas/pullRequest.schema';
 import { PullRequestFileDocument } from './schemas/pullRequestFile.schema';
 import { RepositoryDocument } from './schemas/repository.schema';
@@ -27,6 +32,16 @@ export class DatabaseService {
     private readonly diffModel: Model<DiffDocument>,
     @InjectModel('Issue')
     private readonly issueModel: Model<IssueDocument>,
+    @InjectModel('Label')
+    private readonly labelModel: Model<LabelDocument>,
+    @InjectModel('Assignee')
+    private readonly assigneeModel: Model<AssigneeDocument>,
+    @InjectModel('Assignees')
+    private readonly assigneesModel: Model<AssigneesDocument>,
+    @InjectModel('Milestone')
+    private readonly milestoneModel: Model<MilestoneDocument>,
+    @InjectModel('Pull_request')
+    private readonly pull_requestModel: Model<Pull_requestDocument>,
   ) {}
 
   /**
@@ -73,26 +88,44 @@ export class DatabaseService {
 
   async saveIssues(issues: Issue, repoId: string) {
     this.logger.debug('saving issues to database');
-  // const issueModelsPromises = issues.map((issu) => {
+   //const issueModelsPromises = issues.map((issu) => {
     const issueModel = new this.issueModel();
   //  TODO: map information from issue
 
       this.logger.debug(issues);
       issueModel.id = issues.id;
       issueModel.state = issues.state;
-      issueModel.label = issues.labels;
+      
+      const labelss = await this.labelModel.create(issues.labels,);
+      issueModel.label = labelss;
+
+      const assigneee = await this.assigneeModel.create(issues.assignee,);
+      issueModel.assignee = assigneee;
+
+      const assigneees = await this.assigneesModel.create(issues.assignees,);
+      issueModel.assignees = assigneees;
+
+      const milestonee = await this.milestoneModel.create(issues.milestone,);
+      issueModel.milestone = milestonee;
+
+      const pull_requestt = await this.pull_requestModel.create(issues.pull_request,);
+      issueModel.pull_request = pull_requestt;
+
+      issueModel.created_at = issues.created_at;
+      issueModel.updated_at = issues.updated_at;
+      issueModel.closed_at = issues.closed_at;
+    //  issueModel.label = issues.labels;
       issueModel.title = issues.title;
       const issueModels = await issueModel.save();
-   // });
-  //  const issueModels = await Promise.all(issueModelsPromises);
+  // });
+   // const issueModels = await Promise.all(issueModelsPromises);
 
-    await this.repoModel
-      .findByIdAndUpdate(repoId, {
-        $push: { issues: issueModels },
-      })
-      .exec();
-
-    return issueModel.save();
+      await this.repoModel
+        .findByIdAndUpdate(repoId, {
+          $push: { issues: [issueModels] },
+        })
+        .exec();
+      return issueModel.save();
   }
 
   async savePullRequestDiff(repoId: string, pullRequestDiff: Diff) {

@@ -7,6 +7,13 @@ import { PullRequestDocument } from './schemas/pullRequest.schema';
 import { PullRequestFileDocument } from './schemas/pullRequestFile.schema';
 import { RepositoryDocument } from './schemas/repository.schema';
 import { RepositoryFileDocument } from './schemas/repositoryFile.schema';
+import { IssueDocument } from './schemas/issue.schema';
+import { LabelDocument } from './schemas/labels.schema';
+import { AssigneeDocument } from './schemas/assignee.schema';
+import { AssigneesDocument } from './schemas/assignees.schema';
+import { MilestoneDocument } from './schemas/milestone.schema';
+import { Pull_requestDocument } from './schemas/pull_request.schema';
+
 
 @Injectable()
 export class StatisticService {
@@ -21,7 +28,20 @@ export class StatisticService {
     private readonly pullFileModel: Model<PullRequestFileDocument>,
     @InjectModel('PullRequest')
     private readonly pullRequestModel: Model<PullRequestDocument>,
-    @InjectModel('Diff') private readonly diffModel: Model<DiffDocument>,
+    @InjectModel('Diff') 
+    private readonly diffModel: Model<DiffDocument>,
+    @InjectModel('Issue') 
+    private readonly issueModel: Model<IssueDocument>,
+    @InjectModel('Label') 
+    private readonly labelModel: Model<LabelDocument>,
+    @InjectModel('Assignee') 
+    private readonly assigneeModel: Model<AssigneeDocument>,
+    @InjectModel('Assignees') 
+    private readonly assigneesModel: Model<AssigneesDocument>,
+    @InjectModel('Milestone') 
+    private readonly milestoneModel: Model<MilestoneDocument>,
+    @InjectModel('Pull_request') 
+    private readonly pull_requestModel: Model<Pull_requestDocument>,
   ) {}
 
   /**
@@ -69,7 +89,6 @@ export class StatisticService {
       .sort({ count: -1 })
       .limit(limit)
       .exec();
-
     let avg = 0;
     res.forEach((e) => {
     // this.logger.debug(e);
@@ -93,13 +112,9 @@ export class StatisticService {
  * @param userLimit 
  */
   async getFilesChangedTogether(
-    repoIdent: RepositoryIdentifierDto,
-   // userLimit?: number,
+    repoIdent: RepositoryNameDto,
   ) {
-   // const limit = userLimit ? userLimit : 100;
-    // this.logger.log(
-    //   `getting the ${limit} most changed files for ${repoIdent.owner}/${repoIdent.repo}`,
-    // );
+   
     const filter = {
       repo: repoIdent.repo,
       owner: repoIdent.owner,
@@ -144,9 +159,13 @@ export class StatisticService {
       this.logger.log(`The files ${file1} & ${file2} are repeatedly changed together ${res.length} times.`);
   }
 
-
+/**
+ * Calculate the change in the pullrequests
+ * @param repoIdent 
+ * @param userLimit 
+ */
 async sizeOfPullRequest(
-  repoIdent: RepositoryIdentifierDto,
+  repoIdent: RepositoryNameDto,
   userLimit?: number,
 ) {
   const limit = userLimit ? userLimit : 100;
@@ -209,6 +228,176 @@ async sizeOfPullRequest(
       change = "increase"
 
   this.logger.log(`There is a ${percent} % change or ${Math.abs(percent)} % ${change} in the size of pull requests.`)
+  }
+
+/**
+ * Number of issues with no assignees
+ */
+ async numberOfAssignee( repoIdent: RepositoryNameDto,){
+  const filter = {
+    repo: repoIdent.repo,
+    owner: repoIdent.owner,
+  };
+
+  const getIssues = {
+    from: 'issues',
+    localField: 'issues',
+    foreignField: '_id',
+    as: 'expandedIssues',
+  };
+
+  const getPull_requests = {
+    from: 'pull_requests',
+    localField: 'expandedIssues.pull_request',
+    foreignField: '_id',
+    as: 'pullRequestss',
+  };
+
+  const getAssignees = {
+    from: 'assignees',
+    localField: 'expandedIssues.assignee',
+    foreignField: '_id',
+    as: 'assigneee',
+  };
+  
+  const res: { _id: string; count: number }[] = await this.repoModel
+      .aggregate()
+      .match(filter)
+      .unwind('$issues')
+      .lookup(getIssues)
+      .lookup(getPull_requests)
+      .unwind('$pullRequestss')
+      .lookup(getAssignees)
+      .unwind('$assigneee')
+      .match({'pullRequestss.url' : {$exists : false}})
+      .match({'assigneee.login' : {$exists: false}}) 
+      .exec();
+      this.logger.log(`Number of issues with no assignee are ${res.length}.`);
+}
+
+/**
+ * Calculate the number of open tickets
+ * @param repoIdent 
+ */
+  async numberOfOpenTickets(repoIdent: RepositoryNameDto,){
+    const filter = {
+      repo: repoIdent.repo,
+      owner: repoIdent.owner,
+    };
+  
+    const getIssues = {
+      from: 'issues',
+      localField: 'issues',
+      foreignField: '_id',
+      as: 'expandedIssues',
+    };
+  
+    const getPull_requests = {
+      from: 'pull_requests',
+      localField: 'expandedIssues.pull_request',
+      foreignField: '_id',
+      as: 'pullRequestss',
+    };
+  
+    const getAssignees = {
+      from: 'assignees',
+      localField: 'expandedIssues.assignee',
+      foreignField: '_id',
+      as: 'assigneee',
+    };
+    
+    const res: { _id: string; count: number }[] = await this.repoModel
+        .aggregate()
+        .match(filter)
+        .unwind('$issues')
+        .lookup(getIssues)
+        .unwind('$expandedIssues')
+        .lookup(getPull_requests)
+        .unwind('$pullRequestss')
+        .lookup(getAssignees)
+        .unwind('$assigneee')
+        .match({'pullRequestss.url' : {$exists : false}})
+        .match({ 'expandedIssues.state' : "open"})
+        .exec();
+  this.logger.log(`Number of open issues are ${res.length}.`); 
+ // this.logger.log(res[1]);
+  }
+
+/**
+ * Calculate Avg Number of assignees until the ticket closes
+ * Calculations involve only tickets which are closed
+ * find the tickets which are closed, if assignees is null count them, if assignees is not null count number of assignees
+ * @param repoIdent 
+ */
+ async avgNumberOfAssigneeUntilTicketCloses(repoIdent: RepositoryNameDto,){
+  const filter = {
+    repo: repoIdent.repo,
+    owner: repoIdent.owner,
+  };
+
+  const getIssues = {
+    from: 'issues',
+    localField: 'issues',
+    foreignField: '_id',
+    as: 'expandedIssues',
+  };
+
+  const getPull_requests = {
+    from: 'pull_requests',
+    localField: 'expandedIssues.pull_request',
+    foreignField: '_id',
+    as: 'pullRequestss',
+  };
+
+  const getAssignees = {
+    from: 'assignees',
+    localField: 'expandedIssues.assignee',
+    foreignField: '_id',
+    as: 'assigneee',
+  };
+  
+  const res: { _id: string; count: number }[] = await this.repoModel
+      .aggregate()
+      .match(filter)
+      .unwind('$issues')
+      .lookup(getIssues)
+      .unwind('$expandedIssues')
+      .lookup(getPull_requests)
+      .unwind('$pullRequestss')
+      .lookup(getAssignees)
+      .unwind('$assigneee')
+      .match({'pullRequestss.url' : {$exists : false}})
+      .match({ 'expandedIssues.state' : "closed"})
+//      .addFields({count : {}})
+      .match({'expandedIssues.assignees' : {$exists : false}})
+      .exec();
+
+    //  this.logger.log(`Closed Tickets with only a single assignee ${res.length}.`); 
+
+  const res1: { _id: string; count: number }[] = await this.repoModel
+        .aggregate()
+        .match(filter)
+        .unwind('$issues')
+        .lookup(getIssues)
+        .unwind('$expandedIssues')
+        .lookup(getPull_requests)
+        .unwind('$pullRequestss')
+        .lookup(getAssignees)
+        .unwind('$assigneee')
+        .match({'pullRequestss.url' : {$exists : false}})
+        .match({ 'expandedIssues.state' : "closed"})
+  //      .addFields({count : {}})
+        .match({'expandedIssues.assignees' : {$exists : true}})
+        //.group({'expandedIssues.count1' : {$size : 'expandedIssues.assignees'}})
+      // .group({$cond : { $if : {'expandedIssues.assignees' : {$exists : true}}, $then: {_id : null, totalsize : {$sum : {$size : '$expandedIssues.assignees'}}, numberofticket : { $sum: 1 }} }})
+        .group({_id : null, totalsize : {$sum : {$size : '$expandedIssues.assignees'}}, numberofticket : { $sum: 1 }})
+      // .addFields({count1 : {$add : {$size:'expandedIssues.assignees' }}})
+      // .addFields({count1 : {{$inc : {count1 : {$size : 'expandedIssues.assignees'}}}}})
+        .exec();
+
+    const totalClosedTickets = res.length + res1[0]["numberofticket"];
+    const avg = (res.length + res1[0]["totalsize"])/totalClosedTickets;
+    this.logger.log(`Average number of assignee(s) per ticket until the ticket closes are ${avg}.`);
   }
 }
 // const filesChangeCount = diffs.reduce((acc, curr) => {

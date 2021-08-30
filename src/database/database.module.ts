@@ -3,6 +3,11 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { DatabaseService } from './database.service';
 import { DiffSchema } from './schemas/diff.schema';
 import { IssueSchema } from './schemas/issue.schema';
+import { LabelSchema } from './schemas/labels.schema';
+import { AssigneeSchema } from './schemas/assignee.schema';
+import { AssigneesSchema } from './schemas/assignees.schema';
+import { MilestoneSchema } from './schemas/milestone.schema';
+import { Pull_requestSchema } from './schemas/pull_request.schema';
 import { PullRequestSchema } from './schemas/pullRequest.schema';
 import { PullRequestFileSchema } from './schemas/pullRequestFile.schema';
 import { RepositorySchema } from './schemas/repository.schema';
@@ -18,6 +23,11 @@ import { StatisticService } from './statistic.service';
       { name: 'PullRequest', schema: PullRequestSchema },
       { name: 'PullRequestFiles', schema: PullRequestFileSchema },
       { name: 'RepositoryFiles', schema: RepositoryFileSchema },
+      { name: 'Label', schema: LabelSchema},
+      { name: 'Assignee', schema: AssigneeSchema},
+      { name: 'Assignees', schema: AssigneesSchema},
+      { name: 'Milestone', schema: MilestoneSchema},
+      { name: 'Pull_request', schema: Pull_requestSchema},
     ]),
   ],
   providers: [DatabaseService, StatisticService],

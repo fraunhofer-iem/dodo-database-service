@@ -1,6 +1,6 @@
 import { ApiProperty, PickType } from '@nestjs/swagger';
 
-export class RepositoryIdentifierDto {
+export class RepositoryNameDto {
   @ApiProperty()
   owner: string;
 

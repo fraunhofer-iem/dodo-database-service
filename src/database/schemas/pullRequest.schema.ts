@@ -10,6 +10,9 @@ export class PullRequest {
 
   @Prop()
   title: string;
+
+  @Prop()
+  url: string;
 }
 
 export const PullRequestSchema = SchemaFactory.createForClass(PullRequest);
