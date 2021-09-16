@@ -4,6 +4,7 @@ import { Assignee } from './assignee.schema';
 import { Assignees } from './assignees.schema';
 import { Milestone } from './milestone.schema';
 import { Pull_request } from './pull_request.schema';
+import { IssueEventTypes } from './issueEventTypes.schema';
 
 
 import { Document, Schema as mSchema } from 'mongoose';
@@ -18,8 +19,6 @@ export class Issue {
 
   @Prop([{ type: mSchema.Types.ObjectId, ref: 'Labels' }])
   label: Label[];
-  // @Prop([String])
-  // labels: string[];
 
   @Prop({ type: mSchema.Types.ObjectId, ref: 'Assignee' })
   assignee: Assignee;
@@ -47,11 +46,16 @@ export class Issue {
   state: string;
 
   @Prop()
-  issueId: number;
+  id: number;
+
+  @Prop()
+  node_id: string;
 
   @Prop()
   title: string;
 
+  @Prop([{ type: mSchema.Types.ObjectId, ref: 'IssueEventTypes' }])
+  event: IssueEventTypes[];
   // TODO: create a schema for Users to fill the creator of the issue as well as the
   // assignees
 }

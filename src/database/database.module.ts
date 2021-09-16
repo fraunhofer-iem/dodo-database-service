@@ -3,6 +3,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { DatabaseService } from './database.service';
 import { DiffSchema } from './schemas/diff.schema';
 import { IssueSchema } from './schemas/issue.schema';
+import { IssueEventTypesSchema } from './schemas/issueEventTypes.schema';
+import { ReleasesSchema } from './schemas/releases.schema';
 import { LabelSchema } from './schemas/labels.schema';
 import { AssigneeSchema } from './schemas/assignee.schema';
 import { AssigneesSchema } from './schemas/assignees.schema';
@@ -12,6 +14,7 @@ import { PullRequestSchema } from './schemas/pullRequest.schema';
 import { PullRequestFileSchema } from './schemas/pullRequestFile.schema';
 import { RepositorySchema } from './schemas/repository.schema';
 import { RepositoryFileSchema } from './schemas/repositoryFile.schema';
+import { IssueWithEventsSchema } from './schemas/issueWithEvents.schema';
 import { StatisticService } from './statistic.service';
 
 @Module({
@@ -20,6 +23,8 @@ import { StatisticService } from './statistic.service';
       { name: 'Repository', schema: RepositorySchema },
       { name: 'Diff', schema: DiffSchema },
       { name: 'Issue', schema: IssueSchema },
+      { name: 'IssueEventTypes', schema: IssueEventTypesSchema },
+      { name: 'Releases', schema: ReleasesSchema },
       { name: 'PullRequest', schema: PullRequestSchema },
       { name: 'PullRequestFiles', schema: PullRequestFileSchema },
       { name: 'RepositoryFiles', schema: RepositoryFileSchema },
@@ -28,6 +33,7 @@ import { StatisticService } from './statistic.service';
       { name: 'Assignees', schema: AssigneesSchema},
       { name: 'Milestone', schema: MilestoneSchema},
       { name: 'Pull_request', schema: Pull_requestSchema},
+      { name: 'IssueWithEvents', schema: IssueWithEventsSchema},
     ]),
   ],
   providers: [DatabaseService, StatisticService],

@@ -1,3 +1,19 @@
+
+export interface IssueWithEvents {
+  issue: Issue;
+  issueEventTypes: IssueEventTypes[];
+}
+
+export interface IssueEventTypes{
+  id? : number;
+  node_id? : string;
+  url? : string;
+  event? : string;
+  commit_url? : string;
+  created_at? : string;
+  assignee? : Assignee;
+}
+
 export interface Issue{
   state: string;
   labels: Labels[];
@@ -10,8 +26,19 @@ export interface Issue{
   closed_at : string;
   title: string;
   id: number;
+  node_id : string;
   locked : boolean;
 }
+export interface Releases{
+ url : string;
+ id: number;
+ node_id: string;
+ name: string;
+ created_at: string;
+ published_at : string;
+}
+
+
 
 export interface Labels{
   id : number;
@@ -26,6 +53,7 @@ export interface Labels{
 export interface Assignee{
   login: string;
   id: number;
+  node_id: string;
   type: string;
   site_admin: boolean;
 }

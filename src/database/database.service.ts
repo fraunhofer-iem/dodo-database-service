@@ -1,10 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Diff, Issue } from 'src/github-api/model/PullRequest';
+import { Diff, Issue, IssueEventTypes, Releases, IssueWithEvents } from 'src/github-api/model/PullRequest';
 import { RepositoryNameDto } from 'src/github-api/model/Repository';
 import { DiffDocument } from './schemas/diff.schema';
 import { IssueDocument } from './schemas/issue.schema';
+import { IssueEventTypesDocument } from './schemas/issueEventTypes.schema';
+import { ReleasesDocument } from './schemas/releases.schema';
 import { LabelDocument } from './schemas/labels.schema';
 import { AssigneeDocument } from './schemas/assignee.schema';
 import { AssigneesDocument } from './schemas/assignees.schema';
@@ -14,6 +16,7 @@ import { PullRequestDocument } from './schemas/pullRequest.schema';
 import { PullRequestFileDocument } from './schemas/pullRequestFile.schema';
 import { RepositoryDocument } from './schemas/repository.schema';
 import { RepositoryFileDocument } from './schemas/repositoryFile.schema';
+import { IssueWithEventsDocument } from './schemas/issueWithEvents.schema';
 
 @Injectable()
 export class DatabaseService {
@@ -32,6 +35,10 @@ export class DatabaseService {
     private readonly diffModel: Model<DiffDocument>,
     @InjectModel('Issue')
     private readonly issueModel: Model<IssueDocument>,
+    @InjectModel('Releases')
+    private readonly releasesModel: Model<ReleasesDocument>,
+    @InjectModel('IssueEventTypes')
+    private readonly issueEventTypesModel: Model<IssueEventTypesDocument>,
     @InjectModel('Label')
     private readonly labelModel: Model<LabelDocument>,
     @InjectModel('Assignee')
@@ -42,6 +49,8 @@ export class DatabaseService {
     private readonly milestoneModel: Model<MilestoneDocument>,
     @InjectModel('Pull_request')
     private readonly pull_requestModel: Model<Pull_requestDocument>,
+    @InjectModel('IssueWithEvents')
+    private readonly issueWithEventsModel: Model<IssueWithEventsDocument>,
   ) {}
 
   /**
@@ -73,6 +82,7 @@ export class DatabaseService {
         owner: repoIdent.owner,
         repo: repoIdent.repo,
         diffs: [],
+      //  releases : [],
       }).save();
 
       this.logger.debug('Instance created ' + repoInstance);
@@ -80,7 +90,7 @@ export class DatabaseService {
     }
   }
 
-  async getRepoByName(owner: string, repo: string): Promise<string> {
+  async getRepoByName(owner: string, repo: string,): Promise<string> {
     const repoM = await this.repoModel.findOne({ repo: repo, owner }).exec();
 
     return repoM._id;
@@ -88,14 +98,12 @@ export class DatabaseService {
 
   async saveIssues(issues: Issue, repoId: string) {
     this.logger.debug('saving issues to database');
-   //const issueModelsPromises = issues.map((issu) => {
     const issueModel = new this.issueModel();
-  //  TODO: map information from issue
 
       this.logger.debug(issues);
       issueModel.id = issues.id;
       issueModel.state = issues.state;
-      
+      issueModel.node_id = issues.node_id;
       const labelss = await this.labelModel.create(issues.labels,);
       issueModel.label = labelss;
 
@@ -114,11 +122,9 @@ export class DatabaseService {
       issueModel.created_at = issues.created_at;
       issueModel.updated_at = issues.updated_at;
       issueModel.closed_at = issues.closed_at;
-    //  issueModel.label = issues.labels;
       issueModel.title = issues.title;
       const issueModels = await issueModel.save();
-  // });
-   // const issueModels = await Promise.all(issueModelsPromises);
+
 
       await this.repoModel
         .findByIdAndUpdate(repoId, {
@@ -127,6 +133,68 @@ export class DatabaseService {
         .exec();
       return issueModel.save();
   }
+
+  /**
+   * Function for to save issueEventTypes
+   * @param issuesEventTypes 
+   * @param repoId 
+   * @returns 
+    */
+  async saveIssuesEventTypes(issuesEventTypes: IssueEventTypes, repoId: string) {
+    this.logger.debug('saving issues event types to database');
+    const issueEventTypesModel = new this.issueEventTypesModel();
+
+      this.logger.debug(issuesEventTypes);
+      issueEventTypesModel.id = issuesEventTypes.id;
+      issueEventTypesModel.node_id = issuesEventTypes.node_id;
+    
+      const assigneee = await this.assigneeModel.create(issuesEventTypes.assignee,);
+      issueEventTypesModel.assignee = assigneee;
+
+      issueEventTypesModel.created_at = issuesEventTypes.created_at;
+      issueEventTypesModel.commit_url = issuesEventTypes.commit_url;
+      issueEventTypesModel.url = issuesEventTypes.url;
+      issueEventTypesModel.event = issuesEventTypes.event;
+      const issueEventTypesModels = await issueEventTypesModel.save();
+
+      await this.repoModel
+        .findByIdAndUpdate(repoId, {
+          $push: { issuesEventTypes: [issueEventTypesModels] },
+        })
+        .exec();
+      return issueEventTypesModel.save();
+  }
+/**
+ * function to save releases
+ * @param releases 
+ * @param repoId 
+ * @returns 
+ */
+  async saveReleases(releases: Releases, repoId: string) {
+    this.logger.debug('saving Releases to database');
+    const releasesModel = new this.releasesModel();
+
+      this.logger.debug(releases);
+      releasesModel.url = releases.url;
+      releasesModel.id = releases.id;
+      releasesModel.node_id = releases.node_id;
+      releasesModel.name = releases.name;
+      releasesModel.created_at = releases.created_at;
+      releasesModel.published_at = releases.published_at;
+
+      const releasesModels = await releasesModel.save();
+
+      await this.repoModel
+        .findByIdAndUpdate(repoId, {
+          $push: { releases: [releasesModels] },
+        })
+        .exec();
+      
+      this.logger.debug('saving releases to database finished');
+
+      return releasesModel.save();
+  }
+
 
   async savePullRequestDiff(repoId: string, pullRequestDiff: Diff) {
     this.logger.debug('saving diff to database');
@@ -154,5 +222,26 @@ export class DatabaseService {
       })
       .exec();
     this.logger.debug('saving diff to database finished');
+  }
+
+  async saveIssuesWithEvents(issuesWithEvents: IssueWithEvents, repoId: string) {
+    const issueWithEventsModel = new this.issueWithEventsModel();
+      const issuee = await this.issueModel.create(
+        issuesWithEvents.issue,
+      );
+
+      const issueeEventTypes = await this.issueEventTypesModel.create(
+        issuesWithEvents.issueEventTypes,
+      );
+
+      issueWithEventsModel.issue = issuee;
+      issueWithEventsModel.issueEventTypes = issueeEventTypes;
+      const savedIssueWithEvents = await issueWithEventsModel.save();
+      await this.issueWithEventsModel
+      .findByIdAndUpdate(repoId, {
+        $push: { issuesWithEvents: [savedIssueWithEvents] },
+      })
+      .exec();
+    this.logger.debug('saving issueWithEvents to database finished');
   }
 }

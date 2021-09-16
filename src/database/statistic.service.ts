@@ -8,6 +8,7 @@ import { PullRequestFileDocument } from './schemas/pullRequestFile.schema';
 import { RepositoryDocument } from './schemas/repository.schema';
 import { RepositoryFileDocument } from './schemas/repositoryFile.schema';
 import { IssueDocument } from './schemas/issue.schema';
+import { IssueEventTypesDocument } from './schemas/issueEventTypes.schema';
 import { LabelDocument } from './schemas/labels.schema';
 import { AssigneeDocument } from './schemas/assignee.schema';
 import { AssigneesDocument } from './schemas/assignees.schema';
@@ -32,6 +33,8 @@ export class StatisticService {
     private readonly diffModel: Model<DiffDocument>,
     @InjectModel('Issue') 
     private readonly issueModel: Model<IssueDocument>,
+    @InjectModel('IssueEventTypes') 
+    private readonly issueEventTypesModel: Model<IssueEventTypesDocument>,
     @InjectModel('Label') 
     private readonly labelModel: Model<LabelDocument>,
     @InjectModel('Assignee') 

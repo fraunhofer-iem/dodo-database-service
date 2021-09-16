@@ -10,6 +10,9 @@ export class Assignees {
   id: number;
 
   @Prop()
+  node_id: string;
+
+  @Prop()
   type: string;
 
   @Prop()
