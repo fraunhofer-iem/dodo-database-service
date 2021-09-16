@@ -1,56 +1,54 @@
-
 export interface IssueWithEvents {
   issue: Issue;
   issueEventTypes: IssueEventTypes[];
 }
 
-export interface IssueEventTypes{
-  id? : number;
-  node_id? : string;
-  url? : string;
-  event? : string;
-  commit_url? : string;
-  created_at? : string;
-  assignee? : Assignee;
+export interface IssueEventTypes {
+  id?: number;
+  node_id?: string;
+  url?: string;
+  event?: string;
+  commit_url?: string;
+  created_at?: string;
+  assignee?: Assignee;
 }
 
-export interface Issue{
+export interface Issue {
   state: string;
   labels: Labels[];
-  assignee : Assignee;
+  assignee: Assignee;
   assignees?: Assignees[];
-  milestone : Milestones;
+  milestone: Milestones;
   pull_request?: Pull_request;
-  created_at : string; 
-  updated_at : string;
-  closed_at : string;
+  created_at: string;
+  updated_at: string;
+  closed_at: string;
   title: string;
   id: number;
-  node_id : string;
-  locked : boolean;
+  number: number;
+  node_id: string;
+  locked: boolean;
 }
-export interface Releases{
- url : string;
- id: number;
- node_id: string;
- name: string;
- created_at: string;
- published_at : string;
+export interface Releases {
+  url: string;
+  id: number;
+  node_id: string;
+  name: string;
+  created_at: string;
+  published_at: string;
 }
 
-
-
-export interface Labels{
-  id : number;
-  node_id : string;
-  url : string;
+export interface Labels {
+  id: number;
+  node_id: string;
+  url: string;
   name: string;
   color: string;
   default: boolean;
   description: string;
 }
 
-export interface Assignee{
+export interface Assignee {
   login: string;
   id: number;
   node_id: string;
@@ -58,31 +56,31 @@ export interface Assignee{
   site_admin: boolean;
 }
 
-export interface Assignees{
+export interface Assignees {
   login: string;
-  node_id : string;
+  node_id: string;
   id: number;
   type: string;
   site_admin: boolean;
 }
 
-export interface Milestones{
+export interface Milestones {
   id: number;
-  node_id : string;
-  number : number;
+  node_id: string;
+  number: number;
   state: string;
   title: string;
-  description : string;
-  open_issues : number;
+  description: string;
+  open_issues: number;
   closed_issues: number;
-  created_at : string; //date string to date object 
-  updated_at : string;
-  closed_at : string
-  due_on : string;
+  created_at: string; //date string to date object
+  updated_at: string;
+  closed_at: string;
+  due_on: string;
 }
 
-export interface Pull_request{
-  url : string;
+export interface Pull_request {
+  url: string;
 }
 
 export interface Diff {

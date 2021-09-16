@@ -1,7 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Diff, Issue, IssueEventTypes, Releases, IssueWithEvents } from 'src/github-api/model/PullRequest';
+import {
+  Diff,
+  Issue,
+  IssueEventTypes,
+  Releases,
+  IssueWithEvents,
+} from 'src/github-api/model/PullRequest';
 import { RepositoryNameDto } from 'src/github-api/model/Repository';
 import { DiffDocument } from './schemas/diff.schema';
 import { IssueDocument } from './schemas/issue.schema';
@@ -31,7 +37,7 @@ export class DatabaseService {
     private readonly pullFileModel: Model<PullRequestFileDocument>,
     @InjectModel('PullRequest')
     private readonly pullRequestModel: Model<PullRequestDocument>,
-    @InjectModel('Diff') 
+    @InjectModel('Diff')
     private readonly diffModel: Model<DiffDocument>,
     @InjectModel('Issue')
     private readonly issueModel: Model<IssueDocument>,
@@ -61,7 +67,6 @@ export class DatabaseService {
    * @returns id
    */
   async createRepo(repoIdent: RepositoryNameDto): Promise<string> {
-    
     const exists = await this.repoModel.exists({
       repo: repoIdent.repo,
       owner: repoIdent.owner,
@@ -82,7 +87,7 @@ export class DatabaseService {
         owner: repoIdent.owner,
         repo: repoIdent.repo,
         diffs: [],
-      //  releases : [],
+        //  releases : [],
       }).save();
 
       this.logger.debug('Instance created ' + repoInstance);
@@ -90,7 +95,7 @@ export class DatabaseService {
     }
   }
 
-  async getRepoByName(owner: string, repo: string,): Promise<string> {
+  async getRepoByName(owner: string, repo: string): Promise<string> {
     const repoM = await this.repoModel.findOne({ repo: repo, owner }).exec();
 
     return repoM._id;
@@ -100,101 +105,106 @@ export class DatabaseService {
     this.logger.debug('saving issues to database');
     const issueModel = new this.issueModel();
 
-      this.logger.debug(issues);
-      issueModel.id = issues.id;
-      issueModel.state = issues.state;
-      issueModel.node_id = issues.node_id;
-      const labelss = await this.labelModel.create(issues.labels,);
-      issueModel.label = labelss;
+    this.logger.debug(issues);
+    issueModel.id = issues.id;
+    issueModel.state = issues.state;
+    issueModel.node_id = issues.node_id;
+    const labelss = await this.labelModel.create(issues.labels);
+    issueModel.label = labelss;
 
-      const assigneee = await this.assigneeModel.create(issues.assignee,);
-      issueModel.assignee = assigneee;
+    const assigneee = await this.assigneeModel.create(issues.assignee);
+    issueModel.assignee = assigneee;
 
-      const assigneees = await this.assigneesModel.create(issues.assignees,);
-      issueModel.assignees = assigneees;
+    const assigneees = await this.assigneesModel.create(issues.assignees);
+    issueModel.assignees = assigneees;
 
-      const milestonee = await this.milestoneModel.create(issues.milestone,);
-      issueModel.milestone = milestonee;
+    const milestonee = await this.milestoneModel.create(issues.milestone);
+    issueModel.milestone = milestonee;
 
-      const pull_requestt = await this.pull_requestModel.create(issues.pull_request,);
-      issueModel.pull_request = pull_requestt;
+    const pull_requestt = await this.pull_requestModel.create(
+      issues.pull_request,
+    );
+    issueModel.pull_request = pull_requestt;
 
-      issueModel.created_at = issues.created_at;
-      issueModel.updated_at = issues.updated_at;
-      issueModel.closed_at = issues.closed_at;
-      issueModel.title = issues.title;
-      const issueModels = await issueModel.save();
+    issueModel.created_at = issues.created_at;
+    issueModel.updated_at = issues.updated_at;
+    issueModel.closed_at = issues.closed_at;
+    issueModel.title = issues.title;
+    const issueModels = await issueModel.save();
 
-
-      await this.repoModel
-        .findByIdAndUpdate(repoId, {
-          $push: { issues: [issueModels] },
-        })
-        .exec();
-      return issueModel.save();
+    await this.repoModel
+      .findByIdAndUpdate(repoId, {
+        $push: { issues: [issueModels] },
+      })
+      .exec();
+    return issueModel.save();
   }
 
   /**
    * Function for to save issueEventTypes
-   * @param issuesEventTypes 
-   * @param repoId 
-   * @returns 
-    */
-  async saveIssuesEventTypes(issuesEventTypes: IssueEventTypes, repoId: string) {
+   * @param issuesEventTypes
+   * @param repoId
+   * @returns
+   */
+  async saveIssuesEventTypes(
+    issuesEventTypes: IssueEventTypes,
+    repoId: string,
+  ) {
     this.logger.debug('saving issues event types to database');
     const issueEventTypesModel = new this.issueEventTypesModel();
 
-      this.logger.debug(issuesEventTypes);
-      issueEventTypesModel.id = issuesEventTypes.id;
-      issueEventTypesModel.node_id = issuesEventTypes.node_id;
-    
-      const assigneee = await this.assigneeModel.create(issuesEventTypes.assignee,);
-      issueEventTypesModel.assignee = assigneee;
+    this.logger.debug(issuesEventTypes);
+    issueEventTypesModel.id = issuesEventTypes.id;
+    issueEventTypesModel.node_id = issuesEventTypes.node_id;
 
-      issueEventTypesModel.created_at = issuesEventTypes.created_at;
-      issueEventTypesModel.commit_url = issuesEventTypes.commit_url;
-      issueEventTypesModel.url = issuesEventTypes.url;
-      issueEventTypesModel.event = issuesEventTypes.event;
-      const issueEventTypesModels = await issueEventTypesModel.save();
+    const assigneee = await this.assigneeModel.create(
+      issuesEventTypes.assignee,
+    );
+    issueEventTypesModel.assignee = assigneee;
 
-      await this.repoModel
-        .findByIdAndUpdate(repoId, {
-          $push: { issuesEventTypes: [issueEventTypesModels] },
-        })
-        .exec();
-      return issueEventTypesModel.save();
+    issueEventTypesModel.created_at = issuesEventTypes.created_at;
+    issueEventTypesModel.commit_url = issuesEventTypes.commit_url;
+    issueEventTypesModel.url = issuesEventTypes.url;
+    issueEventTypesModel.event = issuesEventTypes.event;
+    const issueEventTypesModels = await issueEventTypesModel.save();
+
+    await this.repoModel
+      .findByIdAndUpdate(repoId, {
+        $push: { issuesEventTypes: [issueEventTypesModels] },
+      })
+      .exec();
+    return issueEventTypesModel.save();
   }
-/**
- * function to save releases
- * @param releases 
- * @param repoId 
- * @returns 
- */
+  /**
+   * function to save releases
+   * @param releases
+   * @param repoId
+   * @returns
+   */
   async saveReleases(releases: Releases, repoId: string) {
     this.logger.debug('saving Releases to database');
     const releasesModel = new this.releasesModel();
 
-      this.logger.debug(releases);
-      releasesModel.url = releases.url;
-      releasesModel.id = releases.id;
-      releasesModel.node_id = releases.node_id;
-      releasesModel.name = releases.name;
-      releasesModel.created_at = releases.created_at;
-      releasesModel.published_at = releases.published_at;
+    this.logger.debug(releases);
+    releasesModel.url = releases.url;
+    releasesModel.id = releases.id;
+    releasesModel.node_id = releases.node_id;
+    releasesModel.name = releases.name;
+    releasesModel.created_at = releases.created_at;
+    releasesModel.published_at = releases.published_at;
 
-      const releasesModels = await releasesModel.save();
+    const releasesModels = await releasesModel.save();
 
-      await this.repoModel
-        .findByIdAndUpdate(repoId, {
-          $push: { releases: [releasesModels] },
-        })
-        .exec();
-      
-      this.logger.debug('saving releases to database finished');
+    await this.repoModel
+      .findByIdAndUpdate(repoId, {
+        $push: { releases: [releasesModels] },
+      })
+      .exec();
 
-      return releasesModel.save();
+    this.logger.debug('saving releases to database finished');
+
+    return releasesModel.save();
   }
-
 
   async savePullRequestDiff(repoId: string, pullRequestDiff: Diff) {
     this.logger.debug('saving diff to database');
@@ -224,20 +234,21 @@ export class DatabaseService {
     this.logger.debug('saving diff to database finished');
   }
 
-  async saveIssuesWithEvents(issuesWithEvents: IssueWithEvents, repoId: string) {
+  async saveIssuesWithEvents(
+    issuesWithEvents: IssueWithEvents,
+    repoId: string,
+  ) {
     const issueWithEventsModel = new this.issueWithEventsModel();
-      const issuee = await this.issueModel.create(
-        issuesWithEvents.issue,
-      );
+    const issuee = await this.issueModel.create(issuesWithEvents.issue);
 
-      const issueeEventTypes = await this.issueEventTypesModel.create(
-        issuesWithEvents.issueEventTypes,
-      );
+    const issueeEventTypes = await this.issueEventTypesModel.create(
+      issuesWithEvents.issueEventTypes,
+    );
 
-      issueWithEventsModel.issue = issuee;
-      issueWithEventsModel.issueEventTypes = issueeEventTypes;
-      const savedIssueWithEvents = await issueWithEventsModel.save();
-      await this.issueWithEventsModel
+    issueWithEventsModel.issue = issuee;
+    issueWithEventsModel.issueEventTypes = issueeEventTypes;
+    const savedIssueWithEvents = await issueWithEventsModel.save();
+    await this.issueWithEventsModel
       .findByIdAndUpdate(repoId, {
         $push: { issuesWithEvents: [savedIssueWithEvents] },
       })

@@ -22,7 +22,7 @@ export class GithubApiController {
       return this.ghApiService.createRepo(createRepoDto);
   }
 
-  @Post('diffs') 
+  @Post('diffs')
   @ApiOkResponse({
     description: 'The id of the repository in which the data is stored.',
   })
@@ -36,8 +36,7 @@ export class GithubApiController {
   }
 
   @Post('releases')
- 
-  async gatherReleases(@Body() repoIdent: RepositoryNameDto,) {
+  async gatherReleases(@Body() repoIdent: RepositoryNameDto) {
     return this.ghApiService.storeReleases(repoIdent);
   }
 
@@ -47,11 +46,9 @@ export class GithubApiController {
   }
 
   @Post('issues')
-  async gatherTickets(@Body() repoIdent: RepositoryNameDto,) {
+  async gatherTickets(@Body() repoIdent: RepositoryNameDto) {
     return this.ghApiService.storeIssues(repoIdent);
   }
-
-  
 
   // @Post('issuesEventTypes')
   // async gatherTicketsEvents(@Body() repoIdent: RepositoryNameDto,) {
