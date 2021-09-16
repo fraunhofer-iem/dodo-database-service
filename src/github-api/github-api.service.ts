@@ -88,11 +88,7 @@ export class GithubApiService {
         page: pageNumber,
       })
       .then((res) => res.data);
-
-      
       for (const issu of issuess) {
-
-        
         await this.storeIssuesss(owner, repo, issu, repoId, pageNumber);
       // await this.processIssuesEventTypes(owner, repo, repoId, issu.id, 1);
       }
@@ -101,7 +97,26 @@ export class GithubApiService {
       this.processIssues(owner, repo, repoId, pageNumber + 1);
     }
   }
-
+  
+  private async storeIssuesss(
+    owner: string,
+    repo: string,
+    iss: Issue,
+    repoId: string,
+    pageNumber: number,
+  ) {
+    const issuessEventTypes = await this.octokit.rest.issues //see this later
+      .listEvents({
+        owner: owner,
+        repo: repo,
+        issue_number: iss.id,
+        per_page: 100,
+        page: pageNumber,
+      })
+      .then((res) => res.data); 
+    //await this.dbService.saveIssues(iss, repoId);
+    await this.dbService.saveIssuesWithEvents({ issue: iss,  issueEventTypes: issuessEventTypes}, repoId);
+  }
   // public async storeIssuesEventTypes(repoIdent: RepositoryNameDto) {
   //   this.processIssuesEventTypes(
   //     repoIdent.owner,
@@ -188,25 +203,6 @@ export class GithubApiService {
     return this.dbService.createRepo(repo);
   }
 
-  private async storeIssuesss(
-    owner: string,
-    repo: string,
-    iss: Issue,
-    repoId: string,
-    pageNumber: number,
-  ) {
-    const issuessEventTypes = await this.octokit.rest.issues //see this later
-      .listEvents({
-        owner: owner,
-        repo: repo,
-        issue_number: iss.id,
-        per_page: 100,
-        page: pageNumber,
-      })
-      .then((res) => res.data); 
-    //await this.dbService.saveIssues(iss, repoId);
-    await this.dbService.saveIssuesWithEvents({ issue: iss,  issueEventTypes: issuessEventTypes}, repoId);
-  }
 
   // private async storeIssuesssEventTypes(
   //   owner: string,
