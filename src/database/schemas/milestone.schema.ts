@@ -1,6 +1,4 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-//import { Document } from 'mongoose';
-// import { Creator } from 'src/github-api/model/PullRequest';
 import { Document, Schema as mSchema } from 'mongoose';
 
 @Schema()
@@ -24,7 +22,7 @@ export class Milestone {
   @Prop()
   created_at: string;
   @Prop()
-  updated_at: number;
+  updated_at: string;
   @Prop()
   closed_at: string;
   @Prop()

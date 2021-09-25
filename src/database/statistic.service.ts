@@ -9,11 +9,13 @@ import { RepositoryDocument } from './schemas/repository.schema';
 import { RepositoryFileDocument } from './schemas/repositoryFile.schema';
 import { IssueDocument } from './schemas/issue.schema';
 import { IssueEventTypesDocument } from './schemas/issueEventTypes.schema';
+import { IssueWithEventsDocument } from './schemas/issueWithEvents.schema';
 import { LabelDocument } from './schemas/labels.schema';
 import { AssigneeDocument } from './schemas/assignee.schema';
 import { AssigneesDocument } from './schemas/assignees.schema';
 import { MilestoneDocument } from './schemas/milestone.schema';
 import { Pull_requestDocument } from './schemas/pull_request.schema';
+import { match } from 'assert';
 
 
 @Injectable()
@@ -35,6 +37,8 @@ export class StatisticService {
     private readonly issueModel: Model<IssueDocument>,
     @InjectModel('IssueEventTypes') 
     private readonly issueEventTypesModel: Model<IssueEventTypesDocument>,
+    @InjectModel('IssueWithEvents') 
+    private readonly issueWithEventsModel: Model<IssueWithEventsDocument>,
     @InjectModel('Label') 
     private readonly labelModel: Model<LabelDocument>,
     @InjectModel('Assignee') 
@@ -242,23 +246,30 @@ async sizeOfPullRequest(
     owner: repoIdent.owner,
   };
 
-  const getIssues = {
-    from: 'issues',
-    localField: 'issues',
+  const getIssuesWithEvents = {
+    from: 'issuewithevents',
+    localField: 'issuesWithEvents',
     foreignField: '_id',
-    as: 'expandedIssues',
+    as: 'expandedIssuesWithEvents',
+  };
+
+  const getIssue = {
+    from: 'issues',
+    localField: 'expandedIssuesWithEvents.issue',
+    foreignField: '_id',
+    as: 'expandedIssue',
   };
 
   const getPull_requests = {
     from: 'pull_requests',
-    localField: 'expandedIssues.pull_request',
+    localField: 'expandedIssue.pull_request',
     foreignField: '_id',
     as: 'pullRequestss',
   };
 
   const getAssignees = {
     from: 'assignees',
-    localField: 'expandedIssues.assignee',
+    localField: 'expandedIssue.assignee',
     foreignField: '_id',
     as: 'assigneee',
   };
@@ -266,8 +277,11 @@ async sizeOfPullRequest(
   const res: { _id: string; count: number }[] = await this.repoModel
       .aggregate()
       .match(filter)
-      .unwind('$issues')
-      .lookup(getIssues)
+      .unwind('$issuesWithEvents')
+      .lookup(getIssuesWithEvents)
+      .unwind('$expandedIssuesWithEvents')
+      .lookup(getIssue)
+      .unwind('$expandedIssue')
       .lookup(getPull_requests)
       .unwind('$pullRequestss')
       .lookup(getAssignees)
@@ -276,7 +290,7 @@ async sizeOfPullRequest(
       .match({'assigneee.login' : {$exists: false}}) 
       .exec();
       this.logger.log(`Number of issues with no assignee are ${res.length}.`);
-}
+   }
 
 /**
  * Calculate the number of open tickets
@@ -287,24 +301,31 @@ async sizeOfPullRequest(
       repo: repoIdent.repo,
       owner: repoIdent.owner,
     };
-  
-    const getIssues = {
-      from: 'issues',
-      localField: 'issues',
+
+    const getIssuesWithEvents = {
+      from: 'issuewithevents',
+      localField: 'issuesWithEvents',
       foreignField: '_id',
-      as: 'expandedIssues',
+      as: 'expandedIssuesWithEvents',
+    };
+  
+    const getIssue = {
+      from: 'issues',
+      localField: 'expandedIssuesWithEvents.issue',
+      foreignField: '_id',
+      as: 'expandedIssue',
     };
   
     const getPull_requests = {
       from: 'pull_requests',
-      localField: 'expandedIssues.pull_request',
+      localField: 'expandedIssue.pull_request',
       foreignField: '_id',
       as: 'pullRequestss',
     };
   
     const getAssignees = {
       from: 'assignees',
-      localField: 'expandedIssues.assignee',
+      localField: 'expandedIssue.assignee',
       foreignField: '_id',
       as: 'assigneee',
     };
@@ -312,18 +333,19 @@ async sizeOfPullRequest(
     const res: { _id: string; count: number }[] = await this.repoModel
         .aggregate()
         .match(filter)
-        .unwind('$issues')
-        .lookup(getIssues)
-        .unwind('$expandedIssues')
+        .unwind('$issuesWithEvents')
+        .lookup(getIssuesWithEvents)
+        .unwind('$expandedIssuesWithEvents')
+        .lookup(getIssue)
+        .unwind('$expandedIssue')
         .lookup(getPull_requests)
         .unwind('$pullRequestss')
         .lookup(getAssignees)
         .unwind('$assigneee')
         .match({'pullRequestss.url' : {$exists : false}})
-        .match({ 'expandedIssues.state' : "open"})
+        .match({ 'expandedIssue.state' : "open"})
         .exec();
   this.logger.log(`Number of open issues are ${res.length}.`); 
- // this.logger.log(res[1]);
   }
 
 /**
@@ -338,23 +360,30 @@ async sizeOfPullRequest(
     owner: repoIdent.owner,
   };
 
-  const getIssues = {
-    from: 'issues',
-    localField: 'issues',
+  const getIssuesWithEvents = {
+    from: 'issuewithevents',
+    localField: 'issuesWithEvents',
     foreignField: '_id',
-    as: 'expandedIssues',
+    as: 'expandedIssuesWithEvents',
+  };
+
+  const getIssue = {
+    from: 'issues',
+    localField: 'expandedIssuesWithEvents.issue',
+    foreignField: '_id',
+    as: 'expandedIssue',
   };
 
   const getPull_requests = {
     from: 'pull_requests',
-    localField: 'expandedIssues.pull_request',
+    localField: 'expandedIssue.pull_request',
     foreignField: '_id',
     as: 'pullRequestss',
   };
 
   const getAssignees = {
     from: 'assignees',
-    localField: 'expandedIssues.assignee',
+    localField: 'expandedIssue.assignee',
     foreignField: '_id',
     as: 'assigneee',
   };
@@ -362,17 +391,18 @@ async sizeOfPullRequest(
   const res: { _id: string; count: number }[] = await this.repoModel
       .aggregate()
       .match(filter)
-      .unwind('$issues')
-      .lookup(getIssues)
-      .unwind('$expandedIssues')
+      .unwind('$issuesWithEvents')
+      .lookup(getIssuesWithEvents)
+      .unwind('$expandedIssuesWithEvents')
+      .lookup(getIssue)
+      .unwind('$expandedIssue')
       .lookup(getPull_requests)
       .unwind('$pullRequestss')
       .lookup(getAssignees)
       .unwind('$assigneee')
       .match({'pullRequestss.url' : {$exists : false}})
-      .match({ 'expandedIssues.state' : "closed"})
-//      .addFields({count : {}})
-      .match({'expandedIssues.assignees' : {$exists : false}})
+      .match({ 'expandedIssue.state' : "closed"})
+      .match({'expandedIssue.assignees' : {$exists : false}})
       .exec();
 
     //  this.logger.log(`Closed Tickets with only a single assignee ${res.length}.`); 
@@ -380,214 +410,104 @@ async sizeOfPullRequest(
   const res1: { _id: string; count: number }[] = await this.repoModel
         .aggregate()
         .match(filter)
-        .unwind('$issues')
-        .lookup(getIssues)
-        .unwind('$expandedIssues')
+        .unwind('$issuesWithEvents')
+        .lookup(getIssuesWithEvents)
+        .unwind('$expandedIssuesWithEvents')
+        .lookup(getIssue)
+        .unwind('$expandedIssue')
         .lookup(getPull_requests)
         .unwind('$pullRequestss')
         .lookup(getAssignees)
         .unwind('$assigneee')
         .match({'pullRequestss.url' : {$exists : false}})
-        .match({ 'expandedIssues.state' : "closed"})
-  //      .addFields({count : {}})
-        .match({'expandedIssues.assignees' : {$exists : true}})
-        //.group({'expandedIssues.count1' : {$size : 'expandedIssues.assignees'}})
-      // .group({$cond : { $if : {'expandedIssues.assignees' : {$exists : true}}, $then: {_id : null, totalsize : {$sum : {$size : '$expandedIssues.assignees'}}, numberofticket : { $sum: 1 }} }})
-        .group({_id : null, totalsize : {$sum : {$size : '$expandedIssues.assignees'}}, numberofticket : { $sum: 1 }})
-      // .addFields({count1 : {$add : {$size:'expandedIssues.assignees' }}})
-      // .addFields({count1 : {{$inc : {count1 : {$size : 'expandedIssues.assignees'}}}}})
+        .match({ 'expandedIssue.state' : "closed"})
+        .match({'expandedIssue.assignees' : {$exists : true}})
+        .group({_id : null, totalsize : {$sum : {$size : '$expandedIssue.assignees'}}, numberofticket : { $sum: 1 }})
         .exec();
 
     const totalClosedTickets = res.length + res1[0]["numberofticket"];
     const avg = (res.length + res1[0]["totalsize"])/totalClosedTickets;
     this.logger.log(`Average number of assignee(s) per ticket until the ticket closes are ${avg}.`);
   }
-}
-// const filesChangeCount = diffs.reduce((acc, curr) => {
-//     curr.featFiles.forEach((featFile) => {
-//       if (acc.has(featFile.filename)) {
-//         const counter = acc.get(featFile.filename)! + 1;
-//         acc.set(featFile.filename, counter);
-//       } else {
-//         acc.set(featFile.filename, 1);
-//       }
-//     });
-//     return acc;
-//   }, new Map<string, number>());
 
-//   let averageChanges = 0;
-//   let mostChangedFile: [string, number] = ["empty", 0];
-//   filesChangeCount.forEach((v, k) => {
-//     averageChanges = averageChanges + v;
-//     if (v > mostChangedFile[1]) {
-//       mostChangedFile = [k, v];
-//     }
-//   });
-//   averageChanges = averageChanges / filesChangeCount.size;
-//   const res = diffs.map((diff) => {
-//     return {
-//       ...diff,
-//       percentageChangedFiles:
-//         diff.featFiles.length / diff.mergeTargetFiles.length,
-//     };
-//   });
-// import { Injectable, Logger } from '@nestjs/common';
-// import { InjectModel } from '@nestjs/mongoose';
-// import { Model } from 'mongoose';
-// import { RepositoryIdentifierDto } from 'src/github-api/model/RepositoryIdentifierDto';
-// import { DiffDocument } from './schemas/diff.schema';
-// import { PullRequestDocument } from './schemas/pullRequest.schema';
-// import { PullRequestFileDocument } from './schemas/pullRequestFile.schema';
-// import { RepositoryDocument } from './schemas/repository.schema';
-// import { RepositoryFileDocument } from './schemas/repositoryFile.schema';
-
-// @Injectable()
-// export class StatisticService {
-//   private readonly logger = new Logger(StatisticService.name);
-
-//   constructor(
-//     @InjectModel('Repository')
-//     private readonly repoModel: Model<RepositoryDocument>,
-//     @InjectModel('RepositoryFiles')
-//     private readonly repoFileModel: Model<RepositoryFileDocument>,
-//     @InjectModel('PullRequestFiles')
-//     private readonly pullFileModel: Model<PullRequestFileDocument>,
-//     @InjectModel('PullRequest')
-//     private readonly pullRequestModel: Model<PullRequestDocument>,
-//     @InjectModel('Diff') private readonly diffModel: Model<DiffDocument>,
-//   ) {}
-
-//   /**
-//    *
-//    * @param repoIdent
-//    * @param limit a maximum of 100 files is returned
-//    */
-//   async getMostChangedFiles(
-//     repoIdent: RepositoryIdentifierDto,
-//     userLimit?: number,
-//   ) {
-//     const limit = userLimit ? userLimit : 100;
-//     this.logger.log(
-//       `getting the ${limit} most changed files for ${repoIdent.owner}/${repoIdent.repo}`,
-//     );
-
-    
-//     const filter = {
-//       repo: repoIdent.repo,
-//       owner: repoIdent.owner,
-//     };
-
-    
-
-//     const group = {
-//       _id: null,
-//       count: { $count: {} },
-//     };
-// /**
-//  * //{_id: ObjectId(''), diffs: [ObjectID('')], owner: 'octokit', repo: 'rest.js', __v :0 , 
-//  * expandeddiffs: [{_id : 60ed..., repositoryFiles : , pullRequestFiles}]}
-//  */
-//     const getDiffs = {
-//       from: 'diffs',
-//       localField: 'diffs',
-//       foreignField: '_id',
-//       as: 'expandedDiffs', 
-//     };
-// /**
-//  * {_id: ObjectId(''), diffs: [ObjectID('')], owner: 'octokit', repo: 'rest.js', __v :0 ,
-//  * expandeddiffs: [{_id : 60ed..., repositoryFiles : , pullRequestFiles}],
-//  * pullFiles: [{_id : , sha : , filename, status, additions, deleteyions, changes, bloburl}]}
-//  */
-//     const getPullFiles = {
-//       from: 'pullrequestfiles',
-//       localField: 'expandedDiffs.pullRequestFiles',
-//       foreignField: '_id',
-//       as: 'pullFiles',
-//     };
-//    // const file = ['package.json', 'package-lock.json'];
-
-//     // const filenames = {
-//     //   '$in' : 
-
-//     //   ]
-//     // };
-//     const getFilesNames = {
-//       $and : [{'pullFiles.filename': {$in : ['package.json']}}, {'pullFiles.filename': {$in : ['package-lock.json']}}]
-//     };
-
-//     const res: { _id: string; count: number }[] = await this.repoModel
-//       .aggregate()
-//       .match(filter)
-//       .unwind('$diffs') // {_id: , diffs : object id(), owner: , repo: , _v:  }
-//       .lookup(getDiffs)
-//       .lookup(getPullFiles) 
-//       .match(getFilesNames)
-//       .exec();
-    
-//       this.logger.log(`The files are repeatedly changed together ${res.length} times.`);
-//     }
-//   }
   
+/**
+ * Calculate average time until ticket was assigned
+ * @param repoIdent 
+ */
+ async avgTimeTillTicketWasAssigned(repoIdent: RepositoryNameDto,userLimit?: number){
+  const limit = userLimit ? userLimit : 100;
+
+  const filter = {
+    repo: repoIdent.repo,
+    owner: repoIdent.owner,
+  };
+
+  const getIssuesWithEvents = {
+    from: 'issuewithevents',
+    localField: 'issuesWithEvents',
+    foreignField: '_id',
+    as: 'expandedIssuesWithEvents',
+  };
+
+  const getIssueEventTypes = {
+    from: 'issueeventtypes',
+    localField: 'expandedIssuesWithEvents.issueEventTypes',
+    foreignField: '_id',
+    as: 'expanadedissueEventTypes',
+  };
+
+  const getIssue = {
+    from: 'issues',
+    localField: 'expandedIssuesWithEvents.issue',
+    foreignField: '_id',
+    as: 'expandedIssue',
+  };
+
+  const getPull_requests = {
+    from: 'pull_requests',
+    localField: 'expandedIssue.pull_request',
+    foreignField: '_id',
+    as: 'pullRequestss',
+  };
 
 
-      //.match({'pullFiles.filename': {$and : [{$in : ['package.json']}, {$in : ['package.json']}}}
+  const res: { _id: string; count: number }[] = await this.repoModel
+      .aggregate()
+      .match(filter)
+      .unwind('$issuesWithEvents')
+      .lookup(getIssuesWithEvents)
+      .unwind('$expandedIssuesWithEvents')
+      .lookup(getIssueEventTypes)
+      .unwind('$expanadedissueEventTypes') 
+      .lookup(getIssue)
+      .unwind('$expandedIssue')
+      .lookup(getPull_requests)
+      .unwind('$pullRequestss')
+      .match({'pullRequestss.url' : {$exists : false}})
+      .match({'expanadedissueEventTypes.event' : "labeled"})
+      .addFields({_id: null, issueCreatedAt : {$toDate : '$expandedIssue.created_at'}, issueAssignedAt : {$toDate : '$expanadedissueEventTypes.created_at'}})
+      .addFields({_id: null, subtractedDate: {$subtract : ['$issueAssignedAt', '$issueCreatedAt']}})
+      //we get the subtracted dates till here in milliseconds
+      .group({_id: '$subtractedDate'}) 
+      .group({_id: null, totaltime: {$sum: '$_id'} })
+      .limit(limit)
+      .exec();
 
-      //how are they matching as pullreqest id in diff is 2 and only one ID
-     // .match({'$expandedDiffs.pullRequest' : {$cond : {$if:{'$pullFiles.filename' : {$in : ['package.json', 'package-lock.json']} }}}})
-    //   .unwind('$pullFiles') // {_id: ObjectId(''), diffs: [ObjectID('')], owner: 'octokit', repo: 'rest.js', __v :0 , expandeddiffs: {_id : 60ed..., repositoryFiles : , pullRequestFiles}],pullFiles: {_id : , sha : , filename, status, additions, deleteyions, changes, bloburl}}
-    //   .match({'$pullFiles.filename': {$in : ['package.json', 'package-lock.json']}})
-    //  // .match({$expr : {$and: []}})
-    //   .match({$cond : {$if :{'$pullFiles.filename'}}})
-    //   .group({_id: '$expandedDiffs.pullRequest', unique: {}})
-    //   .group(group)
-    //   .sort({ count: -1 })
-    //   .limit(limit)
+      let time = msToTime(res[0]["totaltime"]);
+      this.logger.log(`Average time until tickets was assigned is ${time}`);
 
-    //  res.forEach(e => {
-    //    this.logger.log(e);
-    //  });
-    // let avg = 0;
-    // res.forEach((e) => {
-    //   this.logger.debug(e);
-    //   avg += e.count;
-    // });
-
-    //this.logger.log(`values of res length ${avg}.`);
-    //avg = avg / res.length;
-    // this.logger.log(
-    //   `Calculation of most changed files for ${repoIdent.owner}/${repoIdent.repo} finished. Retrieved ${res.length} files. Average changes to the first files: ${avg}`,
-    // );
-
-
-  /**
-   * 
-   */
-  
-// const filesChangeCount = diffs.reduce((acc, curr) => {
-//     curr.featFiles.forEach((featFile) => {
-//       if (acc.has(featFile.filename)) {
-//         const counter = acc.get(featFile.filename)! + 1;
-//         acc.set(featFile.filename, counter);
-//       } else {
-//         acc.set(featFile.filename, 1);
-//       }
-//     });
-//     return acc;
-//   }, new Map<string, number>());
-
-//   let averageChanges = 0;
-//   let mostChangedFile: [string, number] = ["empty", 0];
-//   filesChangeCount.forEach((v, k) => {
-//     averageChanges = averageChanges + v;
-//     if (v > mostChangedFile[1]) {
-//       mostChangedFile = [k, v];
-//     }
-//   });
-//   averageChanges = averageChanges / filesChangeCount.size;
-//   const res = diffs.map((diff) => {
-//     return {
-//       ...diff,
-//       percentageChangedFiles:
-//         diff.featFiles.length / diff.mergeTargetFiles.length,
-//     };
-//   });
+      //function to convert ms to hour/minutes/seconds
+      function msToTime(ms) {
+      let seconds, minutes, hours, days ;
+      seconds = (ms / 1000).toFixed(1);
+      minutes = (ms / (1000 * 60)).toFixed(1);
+      hours = (ms / (1000 * 60 * 60)).toFixed(1);
+      days = (ms / (1000 * 60 * 60 * 24)).toFixed(1);
+      if (seconds < 60) return seconds + " Sec";
+      else if (minutes < 60) return minutes + " Min";
+      else if (hours < 24) return hours + " Hrs";
+      else return days + " Days"
+      }
+    }
+  }

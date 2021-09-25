@@ -49,9 +49,4 @@ export class GithubApiController {
   async gatherTickets(@Body() repoIdent: RepositoryNameDto) {
     return this.ghApiService.storeIssues(repoIdent);
   }
-
-  // @Post('issuesEventTypes')
-  // async gatherTicketsEvents(@Body() repoIdent: RepositoryNameDto,) {
-  //   return this.ghApiService.storeIssuesEventTypes(repoIdent);
-  // }
 }

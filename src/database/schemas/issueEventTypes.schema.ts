@@ -6,9 +6,6 @@ import { Document, Schema as mSchema } from 'mongoose';
 @Schema()
 export class IssueEventTypes {
 
-  @Prop({ type: mSchema.Types.ObjectId, ref: 'Assignee' })
-  assignee: Assignee;
-
   @Prop()
   id: number;
 

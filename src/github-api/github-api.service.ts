@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Octokit } from 'octokit';
 import { DatabaseService } from 'src/database/database.service';
-//import { Issue } from 'src/database/schemas/issue.schema';
 import { StatisticService } from 'src/database/statistic.service';
 import {
   PullRequest,
@@ -60,17 +59,16 @@ export class GithubApiService {
   }
 
   public async getStatistics(repoIdent: RepositoryNameDto) {
-    this.statisticService.getMostChangedFiles(repoIdent);
-    this.statisticService.getFilesChangedTogether(repoIdent);
-    this.statisticService.sizeOfPullRequest(repoIdent);
-    this.statisticService.numberOfAssignee(repoIdent);
-    this.statisticService.numberOfOpenTickets(repoIdent);
-    this.statisticService.avgNumberOfAssigneeUntilTicketCloses(repoIdent);
+     this.statisticService.getMostChangedFiles(repoIdent);
+     this.statisticService.getFilesChangedTogether(repoIdent);
+     this.statisticService.sizeOfPullRequest(repoIdent);
+     this.statisticService.numberOfAssignee(repoIdent);
+     this.statisticService.numberOfOpenTickets(repoIdent);
+     this.statisticService.avgNumberOfAssigneeUntilTicketCloses(repoIdent);
+    this.statisticService.avgTimeTillTicketWasAssigned(repoIdent);
   }
 
   public async storeIssues(repoIdent: RepositoryNameDto) {
-    // const repoId =  await this.dbService.getRepoByName(repoIdent.owner, repoIdent.repo);
-    // const issuesss = await this.dbService.saveIssues( issue, repoId)
     this.processIssues(
       repoIdent.owner,
       repoIdent.repo,
@@ -97,7 +95,6 @@ export class GithubApiService {
       .then((res) => res.data);
     for (const issu of issuess) {
       await this.storeIssuesss(owner, repo, issu, repoId, pageNumber);
-      // await this.processIssuesEventTypes(owner, repo, repoId, issu.id, 1);
     }
 
     if (issuess.length == 100) {
@@ -122,48 +119,13 @@ export class GithubApiService {
       })
       .then((res) => res.data);
 
-    //await this.dbService.saveIssues(iss, repoId);
     await this.dbService.saveIssuesWithEvents(
       { issue: iss, issueEventTypes: issuessEventTypes },
       repoId,
     );
   }
-  // public async storeIssuesEventTypes(repoIdent: RepositoryNameDto) {
-  //   this.processIssuesEventTypes(
-  //     repoIdent.owner,
-  //     repoIdent.repo,
-  //     await this.dbService.getRepoByName(repoIdent.owner, repoIdent.repo),
-  //           1,
-  //   );
-  // }
-
-  // private async processIssuesEventTypes(
-  //   owner: string,
-  //   repo: string,
-  //   repoId: string,
-  //   issue_number : number,
-  //   pageNumber: number,
-  // ) {
-  //   const issuessEventTypes = await this.octokit.rest.issues //see this later
-  //     .listEvents({
-  //       owner: owner,
-  //       repo: repo,
-  //       issue_number: issue_number,
-  //       per_page: 100,
-  //       page: pageNumber,
-  //     })
-  //     .then((res) => res.data);
-
-  //     for (const issu of issuessEventTypes) {
-  //       await this.storeIssuesssEventTypes(owner, repo, issu, repoId);
-  //     }
-  //   if (issuessEventTypes.length == 100) {
-  //     this.processIssuesEventTypes(owner, repo, repoId, issue_number, pageNumber + 1);
-  //   }
-  // }
 
   public async storeReleases(repoIdent: RepositoryNameDto) {
-    //  const repoId = await this.dbService.createRepo(repoIdent);
     this.logger.log(
       `querying releases for ${repoIdent.owner}/${repoIdent.repo}`,
     );
@@ -173,7 +135,6 @@ export class GithubApiService {
       await this.dbService.getRepoByName(repoIdent.owner, repoIdent.repo),
       1,
     );
-    //return repoId;
   }
 
   private async processReleases(
@@ -211,16 +172,6 @@ export class GithubApiService {
   public async createRepo(repo: CreateRepositoryDto) {
     return this.dbService.createRepo(repo);
   }
-
-  // private async storeIssuesssEventTypes(
-  //   owner: string,
-  //   repo: string,
-  //   iss: IssueEventTypes,
-  //   repoId: string,
-  // ) {
-
-  //   await this.dbService.saveIssuesEventTypes(iss, repoId);
-  // }
 
   /**
    *
