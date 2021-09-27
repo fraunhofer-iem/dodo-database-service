@@ -14,11 +14,15 @@ export class GithubApiController {
 
   @Post('repo/create')
   async createRepo(@Body() createRepoDto: CreateRepositoryDto) {
-    if (
-      this.validationService.verify(
-        await this.ghApiService.getStatus(createRepoDto),
-      )
-    )
+    this.logger.log(
+      'received create repo request with ' +
+        createRepoDto.owner +
+        ' ' +
+        createRepoDto.repo,
+    );
+    const status = await this.ghApiService.getStatus(createRepoDto);
+    this.logger.log('repo status ' + status);
+    if (this.validationService.verify(status))
       return this.ghApiService.createRepo(createRepoDto);
   }
 

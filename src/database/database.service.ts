@@ -4,7 +4,8 @@ import { Model } from 'mongoose';
 import {
   Diff,
   Releases,
-  IssueWithEvents,
+  Issue,
+  IssueEventTypes,
 } from 'src/github-api/model/PullRequest';
 import { RepositoryNameDto } from 'src/github-api/model/Repository';
 import { DiffDocument } from './schemas/diff.schema';
@@ -156,58 +157,44 @@ export class DatabaseService {
     this.logger.debug('saving diff to database finished');
   }
 
-  async saveIssuesWithEvents(
-    issuesWithEvents: IssueWithEvents,
-    repoId: string,
-  ) {
+  async saveIssue(issue: Issue, repoId: string) {
     this.logger.debug('saving Issues along with its events to database');
     //instantiating for issue
 
     const issueModel = new this.issueModel();
-    this.logger.debug(issuesWithEvents.issue);
-    issueModel.id = issuesWithEvents.issue.id;
-    issueModel.number = issuesWithEvents.issue.number;
+    this.logger.debug(issue);
+    issueModel.id = issue.id;
+    issueModel.number = issue.number;
 
-    issueModel.state = issuesWithEvents.issue.state;
-    issueModel.node_id = issuesWithEvents.issue.node_id;
-    const labelss = await this.labelModel.create(issuesWithEvents.issue.labels);
+    issueModel.state = issue.state;
+    issueModel.node_id = issue.node_id;
+    const labelss = await this.labelModel.create(issue.labels);
     issueModel.label = labelss;
 
-    const assigneee = await this.assigneeModel.create(
-      issuesWithEvents.issue.assignee,
-    );
+    const assigneee = await this.assigneeModel.create(issue.assignee);
     issueModel.assignee = assigneee;
 
-    const assigneees = await this.assigneesModel.create(
-      issuesWithEvents.issue.assignees,
-    );
+    const assigneees = await this.assigneesModel.create(issue.assignees);
     issueModel.assignees = assigneees;
 
-    const milestonee = await this.milestoneModel.create(
-      issuesWithEvents.issue.milestone,
-    );
+    const milestonee = await this.milestoneModel.create(issue.milestone);
     issueModel.milestone = milestonee;
 
     const pull_requestt = await this.pull_requestModel.create(
-      issuesWithEvents.issue.pull_request,
+      issue.pull_request,
     );
     issueModel.pull_request = pull_requestt;
 
-    issueModel.created_at = issuesWithEvents.issue.created_at;
-    issueModel.updated_at = issuesWithEvents.issue.updated_at;
-    issueModel.closed_at = issuesWithEvents.issue.closed_at;
-    issueModel.title = issuesWithEvents.issue.title;
+    issueModel.created_at = issue.created_at;
+    issueModel.updated_at = issue.updated_at;
+    issueModel.closed_at = issue.closed_at;
+    issueModel.title = issue.title;
     const issueModels = await issueModel.save();
+
     const issueWithEventsModel = new this.issueWithEventsModel();
     issueWithEventsModel.issue = issueModels;
 
-    //instantiating for issue Event types
-    this.logger.debug(issuesWithEvents.issueEventTypes);
-    const issueEventTypess = await this.issueEventTypesModel.create(
-      issuesWithEvents.issueEventTypes,
-    );
-
-    issueWithEventsModel.issueEventTypes = issueEventTypess;
+    issueWithEventsModel.issueEventTypes = [];
     const savedIssueWithEvents = await issueWithEventsModel.save();
     await this.repoModel
       .findByIdAndUpdate(repoId, {
@@ -216,6 +203,16 @@ export class DatabaseService {
       .exec();
 
     this.logger.debug('saving issueWithEvents to database finished');
-    return savedIssueWithEvents.save();
+    return savedIssueWithEvents.id;
+  }
+
+  async saveIssueEvent(events: IssueEventTypes[], issueId: string) {
+    const issueEvents = await this.issueEventTypesModel.create(events);
+
+    await this.issueWithEventsModel
+      .findByIdAndUpdate(issueId, {
+        $push: { issueEventTypes: issueEvents },
+      })
+      .exec();
   }
 }
