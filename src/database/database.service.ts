@@ -21,7 +21,6 @@ import { PullRequestFileDocument } from './schemas/pullRequestFile.schema';
 import { RepositoryDocument } from './schemas/repository.schema';
 import { RepositoryFileDocument } from './schemas/repositoryFile.schema';
 import { IssueWithEventsDocument } from './schemas/issueWithEvents.schema';
-import { identity } from 'rxjs';
 
 @Injectable()
 export class DatabaseService {
@@ -98,7 +97,7 @@ export class DatabaseService {
     return repoM._id;
   }
 
-   /**
+  /**
    * function to save releases
    * @param releases
    * @param repoId
@@ -162,55 +161,61 @@ export class DatabaseService {
     repoId: string,
   ) {
     this.logger.debug('saving Issues along with its events to database');
- //instantiating for issue 
+    //instantiating for issue
 
- const issueModel = new this.issueModel(); 
- this.logger.debug(issuesWithEvents.issue);
- issueModel.id = issuesWithEvents.issue.id;
- issueModel.number = issuesWithEvents.issue.number;
+    const issueModel = new this.issueModel();
+    this.logger.debug(issuesWithEvents.issue);
+    issueModel.id = issuesWithEvents.issue.id;
+    issueModel.number = issuesWithEvents.issue.number;
 
- issueModel.state = issuesWithEvents.issue.state;
- issueModel.node_id = issuesWithEvents.issue.node_id;
- const labelss = await this.labelModel.create(issuesWithEvents.issue.labels);
- issueModel.label = labelss;
+    issueModel.state = issuesWithEvents.issue.state;
+    issueModel.node_id = issuesWithEvents.issue.node_id;
+    const labelss = await this.labelModel.create(issuesWithEvents.issue.labels);
+    issueModel.label = labelss;
 
- const assigneee = await this.assigneeModel.create(issuesWithEvents.issue.assignee);
- issueModel.assignee = assigneee;
+    const assigneee = await this.assigneeModel.create(
+      issuesWithEvents.issue.assignee,
+    );
+    issueModel.assignee = assigneee;
 
- const assigneees = await this.assigneesModel.create(issuesWithEvents.issue.assignees);
- issueModel.assignees = assigneees;
+    const assigneees = await this.assigneesModel.create(
+      issuesWithEvents.issue.assignees,
+    );
+    issueModel.assignees = assigneees;
 
- const milestonee = await this.milestoneModel.create(issuesWithEvents.issue.milestone);
- issueModel.milestone = milestonee;
+    const milestonee = await this.milestoneModel.create(
+      issuesWithEvents.issue.milestone,
+    );
+    issueModel.milestone = milestonee;
 
- const pull_requestt = await this.pull_requestModel.create(
-  issuesWithEvents.issue.pull_request,
- );
- issueModel.pull_request = pull_requestt;
+    const pull_requestt = await this.pull_requestModel.create(
+      issuesWithEvents.issue.pull_request,
+    );
+    issueModel.pull_request = pull_requestt;
 
- issueModel.created_at = issuesWithEvents.issue.created_at;
- issueModel.updated_at = issuesWithEvents.issue.updated_at;
- issueModel.closed_at = issuesWithEvents.issue.closed_at;
- issueModel.title = issuesWithEvents.issue.title;
- const issueModels = await issueModel.save();
- const issueWithEventsModel = new this.issueWithEventsModel();
- issueWithEventsModel.issue = issueModels;
+    issueModel.created_at = issuesWithEvents.issue.created_at;
+    issueModel.updated_at = issuesWithEvents.issue.updated_at;
+    issueModel.closed_at = issuesWithEvents.issue.closed_at;
+    issueModel.title = issuesWithEvents.issue.title;
+    const issueModels = await issueModel.save();
+    const issueWithEventsModel = new this.issueWithEventsModel();
+    issueWithEventsModel.issue = issueModels;
 
- //instantiating for issue Event types
- this.logger.debug(issuesWithEvents.issueEventTypes);
- const issueEventTypess = await this.issueEventTypesModel.create(
-  issuesWithEvents.issueEventTypes
- );
+    //instantiating for issue Event types
+    this.logger.debug(issuesWithEvents.issueEventTypes);
+    const issueEventTypess = await this.issueEventTypesModel.create(
+      issuesWithEvents.issueEventTypes,
+    );
 
- issueWithEventsModel.issueEventTypes = issueEventTypess;
-  const savedIssueWithEvents = await issueWithEventsModel.save();
-  await this.repoModel
+    issueWithEventsModel.issueEventTypes = issueEventTypess;
+    const savedIssueWithEvents = await issueWithEventsModel.save();
+    await this.repoModel
       .findByIdAndUpdate(repoId, {
         $push: { issuesWithEvents: [savedIssueWithEvents] },
       })
       .exec();
-  
-  this.logger.debug('saving issueWithEvents to database finished');
-  return savedIssueWithEvents.save();
+
+    this.logger.debug('saving issueWithEvents to database finished');
+    return savedIssueWithEvents.save();
   }
 }

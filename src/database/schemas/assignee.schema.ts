@@ -20,4 +20,3 @@ export class Assignee {
 }
 export type AssigneeDocument = Assignee & Document;
 export const AssigneeSchema = SchemaFactory.createForClass(Assignee);
-

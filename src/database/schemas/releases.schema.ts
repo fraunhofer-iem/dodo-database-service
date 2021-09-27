@@ -1,15 +1,14 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Schema as mSchema } from 'mongoose';
+import { Document } from 'mongoose';
 
 @Schema()
 export class Releases {
-
   @Prop()
   url: string;
 
   @Prop()
   id: number;
-  
+
   @Prop()
   node_id: string;
 

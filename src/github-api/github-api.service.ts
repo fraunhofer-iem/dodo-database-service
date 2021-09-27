@@ -6,8 +6,6 @@ import {
   PullRequest,
   RepositoryFile,
   Issue,
-  IssueEventTypes,
-  IssueWithEvents,
   Releases,
 } from './model/PullRequest';
 import { CreateRepositoryDto, RepositoryNameDto } from './model/Repository';
@@ -59,12 +57,12 @@ export class GithubApiService {
   }
 
   public async getStatistics(repoIdent: RepositoryNameDto) {
-     this.statisticService.getMostChangedFiles(repoIdent);
-     this.statisticService.getFilesChangedTogether(repoIdent);
-     this.statisticService.sizeOfPullRequest(repoIdent);
-     this.statisticService.numberOfAssignee(repoIdent);
-     this.statisticService.numberOfOpenTickets(repoIdent);
-     this.statisticService.avgNumberOfAssigneeUntilTicketCloses(repoIdent);
+    this.statisticService.getMostChangedFiles(repoIdent);
+    this.statisticService.getFilesChangedTogether(repoIdent);
+    this.statisticService.sizeOfPullRequest(repoIdent);
+    this.statisticService.numberOfAssignee(repoIdent);
+    this.statisticService.numberOfOpenTickets(repoIdent);
+    this.statisticService.avgNumberOfAssigneeUntilTicketCloses(repoIdent);
     this.statisticService.avgTimeTillTicketWasAssigned(repoIdent);
   }
 

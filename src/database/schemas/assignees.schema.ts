@@ -17,8 +17,6 @@ export class Assignees {
 
   @Prop()
   site_admin: boolean;
-  
 }
 export type AssigneesDocument = Assignees & Document;
 export const AssigneesSchema = SchemaFactory.createForClass(Assignees);
-

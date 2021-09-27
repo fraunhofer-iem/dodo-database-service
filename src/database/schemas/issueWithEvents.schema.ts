@@ -10,11 +10,9 @@ export class IssueWithEvents {
 
   @Prop([{ type: mSchema.Types.ObjectId, ref: 'IssueEventTypes' }])
   issueEventTypes: IssueEventTypes[];
-
 }
 
 export type IssueWithEventsDocument = IssueWithEvents & Document;
 
-export const IssueWithEventsSchema = SchemaFactory.createForClass(IssueWithEvents);
-
-
+export const IssueWithEventsSchema =
+  SchemaFactory.createForClass(IssueWithEvents);

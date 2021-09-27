@@ -4,13 +4,10 @@ import { Assignee } from './assignee.schema';
 import { Assignees } from './assignees.schema';
 import { Milestone } from './milestone.schema';
 import { Pull_request } from './pull_request.schema';
-import { IssueEventTypes } from './issueEventTypes.schema';
-
 
 import { Document, Schema as mSchema } from 'mongoose';
 @Schema()
 export class Issue {
-
   @Prop([{ type: mSchema.Types.ObjectId, ref: 'Labels' }])
   label: Label[];
 
@@ -31,7 +28,7 @@ export class Issue {
 
   @Prop()
   updated_at: string;
-  
+
   @Prop()
   closed_at: string;
 

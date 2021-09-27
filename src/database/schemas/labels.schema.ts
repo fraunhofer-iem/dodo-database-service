@@ -20,11 +20,9 @@ export class Label {
 
   @Prop()
   default: boolean;
-  
+
   @Prop()
   description: string;
-
 }
 export type LabelDocument = Label & Document;
 export const LabelSchema = SchemaFactory.createForClass(Label);
-

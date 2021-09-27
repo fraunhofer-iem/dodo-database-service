@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Schema as mSchema } from 'mongoose';
+import { Document } from 'mongoose';
 
 @Schema()
 export class Milestone {
@@ -32,4 +32,3 @@ export class Milestone {
 }
 export type MilestoneDocument = Milestone & Document;
 export const MilestoneSchema = SchemaFactory.createForClass(Milestone);
-
