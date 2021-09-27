@@ -19,7 +19,6 @@ export interface Issue {
   assignee: Assignee;
   assignees?: Assignees[];
   milestone: Milestones;
-  pull_request?: Pull_request;
   created_at: string;
   updated_at: string;
   closed_at: string;

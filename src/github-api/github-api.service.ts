@@ -76,16 +76,20 @@ export class GithubApiService {
     repoId: string,
     pageNumber: number,
   ) {
-    const issues = await this.octokit.rest.issues
-      .listForRepo({
-        owner: owner,
-        repo: repo,
-        filter: 'assigned',
-        state: 'all',
-        per_page: 100,
-        page: pageNumber,
-      })
-      .then((res) => res.data);
+    const issues = (
+      await this.octokit.rest.issues
+        .listForRepo({
+          owner: owner,
+          repo: repo,
+          filter: 'assigned',
+          state: 'all',
+          per_page: 100,
+          page: pageNumber,
+        })
+        .then((res) => res.data)
+    ).filter((issue) => {
+      return !('pull_request' in issue);
+    });
     for (const issu of issues) {
       // first store issue
       const issuId = await this.dbService.saveIssue(issu, repoId);

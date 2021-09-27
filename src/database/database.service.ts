@@ -16,7 +16,6 @@ import { LabelDocument } from './schemas/labels.schema';
 import { AssigneeDocument } from './schemas/assignee.schema';
 import { AssigneesDocument } from './schemas/assignees.schema';
 import { MilestoneDocument } from './schemas/milestone.schema';
-import { Pull_requestDocument } from './schemas/pull_request.schema';
 import { PullRequestDocument } from './schemas/pullRequest.schema';
 import { PullRequestFileDocument } from './schemas/pullRequestFile.schema';
 import { RepositoryDocument } from './schemas/repository.schema';
@@ -52,8 +51,6 @@ export class DatabaseService {
     private readonly assigneesModel: Model<AssigneesDocument>,
     @InjectModel('Milestone')
     private readonly milestoneModel: Model<MilestoneDocument>,
-    @InjectModel('Pull_request')
-    private readonly pull_requestModel: Model<Pull_requestDocument>,
     @InjectModel('IssueWithEvents')
     private readonly issueWithEventsModel: Model<IssueWithEventsDocument>,
   ) {}
@@ -179,11 +176,6 @@ export class DatabaseService {
 
     const milestonee = await this.milestoneModel.create(issue.milestone);
     issueModel.milestone = milestonee;
-
-    const pull_requestt = await this.pull_requestModel.create(
-      issue.pull_request,
-    );
-    issueModel.pull_request = pull_requestt;
 
     issueModel.created_at = issue.created_at;
     issueModel.updated_at = issue.updated_at;

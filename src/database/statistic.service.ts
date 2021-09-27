@@ -14,7 +14,6 @@ import { LabelDocument } from './schemas/labels.schema';
 import { AssigneeDocument } from './schemas/assignee.schema';
 import { AssigneesDocument } from './schemas/assignees.schema';
 import { MilestoneDocument } from './schemas/milestone.schema';
-import { Pull_requestDocument } from './schemas/pull_request.schema';
 
 @Injectable()
 export class StatisticService {
@@ -45,8 +44,6 @@ export class StatisticService {
     private readonly assigneesModel: Model<AssigneesDocument>,
     @InjectModel('Milestone')
     private readonly milestoneModel: Model<MilestoneDocument>,
-    @InjectModel('Pull_request')
-    private readonly pull_requestModel: Model<Pull_requestDocument>,
   ) {}
 
   /**
@@ -470,13 +467,6 @@ export class StatisticService {
       as: 'expandedIssue',
     };
 
-    const getPull_requests = {
-      from: 'pull_requests',
-      localField: 'expandedIssue.pull_request',
-      foreignField: '_id',
-      as: 'pullRequestss',
-    };
-
     const res: { _id: string; count: number }[] = await this.repoModel
       .aggregate()
       .match(filter)
@@ -487,9 +477,6 @@ export class StatisticService {
       .unwind('$expanadedissueEventTypes')
       .lookup(getIssue)
       .unwind('$expandedIssue')
-      .lookup(getPull_requests)
-      .unwind('$pullRequestss')
-      .match({ 'pullRequestss.url': { $exists: false } })
       .match({ 'expanadedissueEventTypes.event': 'labeled' })
       .addFields({
         _id: null,

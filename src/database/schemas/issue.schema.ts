@@ -3,7 +3,6 @@ import { Label } from './labels.schema';
 import { Assignee } from './assignee.schema';
 import { Assignees } from './assignees.schema';
 import { Milestone } from './milestone.schema';
-import { Pull_request } from './pull_request.schema';
 
 import { Document, Schema as mSchema } from 'mongoose';
 @Schema()
@@ -19,9 +18,6 @@ export class Issue {
 
   @Prop({ type: mSchema.Types.ObjectId, ref: 'Milestone' })
   milestone: Milestone;
-
-  @Prop({ type: mSchema.Types.ObjectId, ref: 'Pull_request' })
-  pull_request: Pull_request;
 
   @Prop()
   created_at: string;
