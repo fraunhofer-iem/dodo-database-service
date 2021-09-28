@@ -15,10 +15,7 @@ export class GithubApiController {
   @Post('repo/create')
   async createRepo(@Body() createRepoDto: CreateRepositoryDto) {
     this.logger.log(
-      'received create repo request with ' +
-        createRepoDto.owner +
-        ' ' +
-        createRepoDto.repo,
+      `received create repo request with ${createRepoDto.owner} and ${createRepoDto.repo}`,
     );
     const status = await this.ghApiService.getStatus(createRepoDto);
     this.logger.log('repo status ' + status);

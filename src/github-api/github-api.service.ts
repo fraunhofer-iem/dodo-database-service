@@ -167,21 +167,12 @@ export class GithubApiService {
       })
       .then((res) => res.data);
 
-    for (const relea of releases) {
-      await this.storeReleasesss(owner, repo, relea, repoId);
+    for (const release of releases) {
+      await this.dbService.saveReleases(release, repoId);
     }
     if (releases.length == 100) {
       this.processReleases(owner, repo, repoId, pageNumber + 1);
     }
-  }
-
-  private async storeReleasesss(
-    owner: string,
-    repo: string,
-    rele: Releases,
-    repoId: string,
-  ) {
-    await this.dbService.saveReleases(rele, repoId);
   }
 
   public async createRepo(repo: CreateRepositoryDto) {
@@ -295,9 +286,8 @@ export class GithubApiService {
     );
 
     this.logger.log(
-      featFiles.length +
-        ' Files were changed in pull request number ' +
-        pullRequest.number,
+      ` ${featFiles.length} Files were changed in pull request number 
+        ${pullRequest.number}`,
     );
 
     await this.dbService.savePullRequestDiff(repoId, {
@@ -324,11 +314,10 @@ export class GithubApiService {
 
     const files = baseTree.data.tree.filter((v) => v.type == FileType.file);
     this.logger.log(
-      'The tree contains ' +
-        baseTree.data.tree.length +
-        ' from which ' +
-        files.length +
-        ' are files.',
+      `The tree contains 
+        ${baseTree.data.tree.length} 
+        from which ${files.length}
+        are files.`,
     );
     return files;
   }
