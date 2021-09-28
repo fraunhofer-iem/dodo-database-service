@@ -102,6 +102,7 @@ export class StatisticService {
       `Calculation of most changed files for ${repoIdent.owner}/${repoIdent.repo} finished. Retrieved ${res.length} files. Average changes to the first files: ${avg}`,
     );
   }
+
   /**
    * This method gives the count of the filenames that are changed together
    * E.g.
@@ -138,6 +139,10 @@ export class StatisticService {
       as: 'pullFiles',
     };
 
+    // TODO: we need to do this for all files
+    // most likely it would be a good idea to iterate
+    // all diffs once, and create a map/counter of which
+    // files occured together
     //enter file name here
     const file1 = ['package.json'];
     const file2 = ['package-lock.json'];
@@ -168,18 +173,16 @@ export class StatisticService {
    * @param userLimit
    */
   async sizeOfPullRequest(repoIdent: RepositoryNameDto, userLimit?: number) {
-    const limit = userLimit ? userLimit : 100;
-    this.logger.log(
-      `getting the ${limit} most changed files for ${repoIdent.owner}/${repoIdent.repo}`,
-    );
     const filter = {
       repo: repoIdent.repo,
       owner: repoIdent.owner,
     };
 
-    const group = {
-      _id: '$pullFiles.filename',
-      count: { $sum: 1 },
+    const getPullRequest = {
+      from: 'pullrequests',
+      localField: 'expandedDiffs.pullRequest',
+      foreignField: '_id',
+      as: 'expandedPullRequest',
     };
 
     const getDiffs = {
@@ -189,46 +192,39 @@ export class StatisticService {
       as: 'expandedDiffs',
     };
 
-    const getPullRequests = {
-      from: 'pullrequests',
-      localField: 'expandedDiffs.pullRequest',
-      foreignField: '_id',
-      as: 'pullRequests',
-    };
-
-    const getPullRequestNumber = {
-      _id: '$pullRequests.number',
-    };
-
-    const res: { _id: string; count: number }[] = await this.repoModel
+    const res: {
+      _id: string;
+      changedFiles: string[];
+      pullRequestNumber: number;
+    }[] = await this.repoModel
       .aggregate()
       .match(filter)
       .unwind('$diffs')
       .lookup(getDiffs)
-      .lookup(getPullRequests)
-      .group(getPullRequestNumber)
-      .sort({ _id: 1 })
+      .lookup(getPullRequest)
+      .unwind('$expandedDiffs')
+      .unwind('$expandedPullRequest')
+      .project({
+        changedFiles: '$expandedDiffs.pullRequestFiles',
+        pullRequestNumber: '$expandedPullRequest.number',
+      })
+      .sort({ pullRequestNumber: 1 })
       .exec();
 
     const fileNumber = [];
+
     res.forEach((e) => {
-      fileNumber.push(parseInt(e._id));
+      fileNumber.push(e.changedFiles.length);
     });
-    const v1 = fileNumber[0];
-    const v2 = fileNumber[fileNumber.length - 1];
-    const difference = v2 - v1;
 
-    console.log(v1, v2, typeof v2);
-    const percent = (difference / Math.abs(v1)) * 100;
-
-    let change;
-    if (percent < 0) change = 'decrease';
-    else change = 'increase';
-
+    const avg =
+      fileNumber.reduce((acc, curr) => {
+        return acc + curr;
+      }, 0) / fileNumber.length;
+    // TODO: now we have the avg number of changed files as well as all values sorted
+    // after time. We can use this to calculate a deriviation or a trend in the values.
     this.logger.log(
-      `There is a ${percent} % change or ${Math.abs(
-        percent,
-      )} % ${change} in the size of pull requests.`,
+      `In average ${avg} files are changed with each pull request`,
     );
   }
 
