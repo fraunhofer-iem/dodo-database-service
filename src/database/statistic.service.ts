@@ -211,21 +211,39 @@ export class StatisticService {
       .sort({ pullRequestNumber: 1 })
       .exec();
 
-    const fileNumber = [];
+    const numberOfFiles = [];
 
     res.forEach((e) => {
-      fileNumber.push(e.changedFiles.length);
+      numberOfFiles.push(e.changedFiles.length);
     });
 
+    console.log(numberOfFiles);
+    const numberOfElements = numberOfFiles.length;
     const avg =
-      fileNumber.reduce((acc, curr) => {
+      numberOfFiles.reduce((acc, curr) => {
         return acc + curr;
-      }, 0) / fileNumber.length;
+      }, 0) / numberOfElements;
+
     // TODO: now we have the avg number of changed files as well as all values sorted
     // after time. We can use this to calculate a deriviation or a trend in the values.
+    const variance = numberOfFiles.reduce((acc, curr) => {
+      return acc + Math.pow(curr - avg, 2) / numberOfElements;
+    }, 0);
+
+    const standardDeviation = Math.sqrt(variance);
+    this.logger.log(
+      `variance ${variance} standard deviation ${standardDeviation}`,
+    );
     this.logger.log(
       `In average ${avg} files are changed with each pull request`,
     );
+
+    return {
+      numberOfFiles,
+      avg,
+      variance,
+      standardDeviation,
+    };
   }
 
   /**
