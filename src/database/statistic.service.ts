@@ -214,10 +214,12 @@ export class StatisticService {
     const numberOfFiles = [];
 
     res.forEach((e) => {
-      numberOfFiles.push(e.changedFiles.length);
+      // somehow there exist pull requests without changed files. need to investigate
+      if ('changedFiles' in e) {
+        numberOfFiles.push(e.changedFiles.length);
+      }
     });
 
-    console.log(numberOfFiles);
     const numberOfElements = numberOfFiles.length;
     const avg =
       numberOfFiles.reduce((acc, curr) => {
