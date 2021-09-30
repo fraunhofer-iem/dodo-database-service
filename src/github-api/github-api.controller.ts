@@ -14,11 +14,12 @@ export class GithubApiController {
 
   @Post('repo/create')
   async createRepo(@Body() createRepoDto: CreateRepositoryDto) {
-    if (
-      this.validationService.verify(
-        await this.ghApiService.getStatus(createRepoDto),
-      )
-    )
+    this.logger.log(
+      `received create repo request with ${createRepoDto.owner} and ${createRepoDto.repo}`,
+    );
+    const status = await this.ghApiService.getStatus(createRepoDto);
+    this.logger.log('repo status ' + status);
+    if (this.validationService.verify(status))
       return this.ghApiService.createRepo(createRepoDto);
   }
 
@@ -33,6 +34,11 @@ export class GithubApiController {
     // in order to not have polling we can just introduce a websocket here
 
     return this.ghApiService.storePullRequestDiffsForRepo(repoIdent);
+  }
+
+  @Post('releases')
+  async gatherReleases(@Body() repoIdent: RepositoryNameDto) {
+    return this.ghApiService.storeReleases(repoIdent);
   }
 
   @Post('statistics')

@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Octokit } from 'octokit';
 import { DatabaseService } from 'src/database/database.service';
 import { StatisticService } from 'src/database/statistic.service';
-import { PullRequest, RepositoryFile } from './model/PullRequest';
+import { PullRequest, RepositoryFile, Releases } from './model/PullRequest';
 import { CreateRepositoryDto, RepositoryNameDto } from './model/Repository';
 
 export interface Tree {
@@ -52,7 +52,13 @@ export class GithubApiService {
   }
 
   public async getStatistics(repoIdent: RepositoryNameDto) {
-    this.statisticService.getMostChangedFiles(repoIdent);
+    // this.statisticService.getMostChangedFiles(repoIdent);
+    // this.statisticService.getFilesChangedTogether(repoIdent);
+    return this.statisticService.sizeOfPullRequest(repoIdent);
+    // this.statisticService.numberOfAssignee(repoIdent);
+    // this.statisticService.numberOfOpenTickets(repoIdent);
+    // this.statisticService.avgNumberOfAssigneeUntilTicketCloses(repoIdent);
+    // this.statisticService.avgTimeTillTicketWasAssigned(repoIdent);
   }
 
   public async storeIssues(repoIdent: RepositoryNameDto) {
@@ -70,21 +76,102 @@ export class GithubApiService {
     repoId: string,
     pageNumber: number,
   ) {
-    const issues = await this.octokit.rest.issues
-      .listForRepo({
+    const issues = (
+      await this.octokit.rest.issues
+        .listForRepo({
+          owner: owner,
+          repo: repo,
+          filter: 'assigned',
+          state: 'all',
+          per_page: 100,
+          page: pageNumber,
+        })
+        .then((res) => res.data)
+    ).filter((issue) => {
+      return !('pull_request' in issue);
+    });
+    for (const issu of issues) {
+      // first store issue
+      const issuId = await this.dbService.saveIssue(issu, repoId);
+      // then query the event types and store them
+      await this.getAndStoreIssueEventTypes(
+        owner,
+        repo,
+        issu.number,
+        pageNumber,
+        issuId,
+      );
+    }
+
+    if (issues.length == 100) {
+      this.processIssues(owner, repo, repoId, pageNumber + 1);
+    }
+  }
+
+  private async getAndStoreIssueEventTypes(
+    owner: string,
+    repo: string,
+    issueNumber: number,
+    pageNumber: number,
+    issueId: string,
+  ) {
+    const eventTypes = await this.octokit.rest.issues //see this later
+      .listEvents({
         owner: owner,
         repo: repo,
-        filter: 'assigned',
-        state: 'all',
+        issue_number: issueNumber,
         per_page: 100,
         page: pageNumber,
       })
       .then((res) => res.data);
 
-    await this.dbService.saveIssues(issues, repoId);
+    await this.dbService.saveIssueEvent(eventTypes, issueId);
 
-    if (issues.length == 100) {
-      this.processIssues(owner, repo, repoId, pageNumber + 1);
+    if (eventTypes.length == 100) {
+      await this.getAndStoreIssueEventTypes(
+        owner,
+        repo,
+        issueNumber,
+        pageNumber + 1,
+        issueId,
+      );
+    }
+
+    return true;
+  }
+
+  public async storeReleases(repoIdent: RepositoryNameDto) {
+    this.logger.log(
+      `querying releases for ${repoIdent.owner}/${repoIdent.repo}`,
+    );
+    this.processReleases(
+      repoIdent.owner,
+      repoIdent.repo,
+      await this.dbService.getRepoByName(repoIdent.owner, repoIdent.repo),
+      1,
+    );
+  }
+
+  private async processReleases(
+    owner: string,
+    repo: string,
+    repoId: string,
+    pageNumber: number,
+  ) {
+    const releases = await this.octokit.rest.repos
+      .listReleases({
+        owner: owner,
+        repo: repo,
+        per_page: 100,
+        page: pageNumber,
+      })
+      .then((res) => res.data);
+
+    for (const release of releases) {
+      await this.dbService.saveReleases(release, repoId);
+    }
+    if (releases.length == 100) {
+      this.processReleases(owner, repo, repoId, pageNumber + 1);
     }
   }
 
@@ -127,7 +214,11 @@ export class GithubApiService {
         owner: repoIdent.owner,
         repo: repoIdent.repo,
       })
+      .then((r) => {
+        return r.status;
+      })
       .catch((r) => {
+        this.logger.log(r);
         if ('status' in r) {
           return r.status;
         } else {
@@ -195,9 +286,8 @@ export class GithubApiService {
     );
 
     this.logger.log(
-      featFiles.length +
-        ' Files were changed in pull request number ' +
-        pullRequest.number,
+      ` ${featFiles.length} Files were changed in pull request number 
+        ${pullRequest.number}`,
     );
 
     await this.dbService.savePullRequestDiff(repoId, {
@@ -224,11 +314,10 @@ export class GithubApiService {
 
     const files = baseTree.data.tree.filter((v) => v.type == FileType.file);
     this.logger.log(
-      'The tree contains ' +
-        baseTree.data.tree.length +
-        ' from which ' +
-        files.length +
-        ' are files.',
+      `The tree contains 
+        ${baseTree.data.tree.length} 
+        from which ${files.length}
+        are files.`,
     );
     return files;
   }

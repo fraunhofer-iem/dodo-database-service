@@ -1,14 +1,26 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Diff } from 'src/github-api/model/PullRequest';
+import {
+  Diff,
+  Releases,
+  Issue,
+  IssueEventTypes,
+} from 'src/github-api/model/PullRequest';
 import { RepositoryNameDto } from 'src/github-api/model/Repository';
 import { DiffDocument } from './schemas/diff.schema';
 import { IssueDocument } from './schemas/issue.schema';
+import { IssueEventTypesDocument } from './schemas/issueEventTypes.schema';
+import { ReleasesDocument } from './schemas/releases.schema';
+import { LabelDocument } from './schemas/labels.schema';
+import { AssigneeDocument } from './schemas/assignee.schema';
+import { AssigneesDocument } from './schemas/assignees.schema';
+import { MilestoneDocument } from './schemas/milestone.schema';
 import { PullRequestDocument } from './schemas/pullRequest.schema';
 import { PullRequestFileDocument } from './schemas/pullRequestFile.schema';
 import { RepositoryDocument } from './schemas/repository.schema';
 import { RepositoryFileDocument } from './schemas/repositoryFile.schema';
+import { IssueWithEventsDocument } from './schemas/issueWithEvents.schema';
 
 @Injectable()
 export class DatabaseService {
@@ -23,8 +35,24 @@ export class DatabaseService {
     private readonly pullFileModel: Model<PullRequestFileDocument>,
     @InjectModel('PullRequest')
     private readonly pullRequestModel: Model<PullRequestDocument>,
-    @InjectModel('Diff') private readonly diffModel: Model<DiffDocument>,
-    @InjectModel('Issue') private readonly issueModel: Model<IssueDocument>,
+    @InjectModel('Diff')
+    private readonly diffModel: Model<DiffDocument>,
+    @InjectModel('Issue')
+    private readonly issueModel: Model<IssueDocument>,
+    @InjectModel('Releases')
+    private readonly releasesModel: Model<ReleasesDocument>,
+    @InjectModel('IssueEventTypes')
+    private readonly issueEventTypesModel: Model<IssueEventTypesDocument>,
+    @InjectModel('Label')
+    private readonly labelModel: Model<LabelDocument>,
+    @InjectModel('Assignee')
+    private readonly assigneeModel: Model<AssigneeDocument>,
+    @InjectModel('Assignees')
+    private readonly assigneesModel: Model<AssigneesDocument>,
+    @InjectModel('Milestone')
+    private readonly milestoneModel: Model<MilestoneDocument>,
+    @InjectModel('IssueWithEvents')
+    private readonly issueWithEventsModel: Model<IssueWithEventsDocument>,
   ) {}
 
   /**
@@ -35,12 +63,12 @@ export class DatabaseService {
    * @returns id
    */
   async createRepo(repoIdent: RepositoryNameDto): Promise<string> {
-    if (
-      await this.repoModel.exists({
-        repo: repoIdent.repo,
-        owner: repoIdent.owner,
-      })
-    ) {
+    const exists = await this.repoModel.exists({
+      repo: repoIdent.repo,
+      owner: repoIdent.owner,
+    });
+
+    if (exists) {
       const repoM = await this.repoModel
         .findOne({ repo: repoIdent.repo, owner: repoIdent.owner })
         .exec();
@@ -54,7 +82,6 @@ export class DatabaseService {
       const repoInstance = await new this.repoModel({
         owner: repoIdent.owner,
         repo: repoIdent.repo,
-        diffs: [],
       }).save();
 
       this.logger.debug('Instance created ' + repoInstance);
@@ -68,24 +95,35 @@ export class DatabaseService {
     return repoM._id;
   }
 
-  async saveIssues(issues: any[], repoId: string) {
-    const issueModelsPromises = issues.map((issue) => {
-      const issueModel = new this.issueModel();
-      // TODO: map information from issue
-      this.logger.debug(issue);
-      issueModel.issueId = issue.id;
-      issueModel.state = issue.state;
-      issueModel.labels = issue.lables;
-      issueModel.title = issue.title;
-      return issueModel.save();
-    });
-    const issueModels = await Promise.all(issueModelsPromises);
+  /**
+   * function to save releases
+   * @param releases
+   * @param repoId
+   * @returns
+   */
+  async saveReleases(releases: Releases, repoId: string) {
+    this.logger.debug('saving Releases to database');
+    const releasesModel = new this.releasesModel();
+
+    this.logger.debug(releases);
+    releasesModel.url = releases.url;
+    releasesModel.id = releases.id;
+    releasesModel.node_id = releases.node_id;
+    releasesModel.name = releases.name;
+    releasesModel.created_at = releases.created_at;
+    releasesModel.published_at = releases.published_at;
+
+    const releasesModels = await releasesModel.save();
 
     await this.repoModel
       .findByIdAndUpdate(repoId, {
-        $push: { issues: issueModels },
+        $push: { releases: [releasesModels] },
       })
       .exec();
+
+    this.logger.debug('saving releases to database finished');
+
+    return releasesModel.save();
   }
 
   async savePullRequestDiff(repoId: string, pullRequestDiff: Diff) {
@@ -114,5 +152,59 @@ export class DatabaseService {
       })
       .exec();
     this.logger.debug('saving diff to database finished');
+  }
+
+  async saveIssue(issue: Issue, repoId: string) {
+    this.logger.debug('saving Issues along with its events to database');
+    //instantiating for issue
+
+    const issueModel = new this.issueModel();
+    this.logger.debug(issue);
+    issueModel.id = issue.id;
+    issueModel.number = issue.number;
+
+    issueModel.state = issue.state;
+    issueModel.node_id = issue.node_id;
+    const labelss = await this.labelModel.create(issue.labels);
+    issueModel.label = labelss;
+
+    const assigneee = await this.assigneeModel.create(issue.assignee);
+    issueModel.assignee = assigneee;
+
+    const assigneees = await this.assigneesModel.create(issue.assignees);
+    issueModel.assignees = assigneees;
+
+    const milestonee = await this.milestoneModel.create(issue.milestone);
+    issueModel.milestone = milestonee;
+
+    issueModel.created_at = issue.created_at;
+    issueModel.updated_at = issue.updated_at;
+    issueModel.closed_at = issue.closed_at;
+    issueModel.title = issue.title;
+    const issueModels = await issueModel.save();
+
+    const issueWithEventsModel = new this.issueWithEventsModel();
+    issueWithEventsModel.issue = issueModels;
+
+    issueWithEventsModel.issueEventTypes = [];
+    const savedIssueWithEvents = await issueWithEventsModel.save();
+    await this.repoModel
+      .findByIdAndUpdate(repoId, {
+        $push: { issuesWithEvents: [savedIssueWithEvents] },
+      })
+      .exec();
+
+    this.logger.debug('saving issueWithEvents to database finished');
+    return savedIssueWithEvents.id;
+  }
+
+  async saveIssueEvent(events: IssueEventTypes[], issueId: string) {
+    const issueEvents = await this.issueEventTypesModel.create(events);
+
+    await this.issueWithEventsModel
+      .findByIdAndUpdate(issueId, {
+        $push: { issueEventTypes: issueEvents },
+      })
+      .exec();
   }
 }
