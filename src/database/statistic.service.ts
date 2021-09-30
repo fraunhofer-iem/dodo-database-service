@@ -93,7 +93,6 @@ export class StatisticService {
       .exec();
     let avg = 0;
     res.forEach((e) => {
-      // this.logger.debug(e);
       avg += e.count;
     });
 
@@ -101,6 +100,8 @@ export class StatisticService {
     this.logger.log(
       `Calculation of most changed files for ${repoIdent.owner}/${repoIdent.repo} finished. Retrieved ${res.length} files. Average changes to the first files: ${avg}`,
     );
+
+    return avg;
   }
 
   /**
@@ -192,6 +193,8 @@ export class StatisticService {
       as: 'expandedDiffs',
     };
 
+    // we query the ids of the changed files (this is enough, because we just want to count the number)
+    // as well as the pull request number to sort the files and label them in the visualization
     const res: {
       _id: string;
       changedFiles: string[];
@@ -211,21 +214,39 @@ export class StatisticService {
       .sort({ pullRequestNumber: 1 })
       .exec();
 
-    const fileNumber = [];
+    const numberOfFiles = [];
 
     res.forEach((e) => {
-      fileNumber.push(e.changedFiles.length);
+      // somehow there exist pull requests without changed files. need to investigate
+      if ('changedFiles' in e) {
+        numberOfFiles.push(e.changedFiles.length);
+      }
     });
 
+    const numberOfElements = numberOfFiles.length;
     const avg =
-      fileNumber.reduce((acc, curr) => {
+      numberOfFiles.reduce((acc, curr) => {
         return acc + curr;
-      }, 0) / fileNumber.length;
-    // TODO: now we have the avg number of changed files as well as all values sorted
-    // after time. We can use this to calculate a deriviation or a trend in the values.
+      }, 0) / numberOfElements;
+
+    const variance = numberOfFiles.reduce((acc, curr) => {
+      return acc + Math.pow(curr - avg, 2) / numberOfElements;
+    }, 0);
+
+    const standardDeviation = Math.sqrt(variance);
+    this.logger.log(
+      `variance ${variance} standard deviation ${standardDeviation}`,
+    );
     this.logger.log(
       `In average ${avg} files are changed with each pull request`,
     );
+
+    return {
+      numberOfFiles,
+      avg,
+      variance,
+      standardDeviation,
+    };
   }
 
   /**
@@ -251,13 +272,6 @@ export class StatisticService {
       as: 'expandedIssue',
     };
 
-    const getPull_requests = {
-      from: 'pull_requests',
-      localField: 'expandedIssue.pull_request',
-      foreignField: '_id',
-      as: 'pullRequestss',
-    };
-
     const getAssignees = {
       from: 'assignees',
       localField: 'expandedIssue.assignee',
@@ -273,13 +287,11 @@ export class StatisticService {
       .unwind('$expandedIssuesWithEvents')
       .lookup(getIssue)
       .unwind('$expandedIssue')
-      .lookup(getPull_requests)
-      .unwind('$pullRequestss')
       .lookup(getAssignees)
       .unwind('$assigneee')
-      .match({ 'pullRequestss.url': { $exists: false } })
       .match({ 'assigneee.login': { $exists: false } })
       .exec();
+
     this.logger.log(`Number of issues with no assignee are ${res.length}.`);
   }
 
@@ -307,20 +319,6 @@ export class StatisticService {
       as: 'expandedIssue',
     };
 
-    const getPull_requests = {
-      from: 'pull_requests',
-      localField: 'expandedIssue.pull_request',
-      foreignField: '_id',
-      as: 'pullRequestss',
-    };
-
-    const getAssignees = {
-      from: 'assignees',
-      localField: 'expandedIssue.assignee',
-      foreignField: '_id',
-      as: 'assigneee',
-    };
-
     const res: { _id: string; count: number }[] = await this.repoModel
       .aggregate()
       .match(filter)
@@ -329,11 +327,6 @@ export class StatisticService {
       .unwind('$expandedIssuesWithEvents')
       .lookup(getIssue)
       .unwind('$expandedIssue')
-      .lookup(getPull_requests)
-      .unwind('$pullRequestss')
-      .lookup(getAssignees)
-      .unwind('$assigneee')
-      .match({ 'pullRequestss.url': { $exists: false } })
       .match({ 'expandedIssue.state': 'open' })
       .exec();
     this.logger.log(`Number of open issues are ${res.length}.`);
@@ -365,13 +358,6 @@ export class StatisticService {
       as: 'expandedIssue',
     };
 
-    const getPull_requests = {
-      from: 'pull_requests',
-      localField: 'expandedIssue.pull_request',
-      foreignField: '_id',
-      as: 'pullRequestss',
-    };
-
     const getAssignees = {
       from: 'assignees',
       localField: 'expandedIssue.assignee',
@@ -387,11 +373,8 @@ export class StatisticService {
       .unwind('$expandedIssuesWithEvents')
       .lookup(getIssue)
       .unwind('$expandedIssue')
-      .lookup(getPull_requests)
-      .unwind('$pullRequestss')
       .lookup(getAssignees)
       .unwind('$assigneee')
-      .match({ 'pullRequestss.url': { $exists: false } })
       .match({ 'expandedIssue.state': 'closed' })
       .match({ 'expandedIssue.assignees': { $exists: false } })
       .exec();
@@ -406,11 +389,8 @@ export class StatisticService {
       .unwind('$expandedIssuesWithEvents')
       .lookup(getIssue)
       .unwind('$expandedIssue')
-      .lookup(getPull_requests)
-      .unwind('$pullRequestss')
       .lookup(getAssignees)
       .unwind('$assigneee')
-      .match({ 'pullRequestss.url': { $exists: false } })
       .match({ 'expandedIssue.state': 'closed' })
       .match({ 'expandedIssue.assignees': { $exists: true } })
       .group({
@@ -473,7 +453,7 @@ export class StatisticService {
       .unwind('$expanadedissueEventTypes')
       .lookup(getIssue)
       .unwind('$expandedIssue')
-      .match({ 'expanadedissueEventTypes.event': 'labeled' })
+      .match({ 'expanadedissueEventTypes.event': 'assigned' }) // this should be assigned event instead of labeld right?
       .addFields({
         _id: null,
         issueCreatedAt: { $toDate: '$expandedIssue.created_at' },
@@ -485,15 +465,15 @@ export class StatisticService {
       })
       //we get the subtracted dates till here in milliseconds
       .group({ _id: '$subtractedDate' })
-      .group({ _id: null, totaltime: { $sum: '$_id' } })
+      .group({ _id: null, totaltime: { $sum: '$_id' } }) // we need to average this else we will only have the sum?
       .limit(limit)
       .exec();
-
+    console.log(res[0]['totaltime']);
     const time = msToTime(res[0]['totaltime']);
     this.logger.log(`Average time until tickets was assigned is ${time}`);
 
     //function to convert ms to hour/minutes/seconds
-    function msToTime(ms) {
+    function msToTime(ms: number) {
       let seconds, minutes, hours, days;
       seconds = (ms / 1000).toFixed(1);
       minutes = (ms / (1000 * 60)).toFixed(1);
