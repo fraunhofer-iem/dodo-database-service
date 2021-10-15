@@ -485,4 +485,80 @@ export class StatisticService {
       else return days + ' Days';
     }
   }
+
+  /**
+   * to Calculate work in progress.
+   * Tickets are assigned to someone and then we count the number of releases
+   * that have been made while the ticket was open
+   * i.e., (Average) number of releases until we close the ticket.
+   * Only tickets which are 'assigned' and tickets whose 'closed_at' key is not null
+   * is taken into account.
+   * @param repoIdent 
+   * @param userLimit 
+   */
+   async workInProgress(
+    repoIdent: RepositoryNameDto,
+    userLimit?: number,
+  ) {
+    const limit = userLimit ? userLimit : 100;
+
+    const filter = {
+      repo: repoIdent.repo,
+      owner: repoIdent.owner,
+    };
+
+    const getIssuesWithEvents = {
+      from: 'issuewithevents',
+      localField: 'issuesWithEvents',
+      foreignField: '_id',
+      as: 'expandedIssuesWithEvents',
+    };
+
+    const getIssueEventTypes = {
+      from: 'issueeventtypes',
+      localField: 'expandedIssuesWithEvents.issueEventTypes',
+      foreignField: '_id',
+      as: 'expandedissueEventTypes',
+    };
+
+    const getIssue = {
+      from: 'issues',
+      localField: 'expandedIssuesWithEvents.issue',
+      foreignField: '_id',
+      as: 'expandedIssue',
+    };
+
+    const getReleases = {
+      from: 'releases',
+      localField: 'releases',
+      foreignField: '_id',
+      as: 'expandedReleases',
+    };
+
+    const res: { _id: string; count: number }[] = await this.repoModel
+      .aggregate()
+      .match(filter)
+      .unwind('$issuesWithEvents')
+      .lookup(getIssuesWithEvents)
+      .unwind('$expandedIssuesWithEvents')
+      .lookup(getIssueEventTypes)
+      .unwind('$expandedissueEventTypes')
+      .lookup(getIssue)
+      .unwind('$expandedIssue')
+      .unwind('$releases')
+      .lookup(getReleases)
+      .unwind('$expandedReleases')
+      .match({'expandedissueEventTypes.event': 'assigned'}) 
+      .match({'expandedIssue.closed_at': { $exists: true, $ne : null } })
+      .project({
+        Release_published_at_Time: {$toDate: '$expandedReleases.published_at'},
+        Issue_updated_at_Time: {$toDate: '$expandedIssue.created_at'},
+        Issue_closed_at_Time: {$toDate: '$expandedIssue.closed_at'},
+      })
+      .match({'Release_published_at_Time':
+       {$gte: new Date("Issue_updated_at_Time"),
+       $lt: new Date("Issue_closed_at_Time")}})
+      .exec();
+     console.log(res);
+  }
 }
