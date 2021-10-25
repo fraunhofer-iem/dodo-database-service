@@ -15,6 +15,7 @@ import { RepositorySchema } from './schemas/repository.schema';
 import { RepositoryFileSchema } from './schemas/repositoryFile.schema';
 import { IssueWithEventsSchema } from './schemas/issueWithEvents.schema';
 import { StatisticService } from './statistic.service';
+import { LanguageSchema } from './schemas/language.schema';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { StatisticService } from './statistic.service';
       { name: 'Assignees', schema: AssigneesSchema },
       { name: 'Milestone', schema: MilestoneSchema },
       { name: 'IssueWithEvents', schema: IssueWithEventsSchema },
+      { name: 'Languages', schema: LanguageSchema}
     ]),
   ],
   providers: [DatabaseService, StatisticService],

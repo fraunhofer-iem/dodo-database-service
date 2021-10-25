@@ -321,4 +321,19 @@ export class GithubApiService {
     );
     return files;
   }
+
+  public async storeLanguages(repoIdent: RepositoryNameDto) {
+    this.logger.log(
+      `querying languages for ${repoIdent.owner}/${repoIdent.repo}`,
+    );
+    const languages = await this.octokit.rest.repos
+    .listLanguages({
+      owner: repoIdent.owner,
+      repo: repoIdent.repo
+    })
+    .then((res) => res.data); // what is the syntax and meaning of this?
+    return await this.dbService.saveLanguages(repoIdent, languages);
+    // await necassary for return value on request console. Why?
+  }
+
 }

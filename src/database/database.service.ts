@@ -6,6 +6,7 @@ import {
   Releases,
   Issue,
   IssueEventTypes,
+  Language
 } from 'src/github-api/model/PullRequest';
 import { RepositoryNameDto } from 'src/github-api/model/Repository';
 import { DiffDocument } from './schemas/diff.schema';
@@ -21,6 +22,7 @@ import { PullRequestFileDocument } from './schemas/pullRequestFile.schema';
 import { RepositoryDocument } from './schemas/repository.schema';
 import { RepositoryFileDocument } from './schemas/repositoryFile.schema';
 import { IssueWithEventsDocument } from './schemas/issueWithEvents.schema';
+import { LanguageDocument } from './schemas/language.schema';
 
 @Injectable()
 export class DatabaseService {
@@ -53,6 +55,8 @@ export class DatabaseService {
     private readonly milestoneModel: Model<MilestoneDocument>,
     @InjectModel('IssueWithEvents')
     private readonly issueWithEventsModel: Model<IssueWithEventsDocument>,
+    @InjectModel('Languages') 
+    private readonly languageModel: Model<LanguageDocument> 
   ) {}
 
   /**
@@ -206,5 +210,35 @@ export class DatabaseService {
         $push: { issueEventTypes: issueEvents },
       })
       .exec();
+  }
+
+  async saveLanguages(repoIdent: RepositoryNameDto, languages: Language): Promise<Language> {
+    const exists = await this.repoModel.exists({
+      repo: repoIdent.repo,
+      owner: repoIdent.owner
+    });
+    if (exists) {
+      const repoM = await this.repoModel
+        .findOne({ repo: repoIdent.repo, owner: repoIdent.owner })
+        .exec();
+      const languageModel = new this.languageModel();
+      const entryExists = await this.languageModel.exists({
+        repo: repoM._id
+      });
+      if (entryExists) {
+        this.logger.debug(`languages entry for ${repoIdent.owner}/${repoIdent.repo} already exists`)
+        return languages;
+      }
+      this.logger.debug(`saving programming languages from ${repoIdent.owner}/${repoIdent.repo} to database...`);
+      languageModel.repo = repoM._id;
+      languageModel.languages = languages;
+      await languageModel.save();
+      this.logger.debug(`stored programming languages from ${repoIdent.owner}/${repoIdent.repo} successful`);
+    }
+    else {
+      await this.createRepo(repoIdent)
+      this.saveLanguages(repoIdent, languages)
+    }
+    return languages;
   }
 }
