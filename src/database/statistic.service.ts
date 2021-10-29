@@ -88,9 +88,14 @@ export class StatisticService {
       .lookup(getPullFiles)
       .unwind('$pullFiles')
       .group(group)
-      .sort({ count: -1 })
+      .sort({ count: -1 }) //sort reverted
       .limit(limit)
       .exec();
+    console.log(res)
+    this.logger.log(typeof(res))
+    res.forEach(element => {
+      this.logger.debug(element._id, element.count)
+    });
     let avg = 0;
     res.forEach((e) => {
       avg += e.count;
@@ -213,7 +218,10 @@ export class StatisticService {
       })
       .sort({ pullRequestNumber: 1 })
       .exec();
-
+    
+    res.forEach(element => {
+      console.log(element._id, element.changedFiles, element.pullRequestNumber)
+    });
     const numberOfFiles = [];
 
     res.forEach((e) => {
@@ -222,8 +230,11 @@ export class StatisticService {
         numberOfFiles.push(e.changedFiles.length);
       }
     });
+    
 
     const numberOfElements = numberOfFiles.length;
+    console.log(numberOfFiles)
+    console.log(numberOfElements)
     const avg =
       numberOfFiles.reduce((acc, curr) => {
         return acc + curr;
@@ -498,9 +509,10 @@ export class StatisticService {
    */
    async workInProgress(
     repoIdent: RepositoryNameDto,
-    userLimit?: number,
-  ) {
+    userLimit?: number
+    ) {
     const limit = userLimit ? userLimit : 100;
+    // Condition ? True : False
 
     const filter = {
       repo: repoIdent.repo,
@@ -508,9 +520,9 @@ export class StatisticService {
     };
 
     const getIssuesWithEvents = {
-      from: 'issuewithevents',
-      localField: 'issuesWithEvents',
-      foreignField: '_id',
+      from: 'issuewithevents', // why lowercase?
+      localField: 'issuesWithEvents', // have to match
+      foreignField: '_id', // have to match
       as: 'expandedIssuesWithEvents',
     };
 
@@ -534,8 +546,78 @@ export class StatisticService {
       foreignField: '_id',
       as: 'expandedReleases',
     };
+    
+    // get all issues with object id, creation and closing date
+    const issues = await this.repoModel
+      .aggregate()
+      .match(filter)
+      .unwind('$issuesWithEvents')
+      .lookup(getIssuesWithEvents)
+      .unwind('$expandedIssuesWithEvents')
+      .lookup(getIssue)
+      .unwind('$expandedIssue')
+      .group({_id: '$expandedIssue'})
+      .match({
+        '_id.assignee': {$nin: [null]},
+        '_id.closed_at': {$nin: [null]}
+        }) // ignore all issues without assignee or closing date
+      .group({_id: {'_id': '$_id._id',
+                    'created_at': '$_id.created_at',
+                    'closed_at': '$_id.closed_at'}
+            }) // group by created_at and closed_at
+      .sort({'_id.created_at': 1}) // sort by created_at
+      .exec();
+    
+    console.log(issues)
+    console.log(issues.length)  
+    
+    // get all releases sorted ascending
+    const releases: {_id: string}[] = await this.repoModel
+      .aggregate()
+      .match(filter)
+      .unwind('$releases')
+      .lookup(getReleases)
+      .unwind('$expandedReleases')
+      .group({_id: '$expandedReleases'})
+      .group({_id: '$_id.published_at'})
+      .sort({_id: 1})
 
-    const res: { _id: string; count: number }[] = await this.repoModel
+    console.log(releases)
+    console.log(releases.length)
+    
+    let releasesPerIssues = [] 
+    // store all releases per issue which were released
+    // between opening and closing date
+    for (const issue of issues) {
+      let opening = new Date(issue._id.created_at)
+      let closing = new Date(issue._id.closed_at)
+      let amount = 0
+      for (const release of releases) {
+        let releasing = new Date(release._id)
+        if (opening < releasing && releasing < closing) {
+          amount += 1
+        }
+        else if (releasing > closing) {
+          releasesPerIssues.push(amount)
+          break
+        }
+      }
+    }
+
+    console.log(releasesPerIssues)        
+
+    const avg =  releasesPerIssues.reduce(
+      (prevVal, currVal) => prevVal+currVal)/issues.length
+
+    this.logger.log(`avg number of releases per closed issue is ${avg}`)
+
+    return avg;
+
+    /**
+     * old pipeline
+     */
+
+    const res:{ _id: string; count: number }[] = await this.repoModel
       .aggregate()
       .match(filter)
       .unwind('$issuesWithEvents')
@@ -559,6 +641,32 @@ export class StatisticService {
        {$gte: new Date("Issue_updated_at_Time"),
        $lt: new Date("Issue_closed_at_Time")}})
       .exec();
-     console.log(res);
+
+    // just ignore that, learning the syntax
+
+    // console.log(res._id)
+    // console.log(res.count)
+    // console.log(res.length)
+    // console.log(res[0].releases)
+    // console.log(Array.isArray(res))
+    // console.log(issuesOpening)
+    // console.log(issuesOpening.length)
+    // res.forEach(element => {
+    //   console.log(element._id)
+    // });
+    // let arr = ["a", "b", "c"]
+    // let arr2 = ["x", "y", "z"]
+    // let res2 = []
+    // const tryout = {pro1: String, prop2: Number};
+    // console.log(tryout)
+    // let j = 0
+    // for(let i of arr) {
+    //   var item = {};
+    //   item[i] = arr2[j]
+    //   res2.push(item);
+    //   j += 1;
+    // }
+    // console.log(tryout.pro1)
+    // console.log(res2)
   }
 }
