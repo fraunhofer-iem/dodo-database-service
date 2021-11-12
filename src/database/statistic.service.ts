@@ -93,14 +93,14 @@ export class StatisticService {
       .exec();
     console.log(res)
     this.logger.log(typeof(res))
-    res.forEach(element => {
-      this.logger.debug(element._id, element.count)
-    });
+    // res.forEach(element => {
+    //   this.logger.debug(element._id, element.count)
+    // });
     let avg = 0;
     res.forEach((e) => {
       avg += e.count;
     });
-
+    console.log(avg)
     avg = avg / res.length;
     this.logger.log(
       `Calculation of most changed files for ${repoIdent.owner}/${repoIdent.repo} finished. Retrieved ${res.length} files. Average changes to the first files: ${avg}`,
@@ -171,6 +171,7 @@ export class StatisticService {
     this.logger.log(
       `The files ${file1} & ${file2} are repeatedly changed together ${res.length} times.`,
     );
+    return res.length
   }
 
   /**
@@ -304,6 +305,7 @@ export class StatisticService {
       .exec();
 
     this.logger.log(`Number of issues with no assignee are ${res.length}.`);
+    return res.length
   }
 
   /**
@@ -341,6 +343,7 @@ export class StatisticService {
       .match({ 'expandedIssue.state': 'open' })
       .exec();
     this.logger.log(`Number of open issues are ${res.length}.`);
+    return res.length
   }
 
   /**
@@ -416,6 +419,7 @@ export class StatisticService {
     this.logger.log(
       `Average number of assignee(s) per ticket until the ticket closes are ${avg}.`,
     );
+    return avg
   }
 
   /**
@@ -561,9 +565,11 @@ export class StatisticService {
         '_id.assignee': {$nin: [null]},
         '_id.closed_at': {$nin: [null]}
         }) // ignore all issues without assignee or closing date
-      .group({_id: {'_id': '$_id._id',
+      .group({_id: {'_id': '$_id.id',
                     'created_at': '$_id.created_at',
-                    'closed_at': '$_id.closed_at'}
+                    'closed_at': '$_id.closed_at',
+                    'assignee': '$_id.assignee'
+                  }
             }) // group by created_at and closed_at
       .sort({'_id.created_at': 1}) // sort by created_at
       .exec();
