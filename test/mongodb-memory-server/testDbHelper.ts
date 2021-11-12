@@ -18,9 +18,9 @@ export class TestDbHelper {
         return this.uri
     }
 
-    stop() {
-        this.con.close();
-        return this.mongoServer.stop();
+    async stop() {
+        await this.con.close();
+        return await this.mongoServer.stop();
     }
 
     async cleanup() {

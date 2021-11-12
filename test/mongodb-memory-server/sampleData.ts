@@ -1,6 +1,6 @@
-import { RepositoryDto, CreateRepositoryDto, RepositoryNameDto } from "src/github-api/model/Repository"
+import { RepositoryDto, CreateRepositoryDto, RepositoryNameDto } from "../../src/github-api/model/Repository"
 import { Diff, PullRequest, RepositoryFile, PullRequestFile, Releases, Issue, IssueEventTypes, IssueWithEvents, Labels, Assignee, Assignees, Milestones } from "src/github-api/model/PullRequest"
-import { Label } from "src/database/schemas/labels.schema"
+import { Label } from "../../src/database/schemas/labels.schema"
 
 
 export class TestData {
@@ -33,12 +33,13 @@ export class TestData {
     getRepoDto2(): RepositoryDto {
         const repo = new RepositoryDto
         repo.owner = "octkit"
-        repo.repo = "rest.js"
+        repo.repo = "action.js"
         return repo
     }
 
     // diffs for 2 pull requests for test repo no. 1
     // same files changed: package-lock.json (2x)
+    // package.json, package-lock.json are changed together in one PR
     // pull request 1: 3 changed files
     // pull request 2: 2 changed files
     getDiffs1(): Diff[] {
@@ -191,10 +192,13 @@ export class TestData {
     // same files changed: .github/workflows/release.yml (2x)
     // same files changed: package-lock.json (3x)
     // same files changed: src/index.ts (2x)
+    // unique file change: README.md (1x)
+    // unique file change: test/smoke.test.ts (1x)
     // pull request 1: 4 changed files
     // pull request 2: 2 changed files
     // pull request 3: 3 changed files
-    // 7 different files, 12 times changed => 12/7 = 1.714285714
+    // 9 file changes in PRs at all, thereof are 5 files unique
+    // => 9/5 = 1.8 => 5 files are changed in avg 1.8 times!
     getDiffs2(): Diff[] {
         // first pull request
         const pullReq1: PullRequest = {
@@ -475,7 +479,7 @@ export class TestData {
             node_id: 'RE_kwDOFWkwyc4C_C1V',
             name: 'v18.11.0',
             created_at: '2021-09-22T18:33:24Z',
-            published_at: '2021-09-22T18:35:00Z',
+            published_at: '2021-10-01T08:35:00Z',
         }
         const releases: Releases[] = [
             release1, release2, release3, release4, release5, release6
@@ -547,7 +551,7 @@ export class TestData {
                 closed_at: "2013-02-12T13:22:01Z",
                 due_on: "2012-10-09T23:39:01Z"
             },
-            created_at: '2021-09-30T07:49:07Z',
+            created_at: '2021-09-15T07:49:07Z',
             updated_at: '2021-10-01T16:26:19Z',
             closed_at: '2021-10-01T09:00:26Z',
             title: 'Getting Error: Empty value for parameter \'tag\': undefined',
