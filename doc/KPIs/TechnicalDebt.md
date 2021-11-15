@@ -1,5 +1,6 @@
 # Technical Debt
 
+## Description
 ## Related Data
 * [Coupling of Components](CouplingOfComponents.md) we assume this value to increase over time.
 * [Time Idea to Market](TimeIdeaToMarket.md) the time idea to market is expected to increase over time.
