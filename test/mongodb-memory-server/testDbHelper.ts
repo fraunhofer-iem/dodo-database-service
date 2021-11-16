@@ -1,8 +1,10 @@
 import { MongoClient } from "mongodb";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import { Db } from "mongodb";
-import { Mongoose } from "mongoose";
 
+/**
+ * In-memory-db setup with start, stop & cleanup to use in the tests
+ */
 export class TestDbHelper {
 
     mongoServer: MongoMemoryServer;
