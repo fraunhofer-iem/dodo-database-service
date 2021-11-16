@@ -91,16 +91,11 @@ export class StatisticService {
       .sort({ count: -1 }) //sort reverted
       .limit(limit)
       .exec();
-    console.log(res)
-    this.logger.log(typeof(res))
-    // res.forEach(element => {
-    //   this.logger.debug(element._id, element.count)
-    // });
+
     let avg = 0;
     res.forEach((e) => {
       avg += e.count;
     });
-    console.log(avg)
     avg = avg / res.length;
     this.logger.log(
       `Calculation of most changed files for ${repoIdent.owner}/${repoIdent.repo} finished. Retrieved ${res.length} files. Average changes to the first files: ${avg}`,
@@ -220,9 +215,6 @@ export class StatisticService {
       .sort({ pullRequestNumber: 1 })
       .exec();
     
-    res.forEach(element => {
-      console.log(element._id, element.changedFiles, element.pullRequestNumber)
-    });
     const numberOfFiles = [];
 
     res.forEach((e) => {
@@ -234,8 +226,6 @@ export class StatisticService {
     
 
     const numberOfElements = numberOfFiles.length;
-    console.log(numberOfFiles)
-    console.log(numberOfElements)
     const avg =
       numberOfFiles.reduce((acc, curr) => {
         return acc + curr;
@@ -468,7 +458,7 @@ export class StatisticService {
       .unwind('$expanadedissueEventTypes')
       .lookup(getIssue)
       .unwind('$expandedIssue')
-      .match({ 'expanadedissueEventTypes.event': 'assigned' }) // this should be assigned event instead of labeld right?
+      .match({ 'expanadedissueEventTypes.event': 'assigned' }) 
       .addFields({
         _id: null,
         issueCreatedAt: { $toDate: '$expandedIssue.created_at' },
@@ -480,12 +470,13 @@ export class StatisticService {
       })
       //we get the subtracted dates till here in milliseconds
       .group({ _id: '$subtractedDate' })
-      .group({ _id: null, totaltime: { $sum: '$_id' } }) // we need to average this else we will only have the sum?
+      .group({ _id: null, totaltime: { $avg: '$_id' } })
       .limit(limit)
       .exec();
-    console.log(res[0]['totaltime']);
+    //console.log(res[0]['totaltime']);
     const time = msToTime(res[0]['totaltime']);
     this.logger.log(`Average time until tickets was assigned is ${time}`);
+    return time
 
     //function to convert ms to hour/minutes/seconds
     function msToTime(ms: number) {
@@ -552,30 +543,31 @@ export class StatisticService {
     };
     
     // get all issues with object id, creation and closing date
+    // only those with closing date and assignee
+    // I assume that every assigend issue got the 'assigned' event for the query
     const issues = await this.repoModel
       .aggregate()
       .match(filter)
       .unwind('$issuesWithEvents')
       .lookup(getIssuesWithEvents)
       .unwind('$expandedIssuesWithEvents')
+      .lookup(getIssueEventTypes)
+      .unwind('$expandedissueEventTypes')
       .lookup(getIssue)
       .unwind('$expandedIssue')
+      .match({'expandedissueEventTypes.event': 'assigned'}) // ignore all unassigned issues
       .group({_id: '$expandedIssue'})
       .match({
-        '_id.assignee': {$nin: [null]},
-        '_id.closed_at': {$nin: [null]}
-        }) // ignore all issues without assignee or closing date
+        '_id.closed_at': {$ne: null}
+        }) // ignore all issues without closing date
       .group({_id: {'_id': '$_id.id',
                     'created_at': '$_id.created_at',
                     'closed_at': '$_id.closed_at',
-                    'assignee': '$_id.assignee'
                   }
-            }) // group by created_at and closed_at
-      .sort({'_id.created_at': 1}) // sort by created_at
-      .exec();
-    
-    console.log(issues)
-    console.log(issues.length)  
+            }) // group by id, created_at and closed_at
+      .sort({'_id.created_at': 1}) // sort by created_at ascending
+      .limit(limit)
+      .exec();  
     
     // get all releases sorted ascending
     const releases: {_id: string}[] = await this.repoModel
@@ -588,9 +580,6 @@ export class StatisticService {
       .group({_id: '$_id.published_at'})
       .sort({_id: 1})
 
-    console.log(releases)
-    console.log(releases.length)
-    
     let releasesPerIssues = [] 
     // store all releases per issue which were released
     // between opening and closing date
@@ -610,69 +599,11 @@ export class StatisticService {
       }
     }
 
-    console.log(releasesPerIssues)        
-
     const avg =  releasesPerIssues.reduce(
       (prevVal, currVal) => prevVal+currVal)/issues.length
 
     this.logger.log(`avg number of releases per closed issue is ${avg}`)
 
     return avg;
-
-    /**
-     * old pipeline
-     */
-
-    const res:{ _id: string; count: number }[] = await this.repoModel
-      .aggregate()
-      .match(filter)
-      .unwind('$issuesWithEvents')
-      .lookup(getIssuesWithEvents)
-      .unwind('$expandedIssuesWithEvents')
-      .lookup(getIssueEventTypes)
-      .unwind('$expandedissueEventTypes')
-      .lookup(getIssue)
-      .unwind('$expandedIssue')
-      .unwind('$releases')
-      .lookup(getReleases)
-      .unwind('$expandedReleases')
-      .match({'expandedissueEventTypes.event': 'assigned'}) 
-      .match({'expandedIssue.closed_at': { $exists: true, $ne : null } })
-      .project({
-        Release_published_at_Time: {$toDate: '$expandedReleases.published_at'},
-        Issue_updated_at_Time: {$toDate: '$expandedIssue.created_at'},
-        Issue_closed_at_Time: {$toDate: '$expandedIssue.closed_at'},
-      })
-      .match({'Release_published_at_Time':
-       {$gte: new Date("Issue_updated_at_Time"),
-       $lt: new Date("Issue_closed_at_Time")}})
-      .exec();
-
-    // just ignore that, learning the syntax
-
-    // console.log(res._id)
-    // console.log(res.count)
-    // console.log(res.length)
-    // console.log(res[0].releases)
-    // console.log(Array.isArray(res))
-    // console.log(issuesOpening)
-    // console.log(issuesOpening.length)
-    // res.forEach(element => {
-    //   console.log(element._id)
-    // });
-    // let arr = ["a", "b", "c"]
-    // let arr2 = ["x", "y", "z"]
-    // let res2 = []
-    // const tryout = {pro1: String, prop2: Number};
-    // console.log(tryout)
-    // let j = 0
-    // for(let i of arr) {
-    //   var item = {};
-    //   item[i] = arr2[j]
-    //   res2.push(item);
-    //   j += 1;
-    // }
-    // console.log(tryout.pro1)
-    // console.log(res2)
   }
 }
