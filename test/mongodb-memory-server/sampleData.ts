@@ -1,8 +1,9 @@
 import { RepositoryDto, CreateRepositoryDto, RepositoryNameDto } from "../../src/github-api/model/Repository"
 import { Diff, PullRequest, RepositoryFile, PullRequestFile, Releases, Issue, IssueEventTypes, IssueWithEvents, Labels, Assignee, Assignees, Milestones } from "src/github-api/model/PullRequest"
-import { Label } from "../../src/database/schemas/labels.schema"
 
-
+/**
+ * Class to get all relevant test data for the statistic tests
+ */
 export class TestData {
 
     // test repo no. 1 
@@ -431,8 +432,8 @@ export class TestData {
         return pullReqDiffs;
     }
 
-    // 6 releases for test repo no. 1
-    getReleases1(): Releases[] {
+    // 6 releases for test both test repos
+    getReleases(): Releases[] {
         const release1: Releases = {
             url: 'https://api.github.com/repos/octokit/rest.js/releases/50990667',
             id: 50990667,
@@ -483,30 +484,6 @@ export class TestData {
         }
         const releases: Releases[] = [
             release1, release2, release3, release4, release5, release6
-        ]
-        return releases
-    }
-    
-    // 2 releases for test repo no. 2
-    getReleases2(): Releases[] {
-        const release1: Releases = {
-            url: 'https://api.github.com/repos/octokit/rest.js/releases/50990667',
-            id: 50990667,
-            node_id: 'RE_kwDOFWkwyc4DCg5L',
-            name: 'v18.12.0',
-            created_at: '2020-10-07T19:44:32Z',
-            published_at: '2020-10-07T19:45:36Z'    
-        }
-        const release2: Releases = {
-            url: 'https://api.github.com/repos/octokit/rest.js/releases/50584540',
-            id: 50584540,
-            node_id: 'RE_kwDOFWkwyc4DA9vc',
-            name: 'v18.11.4',
-            created_at: '2021-05-30T21:23:28Z',
-            published_at: '2021-05-30T21:25:02Z'
-        }
-        const releases: Releases[] = [
-            release1, release2
         ]
         return releases
     }
@@ -685,5 +662,33 @@ export class TestData {
         }
         const issues: Issue[] = [issue1, issue2, issue3, issue4]
         return issues
+    }
+
+    // issue event types for test repo 2
+    getEventTypes(): IssueEventTypes[][] {
+        // assigning time - issue creation time: 07:10:53 h
+        const issueType1: IssueEventTypes[] = [{
+            event: 'assigned',
+            created_at: '2021-09-15T15:00:00Z'
+        }]
+        const issueType2: IssueEventTypes[] = [{
+            event: 'subscribed'
+        }]
+        // assigning time - issue creation time: 08:10:53 h
+        const issueType3: IssueEventTypes[] = [{
+            event: 'assigned',
+            created_at: "2021-09-30T16:00:00Z"
+        }]
+        // assigning time - issue creation time: 09:10:53 h
+        const issueType4: IssueEventTypes[] = [{
+            event: 'assigned',
+            created_at: '2021-09-30T17:00:00Z'
+        }]
+        // avgTimeTillTicketWasAssigned
+        // addition: 24:32:39 => 24*3600000+32*60000+39*1000 = 88359000
+        // 88359000/3 * 1/1000 * 1/60 * 1/60 = 8.181388889 ~ 8.2h
+        // 24.5/3 = 8.2h
+        const issueEventTypes = [issueType1, issueType2, issueType3, issueType4]
+        return issueEventTypes
     }
 }
