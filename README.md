@@ -38,7 +38,16 @@ $ npm run test:e2e
 # test coverage
 $ npm run test:cov
 ```
+### Run the statistic tests
+1. install mongodb-memory-server
 
+```bash
+$ npm i --save-dev mongodb-memory-server 
+```
+2. run the test suite
+```bash
+$ npm test
+```
 ## Configuration
 
 Create local `.env.local` file in which you store a GitHub access token under the `GITHUB_ACCESS_TOKEN` key. The GitHub REST API is restricted to 60 requests per hour if you don't use any access token and this will be exceeded by one of the predefined queries. For more details of the limited rates see the GitHub [documentation](https://docs.github.com/en/rest/overview/resources-in-the-rest-api#rate-limiting).
