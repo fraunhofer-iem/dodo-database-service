@@ -17,11 +17,10 @@ import { DatabaseModule } from './database/database.module';
       useFactory: async (configService: ConfigService) => ({
         uri: configService.get<string>('DB_URI'),
         auth: {
-          user: configService.get<string>('DB_USER'),
+          username: configService.get<string>('DB_USER'),
           password: configService.get<string>('DB_USER_PASSWORD'),
         },
         useNewUrlParser: true,
-        useFindAndModify: false, //https://mongoosejs.com/docs/deprecations.html#findandmodify
       }),
       inject: [ConfigService],
     }),
