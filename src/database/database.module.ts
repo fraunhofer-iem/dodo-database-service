@@ -33,12 +33,12 @@ import { LanguageSchema } from './schemas/language.schema';
       { name: 'Assignees', schema: AssigneesSchema },
       { name: 'Milestone', schema: MilestoneSchema },
       { name: 'IssueWithEvents', schema: IssueWithEventsSchema },
-      { name: 'Languages', schema: LanguageSchema}
+      { name: 'Languages', schema: LanguageSchema },
     ]),
   ],
   providers: [DatabaseService, StatisticService],
   exports: [
-    DatabaseService, 
+    DatabaseService,
     StatisticService,
     MongooseModule.forFeature([
       { name: 'Repository', schema: RepositorySchema },
@@ -54,8 +54,8 @@ import { LanguageSchema } from './schemas/language.schema';
       { name: 'Assignees', schema: AssigneesSchema },
       { name: 'Milestone', schema: MilestoneSchema },
       { name: 'IssueWithEvents', schema: IssueWithEventsSchema },
-      { name: 'Languages', schema: LanguageSchema}
-    ])
-  ]
+      { name: 'Languages', schema: LanguageSchema },
+    ]),
+  ],
 })
 export class DatabaseModule {}
