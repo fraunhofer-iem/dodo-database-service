@@ -13,4 +13,4 @@ As outlined in the paper ["Technical Debt: From Metaphor to Theory and Practice"
 * [Time Idea to Market](TimeIdeaToMarket.md) the time idea to market is expected to increase over time.
 * [Release Cycle](ReleaseCycle.md) is expected to increase.
 * [Development Focus](DevelopmentFocus.md) we measure how many feature vs bugs vs security tickets are closed with every release. The number of feature tickets is expected to decrease.
-* 
+* [Complexity of Pull Requests](PullRequestComplexity.md) 
