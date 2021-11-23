@@ -503,7 +503,6 @@ export class StatisticService {
    */
   async workInProgress(repoIdent: RepositoryNameDto, userLimit?: number) {
     const limit = userLimit ? userLimit : 100;
-    // Condition ? True : False
 
     const filter = {
       repo: repoIdent.repo,
