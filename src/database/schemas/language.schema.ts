@@ -5,8 +5,8 @@ import { Language } from 'src/github-api/model/PullRequest';
 
 @Schema()
 export class Languages {
-    @Prop({ type: mSchema.Types.ObjectId, ref: 'repo' })
-    repo: Repository;
+    @Prop()
+    repo_id: string;
     
     @Prop({type: Object})
     languages: Language;

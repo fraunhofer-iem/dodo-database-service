@@ -226,7 +226,7 @@ export class DatabaseService {
         .exec();
       const languageModel = new this.languageModel();
       const entryExists = await this.languageModel.exists({
-        repo: repoM._id,
+        repo_id: repoM._id,
       });
       if (entryExists) {
         this.logger.debug(
@@ -237,9 +237,15 @@ export class DatabaseService {
       this.logger.debug(
         `saving programming languages from ${repoIdent.owner}/${repoIdent.repo} to database...`,
       );
-      languageModel.repo = repoM._id;
+      // const repoID = await this.getRepoByName(repoIdent.owner, repoIdent.repo)
+      languageModel.repo_id = repoM._id
       languageModel.languages = languages;
-      await languageModel.save();
+      const savedLanguages = await languageModel.save();
+      await this.repoModel
+      .findByIdAndUpdate(repoM._id,
+        { languages: savedLanguages },
+      )
+      .exec();
       this.logger.debug(
         `stored programming languages from ${repoIdent.owner}/${repoIdent.repo} successful`,
       );
