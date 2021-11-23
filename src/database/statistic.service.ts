@@ -575,7 +575,8 @@ export class StatisticService {
       .unwind('$expandedReleases')
       .group({ _id: '$expandedReleases' })
       .group({ _id: '$_id.published_at' })
-      .sort({ _id: 1 });
+      .sort({ _id: 1 })
+      .exec();
 
     let releasesPerIssues = [];
     // store all releases per issue which were released
