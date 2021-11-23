@@ -543,6 +543,7 @@ export class StatisticService {
     const issues = await this.repoModel
       .aggregate()
       .match(filter)
+      .project({'issuesWithEvents': 1})
       .unwind('$issuesWithEvents')
       .lookup(getIssuesWithEvents)
       .unwind('$expandedIssuesWithEvents')
@@ -551,18 +552,17 @@ export class StatisticService {
       .lookup(getIssue)
       .unwind('$expandedIssue')
       .match({ 'expandedissueEventTypes.event': 'assigned' }) // ignore all unassigned issues
-      .group({ _id: '$expandedIssue' })
+      .project({'expandedIssue.created_at': 1, 'expandedIssue.closed_at':1, '_id': 0})
       .match({
-        '_id.closed_at': { $ne: null },
+        'expandedIssue.closed_at': { $ne: null },
       }) // ignore all issues without closing date
       .group({
         _id: {
-          _id: '$_id.id',
-          created_at: '$_id.created_at',
-          closed_at: '$_id.closed_at',
+          created_at: '$expandedIssue.created_at',
+          closed_at: '$expandedIssue.closed_at',
         },
       }) // group by id, created_at and closed_at
-      .sort({ '_id.created_at': 1 }) // sort by created_at ascending
+      .sort({ 'expandedIssue.created_at': 1 }) // sort by created_at ascending
       .limit(limit)
       .exec();
 
@@ -570,6 +570,7 @@ export class StatisticService {
     const releases: { _id: string }[] = await this.repoModel
       .aggregate()
       .match(filter)
+      .project({'releases': 1})
       .unwind('$releases')
       .lookup(getReleases)
       .unwind('$expandedReleases')
