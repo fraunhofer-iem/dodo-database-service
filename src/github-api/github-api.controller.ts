@@ -51,11 +51,6 @@ export class GithubApiController {
     return this.ghApiService.storeIssues(repoIdent);
   }
 
-  @Get('funny')
-  async funnyGet(): Promise<string> {
-    return "new funny GET method";
-  }
-
   @Post('languages')
   async gatherLanguages(@Body() repoIdent: RepositoryNameDto) {
     return this.ghApiService.storeLanguages(repoIdent);
