@@ -39,12 +39,7 @@ $ npm run test:e2e
 $ npm run test:cov
 ```
 ### Run the statistic tests
-1. install mongodb-memory-server
 
-```bash
-$ npm i --save-dev mongodb-memory-server 
-```
-2. run the test suite
 ```bash
 $ npm test
 ```
