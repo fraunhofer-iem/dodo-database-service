@@ -1,10 +1,10 @@
 import { MongooseModule } from '@nestjs/mongoose';
-import { Test } from "@nestjs/testing";
+import { Test } from '@nestjs/testing';
 import { DatabaseModule } from '../../src/database/database.module';
-import { StatisticService } from "../../src/database/statistic.service";
-import { DatabaseService } from "../../src/database/database.service";
-import { TestData } from "./sampleData"
-import { TestDbHelper } from "./testDbHelper"
+import { StatisticService } from '../../src/database/statistic.service';
+import { DatabaseService } from '../../src/database/database.service';
+import { TestData } from './sampleData';
+import { TestDbHelper } from './testDbHelper';
 
 /**
  * test suite for all KPIs from statistic service
@@ -12,58 +12,62 @@ import { TestDbHelper } from "./testDbHelper"
  */
 
 describe('StatisticService', () => {
-  const dbHelper = new TestDbHelper()
-  const testData = new TestData()
-  let databaseService: DatabaseService
-  let statisticService: StatisticService
-  
-  beforeAll( async () => {
-    const uri = dbHelper.start();
+  const dbHelper = new TestDbHelper();
+  const testData = new TestData();
+  let databaseService: DatabaseService;
+  let statisticService: StatisticService;
+
+  beforeAll(async () => {
+    const uri = await dbHelper.start();
     // config testing module
     const testMod = await Test.createTestingModule({
-      imports: [
-        MongooseModule.forRoot(await uri),
-        DatabaseModule
-      ],
-      providers: [StatisticService, DatabaseService]
+      imports: [MongooseModule.forRoot(uri), DatabaseModule],
+      providers: [StatisticService, DatabaseService],
     }).compile();
+
     // get Services in testing environment
-    databaseService = testMod.get(DatabaseService)
-    statisticService = testMod.get(StatisticService)
+    databaseService = testMod.get(DatabaseService);
+    statisticService = testMod.get(StatisticService);
     // fill testDb
     // repo 1
-    let repoId1 = databaseService.createRepo(testData.getCreateRepo1())
+    const repoId1 = await databaseService.createRepo(testData.getCreateRepo1());
     for (let pullReqDiff of testData.getDiffs1()) {
-      await databaseService.savePullRequestDiff(await repoId1, pullReqDiff)
+      await databaseService.savePullRequestDiff(repoId1, pullReqDiff);
     }
     for (let release of testData.getReleases()) {
-      await databaseService.saveReleases(release, await repoId1)
+      await databaseService.saveReleases(release, repoId1);
     }
     for (let issue of testData.getIssues()) {
-      await databaseService.saveIssue(issue, await repoId1)
+      await databaseService.saveIssue(issue, repoId1);
     }
     // repo 2
-    let repoId2 = databaseService.createRepo(testData.getCreateRepo2())
+    let repoId2 = databaseService.createRepo(testData.getCreateRepo2());
     for (let pullReqDiff of testData.getDiffs2()) {
-      await databaseService.savePullRequestDiff(await repoId2, pullReqDiff)
+      await databaseService.savePullRequestDiff(await repoId2, pullReqDiff);
     }
     for (let release of testData.getReleases()) {
-      await databaseService.saveReleases(release, await repoId2)
+      await databaseService.saveReleases(release, await repoId2);
     }
     // fill issues with events
-    let issueEventTypes = testData.getEventTypes()
-    let index = 0
+    let issueEventTypes = testData.getEventTypes();
+    let index = 0;
     for (let issue of testData.getIssues()) {
-      let issueWithEventID = await databaseService.saveIssue(issue, await repoId2)
-      await databaseService.saveIssueEvent(issueEventTypes[index], issueWithEventID)
-      index += 1
+      let issueWithEventID = await databaseService.saveIssue(
+        issue,
+        await repoId2,
+      );
+      await databaseService.saveIssueEvent(
+        issueEventTypes[index],
+        issueWithEventID,
+      );
+      index += 1;
     }
   });
 
-  afterAll( async () => {
-    dbHelper.stop();
-    dbHelper.cleanup();
-  })
+  afterAll(async () => {
+    await dbHelper.cleanup();
+    await dbHelper.stop();
+  });
 
   // test cases
 
@@ -71,9 +75,11 @@ describe('StatisticService', () => {
     it('should return avarage on how often a changed file in PRs was changed', async () => {
       // see calculation explanation in TestData.getDiffs2()
       // test repo no. 2
-      const expectedAvg = 1.8
-      const avg = await statisticService.getMostChangedFiles(testData.getRepoDto2())
-      expect(avg).toEqual(expectedAvg)
+      const expectedAvg = 1.8;
+      const avg = await statisticService.getMostChangedFiles(
+        testData.getRepoDto2(),
+      );
+      expect(avg).toEqual(expectedAvg);
     });
   });
 
@@ -81,9 +87,11 @@ describe('StatisticService', () => {
     it('should return how often two files, configured in the tested function', async () => {
       // --> package.json, package-lock.json are changed together in one PR
       // test repo no. 1
-      const expectedPRs = 1
-      const PRs = await statisticService.getFilesChangedTogether(testData.getRepoDto1())
-      expect(PRs).toEqual(expectedPRs)
+      const expectedPRs = 1;
+      const PRs = await statisticService.getFilesChangedTogether(
+        testData.getRepoDto1(),
+      );
+      expect(PRs).toEqual(expectedPRs);
     });
   });
 
@@ -91,33 +99,39 @@ describe('StatisticService', () => {
     it('should return array with changed files per PR, avg of changed files per PR, variance & SD', async () => {
       // see calculation explanation in TestData.getDiffs2()
       // test repo no. 2
-      const expectedChangedFilesArray = [4, 2, 3]
-      const expectedAvg = 3
-      const expectedVariance = 0.6666666666666666
-      const expectedSD = Math.sqrt(expectedVariance)
-      const resObj = await statisticService.sizeOfPullRequest(testData.getRepoDto2())
-      expect(resObj.numberOfFiles).toEqual(expectedChangedFilesArray)
-      expect(resObj.avg).toEqual(expectedAvg)
-      expect(resObj.variance).toEqual(expectedVariance)
-      expect(resObj.standardDeviation).toEqual(expectedSD)
+      const expectedChangedFilesArray = [4, 2, 3];
+      const expectedAvg = 3;
+      const expectedVariance = 0.6666666666666666;
+      const expectedSD = Math.sqrt(expectedVariance);
+      const resObj = await statisticService.sizeOfPullRequest(
+        testData.getRepoDto2(),
+      );
+      expect(resObj.numberOfFiles).toEqual(expectedChangedFilesArray);
+      expect(resObj.avg).toEqual(expectedAvg);
+      expect(resObj.variance).toEqual(expectedVariance);
+      expect(resObj.standardDeviation).toEqual(expectedSD);
     });
   });
 
   describe('numberOfAssignee', () => {
     it('should return the number of issues with no assignee', async () => {
       // test repo no. 2
-      const expectedIssues = 1
-      const issues = await statisticService.numberOfAssignee(testData.getRepoDto2())
-      expect(issues).toEqual(expectedIssues)
+      const expectedIssues = 1;
+      const issues = await statisticService.numberOfAssignee(
+        testData.getRepoDto2(),
+      );
+      expect(issues).toEqual(expectedIssues);
     });
   });
 
   describe('numberOfOpenTickets', () => {
     it('should return the number of all issues which are open, i.e. not closed', async () => {
       // test repo no. 2
-      const expectedIssues = 1
-      const issues = await statisticService.numberOfOpenTickets(testData.getCreateRepo2())
-      expect(issues).toEqual(expectedIssues)
+      const expectedIssues = 1;
+      const issues = await statisticService.numberOfOpenTickets(
+        testData.getCreateRepo2(),
+      );
+      expect(issues).toEqual(expectedIssues);
     });
   });
 
@@ -125,9 +139,11 @@ describe('StatisticService', () => {
     it('should return avg number of assignees per ticket until it is closed', async () => {
       // test repo no. 2
       // 1+1+1 assignees / 3 tickets with assignee
-      const expectedAvg = 1
-      const avg = await statisticService.avgNumberOfAssigneeUntilTicketCloses(testData.getRepoDto2())
-      expect(avg).toEqual(expectedAvg)
+      const expectedAvg = 1;
+      const avg = await statisticService.avgNumberOfAssigneeUntilTicketCloses(
+        testData.getRepoDto2(),
+      );
+      expect(avg).toEqual(expectedAvg);
     });
   });
 
@@ -135,9 +151,11 @@ describe('StatisticService', () => {
     it('should return the avg time until a ticket was assigned', async () => {
       // see calculation explanation in TestData.getEventTypes()
       // test repo no. 2
-      const expectedAvg = "8.2 Hrs"
-      const avg = await statisticService.avgTimeTillTicketWasAssigned(testData.getRepoDto2())
-      expect(avg).toEqual(expectedAvg)
+      const expectedAvg = '8.2 Hrs';
+      const avg = await statisticService.avgTimeTillTicketWasAssigned(
+        testData.getRepoDto2(),
+      );
+      expect(avg).toEqual(expectedAvg);
     });
   });
 
@@ -147,11 +165,9 @@ describe('StatisticService', () => {
       // issue 1 and 4 get in calculation
       // releases 2,6 fit for issue 1
       // releases 2,3,4,5,6 fit for issue 2
-      const expectedAvg = 3.5
-      const avg = await statisticService.workInProgress(testData.getRepoDto2())
-      expect(avg).toEqual(expectedAvg)
+      const expectedAvg = 3.5;
+      const avg = await statisticService.workInProgress(testData.getRepoDto2());
+      expect(avg).toEqual(expectedAvg);
     });
   });
-
 });
-
