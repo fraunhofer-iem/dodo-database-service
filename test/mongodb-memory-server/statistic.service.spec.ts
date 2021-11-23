@@ -5,6 +5,20 @@ import { StatisticService } from '../../src/database/statistic.service';
 import { DatabaseService } from '../../src/database/database.service';
 import { TestData } from './sampleData';
 import { TestDbHelper } from './testDbHelper';
+import { RepositorySchema } from '../../src/database/schemas/repository.schema';
+import { DiffSchema } from '../../src/database/schemas/diff.schema';
+import { IssueSchema } from '../../src/database/schemas/issue.schema';
+import { IssueEventTypesSchema } from '../../src/database/schemas/issueEventTypes.schema';
+import { AssigneeSchema } from '../../src/database/schemas/assignee.schema';
+import { AssigneesSchema } from '../../src/database/schemas/assignees.schema';
+import { IssueWithEventsSchema } from '../../src/database/schemas/issueWithEvents.schema';
+import { LabelSchema } from '../../src/database/schemas/labels.schema';
+import { LanguageSchema } from '../../src/database/schemas/language.schema';
+import { MilestoneSchema } from '../../src/database/schemas/milestone.schema';
+import { PullRequestSchema } from '../../src/database/schemas/pullRequest.schema';
+import { PullRequestFileSchema } from '../../src/database/schemas/pullRequestFile.schema';
+import { ReleasesSchema } from '../../src/database/schemas/releases.schema';
+import { RepositoryFileSchema } from '../../src/database/schemas/repositoryFile.schema';
 
 /**
  * test suite for all KPIs from statistic service
@@ -21,7 +35,24 @@ describe('StatisticService', () => {
     const uri = await dbHelper.start();
     // config testing module
     const testMod = await Test.createTestingModule({
-      imports: [MongooseModule.forRoot(uri), DatabaseModule],
+      imports: [MongooseModule.forRoot(uri), DatabaseModule, 
+        MongooseModule.forFeature([
+          { name: 'Repository', schema: RepositorySchema },
+          { name: 'Diff', schema: DiffSchema },
+          { name: 'Issue', schema: IssueSchema },
+          { name: 'IssueEventTypes', schema: IssueEventTypesSchema },
+          { name: 'Releases', schema: ReleasesSchema },
+          { name: 'PullRequest', schema: PullRequestSchema },
+          { name: 'PullRequestFiles', schema: PullRequestFileSchema },
+          { name: 'RepositoryFiles', schema: RepositoryFileSchema },
+          { name: 'Label', schema: LabelSchema },
+          { name: 'Assignee', schema: AssigneeSchema },
+          { name: 'Assignees', schema: AssigneesSchema },
+          { name: 'Milestone', schema: MilestoneSchema },
+          { name: 'IssueWithEvents', schema: IssueWithEventsSchema },
+          { name: 'Languages', schema: LanguageSchema },
+        ]),
+      ],
       providers: [StatisticService, DatabaseService],
     }).compile();
 
