@@ -3,7 +3,7 @@
 ## Description
 
 The Fault Correction Rate describes the development team's capability to respond to bug reports.  
-It is a quantitative indicator for which we consider all issues labeled `bug` (or some other equivalent tag) that existed at the time of the release.  
+It is a quantitative indicator for which we consider all issues labeled `bug` (or some other equivalent tag) that existed at the time of a release.  
 The Fault Correction Rate is the amount of closed `bug` issues divided by the total amount of `bug` issues.
 
 ## Calculation

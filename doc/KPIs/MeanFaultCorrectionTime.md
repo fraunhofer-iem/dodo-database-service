@@ -2,7 +2,7 @@
 
 ## Description
 
-The Fault Correction Rate describes the development team's capability to respond to bug reports.  
+The Mean Fault Correction Time describes the development team's capability to respond to bug reports.  
 It is a qualitative indicator for which we consider all issues labeled `bug` (or some other equivalent tag). We then calculate `Fault Correction Time` for each resolved fault individually and using this we calculate the average resolution time.  
 
 ## Calculation
