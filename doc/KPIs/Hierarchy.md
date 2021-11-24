@@ -11,7 +11,8 @@
     * [?Feature?](Feature.md)
       * Bugs per Feature
         * Modification Correctness
-      * Fault Correction Rate
+      * [Fault Correction Rate](FaultCorrectionRate.md)
+      * [Mean Fault Correction Time](MeanFaultCorrectionTime.md)
       * Build Failure Rate
       * Time Idea to Market
       * Test Coverage
