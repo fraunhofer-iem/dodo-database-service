@@ -88,14 +88,14 @@ export class StatisticService {
       .lookup(getPullFiles)
       .unwind('$pullFiles')
       .group(group)
-      .sort({ count: -1 })
+      .sort({ count: -1 }) //sort reverted
       .limit(limit)
       .exec();
+
     let avg = 0;
     res.forEach((e) => {
       avg += e.count;
     });
-
     avg = avg / res.length;
     this.logger.log(
       `Calculation of most changed files for ${repoIdent.owner}/${repoIdent.repo} finished. Retrieved ${res.length} files. Average changes to the first files: ${avg}`,
@@ -166,6 +166,7 @@ export class StatisticService {
     this.logger.log(
       `The files ${file1} & ${file2} are repeatedly changed together ${res.length} times.`,
     );
+    return res.length;
   }
 
   /**
@@ -293,6 +294,7 @@ export class StatisticService {
       .exec();
 
     this.logger.log(`Number of issues with no assignee are ${res.length}.`);
+    return res.length;
   }
 
   /**
@@ -330,6 +332,7 @@ export class StatisticService {
       .match({ 'expandedIssue.state': 'open' })
       .exec();
     this.logger.log(`Number of open issues are ${res.length}.`);
+    return res.length;
   }
 
   /**
@@ -405,6 +408,7 @@ export class StatisticService {
     this.logger.log(
       `Average number of assignee(s) per ticket until the ticket closes are ${avg}.`,
     );
+    return avg;
   }
 
   /**
@@ -453,7 +457,7 @@ export class StatisticService {
       .unwind('$expanadedissueEventTypes')
       .lookup(getIssue)
       .unwind('$expandedIssue')
-      .match({ 'expanadedissueEventTypes.event': 'assigned' }) // this should be assigned event instead of labeld right?
+      .match({ 'expanadedissueEventTypes.event': 'assigned' })
       .addFields({
         _id: null,
         issueCreatedAt: { $toDate: '$expandedIssue.created_at' },
@@ -465,24 +469,143 @@ export class StatisticService {
       })
       //we get the subtracted dates till here in milliseconds
       .group({ _id: '$subtractedDate' })
-      .group({ _id: null, totaltime: { $sum: '$_id' } }) // we need to average this else we will only have the sum?
+      .group({ _id: null, totaltime: { $avg: '$_id' } })
       .limit(limit)
       .exec();
-    console.log(res[0]['totaltime']);
+    //console.log(res[0]['totaltime']);
     const time = msToTime(res[0]['totaltime']);
     this.logger.log(`Average time until tickets was assigned is ${time}`);
+    return time;
 
     //function to convert ms to hour/minutes/seconds
     function msToTime(ms: number) {
-      let seconds, minutes, hours, days;
-      seconds = (ms / 1000).toFixed(1);
-      minutes = (ms / (1000 * 60)).toFixed(1);
-      hours = (ms / (1000 * 60 * 60)).toFixed(1);
-      days = (ms / (1000 * 60 * 60 * 24)).toFixed(1);
-      if (seconds < 60) return seconds + ' Sec';
-      else if (minutes < 60) return minutes + ' Min';
-      else if (hours < 24) return hours + ' Hrs';
+      const seconds = ms / 1000;
+      const minutes = ms / (1000 * 60);
+      const hours = ms / (1000 * 60 * 60);
+      const days = ms / (1000 * 60 * 60 * 24);
+      if (seconds < 60) return seconds.toFixed(1) + ' Sec';
+      else if (minutes < 60) return minutes.toFixed(1) + ' Min';
+      else if (hours < 24) return hours.toFixed(1) + ' Hrs';
       else return days + ' Days';
     }
+  }
+
+  /**
+   * to Calculate work in progress.
+   * Tickets are assigned to someone and then we count the number of releases
+   * that have been made while the ticket was open
+   * i.e., (Average) number of releases until we close the ticket.
+   * Only tickets which are 'assigned' and tickets whose 'closed_at' key is not null
+   * is taken into account.
+   * @param repoIdent
+   * @param userLimit
+   */
+  async workInProgress(repoIdent: RepositoryNameDto, userLimit?: number) {
+    const limit = userLimit ? userLimit : 100;
+
+    const filter = {
+      repo: repoIdent.repo,
+      owner: repoIdent.owner,
+    };
+
+    const getIssuesWithEvents = {
+      from: 'issuewithevents', // why lowercase?
+      localField: 'issuesWithEvents', // have to match
+      foreignField: '_id', // have to match
+      as: 'expandedIssuesWithEvents',
+    };
+
+    const getIssueEventTypes = {
+      from: 'issueeventtypes',
+      localField: 'expandedIssuesWithEvents.issueEventTypes',
+      foreignField: '_id',
+      as: 'expandedissueEventTypes',
+    };
+
+    const getIssue = {
+      from: 'issues',
+      localField: 'expandedIssuesWithEvents.issue',
+      foreignField: '_id',
+      as: 'expandedIssue',
+    };
+
+    const getReleases = {
+      from: 'releases',
+      localField: 'releases',
+      foreignField: '_id',
+      as: 'expandedReleases',
+    };
+
+    // get all issues with object id, creation and closing date
+    // only those with closing date and assignee
+    // I assume that every assigend issue got the 'assigned' event for the query
+    const issues = await this.repoModel
+      .aggregate()
+      .match(filter)
+      .project({ issuesWithEvents: 1 })
+      .unwind('$issuesWithEvents')
+      .lookup(getIssuesWithEvents)
+      .unwind('$expandedIssuesWithEvents')
+      .lookup(getIssueEventTypes)
+      .unwind('$expandedissueEventTypes')
+      .lookup(getIssue)
+      .unwind('$expandedIssue')
+      .match({ 'expandedissueEventTypes.event': 'assigned' }) // ignore all unassigned issues
+      .project({
+        'expandedIssue.created_at': 1,
+        'expandedIssue.closed_at': 1,
+        _id: 0,
+      })
+      .match({
+        'expandedIssue.closed_at': { $ne: null },
+      }) // ignore all issues without closing date
+      .group({
+        _id: {
+          created_at: '$expandedIssue.created_at',
+          closed_at: '$expandedIssue.closed_at',
+        },
+      }) // group by id, created_at and closed_at
+      .sort({ 'expandedIssue.created_at': 1 }) // sort by created_at ascending
+      .limit(limit)
+      .exec();
+
+    // get all releases sorted ascending
+    const releases: { _id: string }[] = await this.repoModel
+      .aggregate()
+      .match(filter)
+      .project({ releases: 1 })
+      .unwind('$releases')
+      .lookup(getReleases)
+      .unwind('$expandedReleases')
+      .group({ _id: '$expandedReleases' })
+      .group({ _id: '$_id.published_at' })
+      .sort({ _id: 1 })
+      .exec();
+
+    const releasesPerIssues = [];
+    // store all releases per issue which were released
+    // between opening and closing date
+    for (const issue of issues) {
+      const opening = new Date(issue._id.created_at);
+      const closing = new Date(issue._id.closed_at);
+      let amount = 0;
+      for (const release of releases) {
+        const releasing = new Date(release._id);
+        if (opening < releasing && releasing < closing) {
+          amount += 1;
+        } else if (releasing > closing) {
+          releasesPerIssues.push(amount);
+          break;
+        }
+      }
+    }
+
+    const avg =
+      releasesPerIssues.reduce((prevVal, currVal) => prevVal + currVal) /
+      issues.length;
+
+    this.logger.log(`avg number of releases per closed issue is ${avg}`);
+
+    return avg;
   }
 }

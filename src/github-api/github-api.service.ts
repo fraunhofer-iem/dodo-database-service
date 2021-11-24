@@ -54,11 +54,12 @@ export class GithubApiService {
   public async getStatistics(repoIdent: RepositoryNameDto) {
     // this.statisticService.getMostChangedFiles(repoIdent);
     // this.statisticService.getFilesChangedTogether(repoIdent);
-    return this.statisticService.sizeOfPullRequest(repoIdent);
+    // this.statisticService.sizeOfPullRequest(repoIdent);
     // this.statisticService.numberOfAssignee(repoIdent);
     // this.statisticService.numberOfOpenTickets(repoIdent);
     // this.statisticService.avgNumberOfAssigneeUntilTicketCloses(repoIdent);
     // this.statisticService.avgTimeTillTicketWasAssigned(repoIdent);
+    this.statisticService.workInProgress(repoIdent);
   }
 
   public async storeIssues(repoIdent: RepositoryNameDto) {
@@ -92,7 +93,10 @@ export class GithubApiService {
     });
     for (const issu of issues) {
       // first store issue
-      const issuId = await this.dbService.saveIssue(issu, repoId);
+      const issuId = await this.dbService.saveIssue(
+        { ...issu, labels: [] }, // TODO: workaround because the current label handling seems to be very broken and we ignore it for now
+        repoId,
+      );
       // then query the event types and store them
       await this.getAndStoreIssueEventTypes(
         owner,
@@ -320,5 +324,19 @@ export class GithubApiService {
         are files.`,
     );
     return files;
+  }
+
+  public async storeLanguages(repoIdent: RepositoryNameDto) {
+    this.logger.log(
+      `querying languages for ${repoIdent.owner}/${repoIdent.repo}`,
+    );
+    const languages = await this.octokit.rest.repos
+      .listLanguages({
+        owner: repoIdent.owner,
+        repo: repoIdent.repo,
+      })
+      .then((res) => res.data); // what is the syntax and meaning of this?
+    return await this.dbService.saveLanguages(repoIdent, languages);
+    // await necassary for return value on request console. Why?
   }
 }
