@@ -238,14 +238,12 @@ export class DatabaseService {
         `saving programming languages from ${repoIdent.owner}/${repoIdent.repo} to database...`,
       );
       // const repoID = await this.getRepoByName(repoIdent.owner, repoIdent.repo)
-      languageModel.repo_id = repoM._id
+      languageModel.repo_id = repoM._id;
       languageModel.languages = languages;
       const savedLanguages = await languageModel.save();
       await this.repoModel
-      .findByIdAndUpdate(repoM._id,
-        { languages: savedLanguages },
-      )
-      .exec();
+        .findByIdAndUpdate(repoM._id, { languages: savedLanguages })
+        .exec();
       this.logger.debug(
         `stored programming languages from ${repoIdent.owner}/${repoIdent.repo} successful`,
       );
