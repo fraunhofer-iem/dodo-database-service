@@ -123,3 +123,7 @@ export interface RepositoryFile {
   size?: number;
   url?: string;
 }
+
+export interface Language {
+  [key: string]: number;
+}
