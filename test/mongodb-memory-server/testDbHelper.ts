@@ -19,7 +19,7 @@ export class TestDbHelper {
   }
 
   async stop() {
-    await this.con.close();
+    await this.con.close(true);
     return this.mongoServer.stop();
   }
 

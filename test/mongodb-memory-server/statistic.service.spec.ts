@@ -1,5 +1,5 @@
-import { MongooseModule } from '@nestjs/mongoose';
-import { Test } from '@nestjs/testing';
+import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
+import { Test, TestingModule } from '@nestjs/testing';
 import { DatabaseModule } from '../../src/database/database.module';
 import { StatisticService } from '../../src/database/statistic.service';
 import { DatabaseService } from '../../src/database/database.service';
@@ -30,12 +30,14 @@ describe('StatisticService', () => {
   const testData = new TestData();
   let databaseService: DatabaseService;
   let statisticService: StatisticService;
-
+  let testMod: TestingModule;
   beforeAll(async () => {
     const uri = await dbHelper.start();
     // config testing module
-    const testMod = await Test.createTestingModule({
-      imports: [MongooseModule.forRoot(uri), DatabaseModule, 
+    testMod = await Test.createTestingModule({
+      imports: [
+        MongooseModule.forRoot(uri),
+        DatabaseModule,
         MongooseModule.forFeature([
           { name: 'Repository', schema: RepositorySchema },
           { name: 'Diff', schema: DiffSchema },
@@ -96,6 +98,8 @@ describe('StatisticService', () => {
   });
 
   afterAll(async () => {
+    const mongooseConnection = await testMod.get(getConnectionToken());
+    await mongooseConnection.close();
     await dbHelper.cleanup();
     await dbHelper.stop();
   });
