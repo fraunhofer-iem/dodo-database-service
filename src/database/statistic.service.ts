@@ -479,14 +479,13 @@ export class StatisticService {
 
     //function to convert ms to hour/minutes/seconds
     function msToTime(ms: number) {
-      let seconds, minutes, hours, days;
-      seconds = (ms / 1000).toFixed(1);
-      minutes = (ms / (1000 * 60)).toFixed(1);
-      hours = (ms / (1000 * 60 * 60)).toFixed(1);
-      days = (ms / (1000 * 60 * 60 * 24)).toFixed(1);
-      if (seconds < 60) return seconds + ' Sec';
-      else if (minutes < 60) return minutes + ' Min';
-      else if (hours < 24) return hours + ' Hrs';
+      const seconds = ms / 1000;
+      const minutes = ms / (1000 * 60);
+      const hours = ms / (1000 * 60 * 60);
+      const days = ms / (1000 * 60 * 60 * 24);
+      if (seconds < 60) return seconds.toFixed(1) + ' Sec';
+      else if (minutes < 60) return minutes.toFixed(1) + ' Min';
+      else if (hours < 24) return hours.toFixed(1) + ' Hrs';
       else return days + ' Days';
     }
   }
@@ -543,7 +542,7 @@ export class StatisticService {
     const issues = await this.repoModel
       .aggregate()
       .match(filter)
-      .project({'issuesWithEvents': 1})
+      .project({ issuesWithEvents: 1 })
       .unwind('$issuesWithEvents')
       .lookup(getIssuesWithEvents)
       .unwind('$expandedIssuesWithEvents')
@@ -552,7 +551,11 @@ export class StatisticService {
       .lookup(getIssue)
       .unwind('$expandedIssue')
       .match({ 'expandedissueEventTypes.event': 'assigned' }) // ignore all unassigned issues
-      .project({'expandedIssue.created_at': 1, 'expandedIssue.closed_at':1, '_id': 0})
+      .project({
+        'expandedIssue.created_at': 1,
+        'expandedIssue.closed_at': 1,
+        _id: 0,
+      })
       .match({
         'expandedIssue.closed_at': { $ne: null },
       }) // ignore all issues without closing date
@@ -570,7 +573,7 @@ export class StatisticService {
     const releases: { _id: string }[] = await this.repoModel
       .aggregate()
       .match(filter)
-      .project({'releases': 1})
+      .project({ releases: 1 })
       .unwind('$releases')
       .lookup(getReleases)
       .unwind('$expandedReleases')
@@ -579,15 +582,15 @@ export class StatisticService {
       .sort({ _id: 1 })
       .exec();
 
-    let releasesPerIssues = [];
+    const releasesPerIssues = [];
     // store all releases per issue which were released
     // between opening and closing date
     for (const issue of issues) {
-      let opening = new Date(issue._id.created_at);
-      let closing = new Date(issue._id.closed_at);
+      const opening = new Date(issue._id.created_at);
+      const closing = new Date(issue._id.closed_at);
       let amount = 0;
       for (const release of releases) {
-        let releasing = new Date(release._id);
+        const releasing = new Date(release._id);
         if (opening < releasing && releasing < closing) {
           amount += 1;
         } else if (releasing > closing) {
