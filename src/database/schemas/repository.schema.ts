@@ -17,8 +17,8 @@ export class Repository {
 
   @Prop([{ type: mSchema.Types.ObjectId, ref: 'Releases' }])
   releases: Releases[];
-  
-  @Prop({ type: mSchema.Types.ObjectId, ref: 'Languages'})
+
+  @Prop({ type: mSchema.Types.ObjectId, ref: 'Languages' })
   languages: Languages;
 
   @Prop()
