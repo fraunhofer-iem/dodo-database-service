@@ -64,28 +64,28 @@ describe('StatisticService', () => {
     // fill testDb
     // repo 1
     const repoId1 = await databaseService.createRepo(testData.getCreateRepo1());
-    for (let pullReqDiff of testData.getDiffs1()) {
+    for (const pullReqDiff of testData.getDiffs1()) {
       await databaseService.savePullRequestDiff(repoId1, pullReqDiff);
     }
-    for (let release of testData.getReleases()) {
+    for (const release of testData.getReleases()) {
       await databaseService.saveReleases(release, repoId1);
     }
-    for (let issue of testData.getIssues()) {
+    for (const issue of testData.getIssues()) {
       await databaseService.saveIssue(issue, repoId1);
     }
     // repo 2
-    let repoId2 = databaseService.createRepo(testData.getCreateRepo2());
-    for (let pullReqDiff of testData.getDiffs2()) {
+    const repoId2 = databaseService.createRepo(testData.getCreateRepo2());
+    for (const pullReqDiff of testData.getDiffs2()) {
       await databaseService.savePullRequestDiff(await repoId2, pullReqDiff);
     }
-    for (let release of testData.getReleases()) {
+    for (const release of testData.getReleases()) {
       await databaseService.saveReleases(release, await repoId2);
     }
     // fill issues with events
-    let issueEventTypes = testData.getEventTypes();
+    const issueEventTypes = testData.getEventTypes();
     let index = 0;
-    for (let issue of testData.getIssues()) {
-      let issueWithEventID = await databaseService.saveIssue(
+    for (const issue of testData.getIssues()) {
+      const issueWithEventID = await databaseService.saveIssue(
         issue,
         await repoId2,
       );
