@@ -37,9 +37,6 @@ import { LanguageSchema } from './schemas/language.schema';
     ]),
   ],
   providers: [DatabaseService, StatisticService],
-  exports: [
-    DatabaseService,
-    StatisticService
-  ],
+  exports: [DatabaseService, StatisticService],
 })
 export class DatabaseModule {}
