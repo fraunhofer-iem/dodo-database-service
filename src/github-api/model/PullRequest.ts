@@ -127,3 +127,9 @@ export interface RepositoryFile {
 export interface Language {
   [key: string]: number;
 }
+
+export interface Commit {
+  url: string;
+  login: string;
+  timestamp: string;
+}

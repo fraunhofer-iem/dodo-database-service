@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Octokit } from 'octokit';
 import { DatabaseService } from 'src/database/database.service';
 import { StatisticService } from 'src/database/statistic.service';
-import { PullRequest, RepositoryFile, Releases } from './model/PullRequest';
+import { PullRequest, RepositoryFile, Commit } from './model/PullRequest';
 import { CreateRepositoryDto, RepositoryNameDto } from './model/Repository';
 
 export interface Tree {
@@ -59,7 +59,8 @@ export class GithubApiService {
     // this.statisticService.numberOfOpenTickets(repoIdent);
     // this.statisticService.avgNumberOfAssigneeUntilTicketCloses(repoIdent);
     // this.statisticService.avgTimeTillTicketWasAssigned(repoIdent);
-    this.statisticService.workInProgress(repoIdent);
+    // this.statisticService.workInProgress(repoIdent);
+    this.statisticService.devSpread(repoIdent);
   }
 
   public async storeIssues(repoIdent: RepositoryNameDto) {
@@ -338,5 +339,42 @@ export class GithubApiService {
       .then((res) => res.data); // what is the syntax and meaning of this?
     return await this.dbService.saveLanguages(repoIdent, languages);
     // await necassary for return value on request console. Why?
+  }
+
+  public async storeCommits(repoIdent: RepositoryNameDto) {
+    if (!this.dbService.repoExists(repoIdent)) {
+      await this.dbService.createRepo(repoIdent);
+      this.logger.debug(
+        `create repository for ${repoIdent.owner}/${repoIdent.repo} first`,
+      );
+      this.storeCommits(repoIdent);
+    }
+    this.logger.log(
+      `querying commits with developer and timestamp for ${repoIdent.owner}/${repoIdent.repo}`,
+    );
+    const repoId = await this.dbService.getRepoByName(
+      repoIdent.owner,
+      repoIdent.repo,
+    );
+    const commits = await this.octokit.rest.repos
+      .listCommits({
+        owner: repoIdent.owner,
+        repo: repoIdent.repo,
+      })
+      .then((res) => res.data);
+    this.logger.debug(
+      `saving commits from ${repoIdent.owner}/${repoIdent.repo} to database...`,
+    );
+    for (const commit of commits) {
+      const commit_obj: Commit = {
+        url: commit.commit.url,
+        login: commit.committer.login,
+        timestamp: commit.commit.committer.date,
+      };
+      await this.dbService.saveCommits(repoId, commit_obj);
+    }
+    this.logger.debug(
+      `saved all commits from ${repoIdent.owner}/${repoIdent.repo} to database succesful`,
+    );
   }
 }

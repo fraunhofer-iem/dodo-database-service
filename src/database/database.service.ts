@@ -1,12 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Mongoose } from 'mongoose';
 import {
   Diff,
   Releases,
   Issue,
   IssueEventTypes,
   Language,
+  Commit,
 } from 'src/github-api/model/PullRequest';
 import { RepositoryNameDto } from 'src/github-api/model/Repository';
 import { DiffDocument } from './schemas/diff.schema';
@@ -23,6 +24,7 @@ import { RepositoryDocument } from './schemas/repository.schema';
 import { RepositoryFileDocument } from './schemas/repositoryFile.schema';
 import { IssueWithEventsDocument } from './schemas/issueWithEvents.schema';
 import { LanguageDocument } from './schemas/language.schema';
+import { CommitDocument } from './schemas/commit.schema';
 
 @Injectable()
 export class DatabaseService {
@@ -57,6 +59,8 @@ export class DatabaseService {
     private readonly issueWithEventsModel: Model<IssueWithEventsDocument>,
     @InjectModel('Languages')
     private readonly languageModel: Model<LanguageDocument>,
+    @InjectModel('Commit')
+    private readonly commitModel: Model<CommitDocument>,
   ) {}
 
   /**
@@ -252,5 +256,35 @@ export class DatabaseService {
       this.saveLanguages(repoIdent, languages);
     }
     return languages;
+  }
+
+  async saveCommits(repoId: string, commit: Commit) {
+    this.logger.debug('saving commit to database');
+    const commitModel = new this.commitModel();
+
+    this.logger.debug(commit);
+    commitModel.url = commit.url;
+    commitModel.login = commit.login;
+    commitModel.timestamp = commit.timestamp;
+
+    const savedCommits = await commitModel.save();
+
+    await this.repoModel
+      .findByIdAndUpdate(repoId, {
+        $push: { commits: savedCommits },
+      })
+      .exec();
+
+    this.logger.debug('saving commit to database finished');
+
+    return commitModel.save();
+  }
+
+  async repoExists(repoIdent: RepositoryNameDto): Promise<boolean> {
+    const exists = await this.repoModel.exists({
+      repo: repoIdent.repo,
+      owner: repoIdent.owner,
+    });
+    return exists;
   }
 }
