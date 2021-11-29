@@ -9,10 +9,17 @@
 
     * Release Capability
       * [Release Cycle](ReleaseCycle.md)
+
       * [Fault Correction Rate](FaultCorrectionRate.md)
       * [Feature Completion Rate](FeatureCompletionRate.md)
+
       * Mean Idea to Market Time of Features in this Release?
         * [Time Idea to Market](TimeIdeaToMarket.md)
+
+      * Modification Capability
+        * [Feature Completion Capability](FeatureCompletionCapability.md)
+        * [Fault Correction Capability](FaultCorrectionCapability.md)
+
       * [Build Failure Rate](BuildFailureRate.md)
 
     * ?Incident? Response
@@ -31,9 +38,6 @@
       * Bugs per Feature
         * [Modification Correctness](ModificationCorrectness.md)
 
-      * Modification Capability
-        * [Feature Completion Capability](FeatureCompletionCapability.md)
-        * [Fault Correction Capability](FaultCorrectionCapability.md)
 
     * Pipeline
       * [Test Coverage](TestCoverage.md)

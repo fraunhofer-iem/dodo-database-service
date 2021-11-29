@@ -19,5 +19,9 @@ For this qualitative indicator we take all issues labeled `enhancement` (or some
 ```
 
 ## Related Data
-[Issues](Issue.md): `label`, `state`, `created_at`, `closed_at`
-[Release](Release.md): `created_at`, `previous` which is currently not part of the schema
+- [Issues](Issue.md): `label`, `state`, `created_at`, `closed_at`
+- [Release](Release.md): `created_at`, `previous` which is currently not part of the schema
+
+### Notes
+I want to put it up to debate if the capability should be calculated using the issue creation and close time. That way, left-over features will always reduce the capability of future sprints.  
+A different approach would be to take the respective pull requests and instead take the branch creation time as starting point for the capability. That way, it's only the implementation time that is assessed with this KPI.

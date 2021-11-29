@@ -9,7 +9,7 @@ The Feature Completion Rate is the amount of closed `enhancement` issues divided
 ## Calculation
 ```
 (release, issues) => {
-    closed_features = issues[ label = enhancement, state = closed, closed_at <= release.created_at ] 
+    closed_features = issues[ label = enhancement, state = closed, closed_at <= release.created_at, closed_at >= release.previous().created_at ] 
     open_features = issues[ label = enhancement, state = open, created_at <= release.created_at ]
 
     return |closed_features| / |closed_features| + |open_features|
@@ -18,7 +18,4 @@ The Feature Completion Rate is the amount of closed `enhancement` issues divided
 
 ## Related Data
 - [Issues](Issue.md): `label`, `state`, `created_at`, `closed_at`
-- [Release](Release.md): `created_at`
-
-### See also
-[Time Idea to Market](TimeIdeaToMarket.md)
+- [Release](Release.md): `created_at`, `previous` which is currently not part of the schema
