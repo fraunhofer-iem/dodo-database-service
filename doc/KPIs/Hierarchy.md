@@ -3,7 +3,7 @@
 [Introduction]
 
 * [Organizational Health](OrganizationalHealth.md)
-  * Project Healt
+  * Project Health
     * [Technical Debt](TechnicalDebt.md)
       * [Coupling of Components](CouplingOfComponents.md)
 
@@ -13,6 +13,7 @@
       * [Feature Completion Rate](FeatureCompletionRate.md)
       * Mean Idea to Market Time of Features in this Release?
         * [Time Idea to Market](TimeIdeaToMarket.md)
+      * [Build Failure Rate](BuildFailureRate.md)
 
     * Incident Response
         * [Mean Fault Correction Efficiency](MeanFaultCorrectionEfficiency.md)
@@ -29,9 +30,11 @@
 
       * Bugs per Feature
         * [Modification Correctness](ModificationCorrectness.md)
-      * Build Failure Rate
-      
-      * Test Coverage
+
+      * Modification Capability
+      * Functional Correctness
+
+      * [Test Coverage](TestCoverage.md)
 
   * [Development Health](DevelopmentHealth.md)
     * [Development Focus](DevelopmentFocus.md)
