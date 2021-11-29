@@ -794,6 +794,8 @@ export class StatisticService {
     // week, sprint or month => give the number per time unit
     // which show the normal case without any spread (i.e. days/time unit)
 
+    // TODO: implement the spread per repo!
+
     function addDays(date: string, days: number) {
       var result = new Date(date);
       result.setDate(result.getDate() + days);
