@@ -651,11 +651,11 @@ export class StatisticService {
     // group by developer
     // acc is empty object which will group the objects
     const developers = commit_arr.reduce((acc, obj) => {
-      var key = obj['login'];
+      const key = obj['login'];
       if (!acc[key]) {
         acc[key] = [];
       }
-      var date = obj.timestamp.slice(0, 10);
+      const date = obj.timestamp.slice(0, 10);
       if (!acc[key].includes(date)) {
         acc[key].push(date);
       }
@@ -691,8 +691,8 @@ export class StatisticService {
     // get the devSpread
     const spread = {};
     for (const dev of developerSet) {
-      var allDevCommits: string[] = [];
-      var repoCount = 0;
+      const allDevCommits: string[] = [];
+      let repoCount = 0;
       for (const repo of repoDevelopers) {
         if (dev in repo) {
           repoCount += 1;
@@ -715,13 +715,13 @@ export class StatisticService {
       const timestamps: string[] = Object.keys(spread[dev].spread).sort();
       console.log(timestamps);
       const end = timestamps[-1];
-      var weekDate = timestamps[0];
-      var sprintDate = timestamps[0];
-      var monthDate = timestamps[0];
-      var spreads = spread[dev].spread[timestamps[0]]; // initial value for days always
-      var week = 0;
-      var sprint = 0;
-      var month = 0;
+      let weekDate = timestamps[0];
+      let sprintDate = timestamps[0];
+      let monthDate = timestamps[0];
+      let spreads = spread[dev].spread[timestamps[0]]; // initial value for days always
+      let week = 0;
+      let sprint = 0;
+      let month = 0;
       for (let i = 1; i < timestamps.length; i++) {
         const value = spread[dev].spread[timestamps[i]];
         spreads += value;
@@ -797,7 +797,7 @@ export class StatisticService {
     // TODO: implement the spread per repo!
 
     function addDays(date: string, days: number) {
-      var result = new Date(date);
+      const result = new Date(date);
       result.setDate(result.getDate() + days);
       return result;
     }
