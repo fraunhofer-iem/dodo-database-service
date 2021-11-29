@@ -15,7 +15,7 @@
         * [Time Idea to Market](TimeIdeaToMarket.md)
       * [Build Failure Rate](BuildFailureRate.md)
 
-    * Incident Response
+    * ?Incident? Response
         * [Mean Fault Correction Efficiency](MeanFaultCorrectionEfficiency.md)
           * [Fault Correction Efficiency](FaultCorrectionEfficiency.md)
         * [Mean Time to Resolution](MeanTimeToResolution.md)
@@ -32,9 +32,14 @@
         * [Modification Correctness](ModificationCorrectness.md)
 
       * Modification Capability
-      * Functional Correctness
+        * [Feature Completion Capability](FeatureCompletionCapability.md)
+        * [Fault Correction Capability](FaultCorrectionCapability.md)
 
+    * Pipeline
       * [Test Coverage](TestCoverage.md)
+
+    * GitFlow
+      * [Branch Uniqueness](BranchUniqueness.md)
 
   * [Development Health](DevelopmentHealth.md)
     * [Development Focus](DevelopmentFocus.md)
