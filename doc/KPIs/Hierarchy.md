@@ -9,6 +9,11 @@
     * [Release Capability](ReleaseCapability.md)
       * [Release Cycle](ReleaseCycle.md)
     * [?Feature?](Feature.md)
+      * [Modification Efficiency](ModificationEfficiency.md)
+        * [Mean Fault Correction Efficiency](MeanFaultCorrectionEfficiency.md)
+          * [Fault Correction Efficiency](FaultCorrectionEfficiency.md)
+        * [Mean Feature Completion Efficiency](MeanFeatureCompletionEfficiency.md)
+          * [Feature Completion Efficiency](FeatureCompletionEfficiency.md)
       * Bugs per Feature
         * Modification Correctness
       * [Fault Correction Rate](FaultCorrectionRate.md)

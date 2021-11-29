@@ -1,7 +1,7 @@
 # Pull Request Complexity
 
 ## Description
-Pull Request Size (how many files were changed and how much changes were made. how does this relate to the repository size?)
+Pull Request Size (how many files were changed and how much changes were made. How does this relate to the repository size?)
 ## Calculation
 
 ## Related Data
