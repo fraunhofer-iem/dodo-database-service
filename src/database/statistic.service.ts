@@ -14,6 +14,7 @@ import { LabelDocument } from './schemas/labels.schema';
 import { AssigneeDocument } from './schemas/assignee.schema';
 import { AssigneesDocument } from './schemas/assignees.schema';
 import { MilestoneDocument } from './schemas/milestone.schema';
+import { timestamp } from 'rxjs';
 
 @Injectable()
 export class StatisticService {
@@ -607,5 +608,196 @@ export class StatisticService {
     this.logger.log(`avg number of releases per closed issue is ${avg}`);
 
     return avg;
+  }
+
+  async getRepoCommits(repoId: string, userLimit?: number) {
+    const limit = userLimit ? userLimit : 100;
+
+    const getCommits = {
+      from: 'commits',
+      localField: 'commits', // have to match
+      foreignField: '_id', // have to match
+      as: 'expandedCommits',
+    };
+
+    const commits: { expandedCommits: { login: string; timestamp: string } }[] =
+      await this.repoModel
+        .aggregate()
+        .match({ _id: repoId })
+        .project({ commits: 1 })
+        .unwind('$commits')
+        .lookup(getCommits)
+        .unwind('$expandedCommits')
+        .project({
+          'expandedCommits.login': 1,
+          'expandedCommits.timestamp': 1,
+          _id: 0,
+        })
+        .sort({ 'expandedCommits.timestamp': 1 })
+        .exec();
+
+    // console.log(commits);
+
+    const commit_arr: { login: string; timestamp: string }[] = [];
+    commits.forEach((commit) => {
+      commit_arr.push({
+        login: commit.expandedCommits.login,
+        timestamp: commit.expandedCommits.timestamp,
+      });
+    });
+
+    // console.log(commit_arr);
+
+    // group by developer
+    // acc is empty object which will group the objects
+    const developers = commit_arr.reduce((acc, obj) => {
+      var key = obj['login'];
+      if (!acc[key]) {
+        acc[key] = [];
+      }
+      var date = obj.timestamp.slice(0, 10);
+      if (!acc[key].includes(date)) {
+        acc[key].push(date);
+      }
+      return acc;
+    }, {});
+
+    // console.log(developers);
+    return developers;
+  }
+
+  async devSpread(owner: string, timespread?: string) {
+    const timeslot = timespread ? timespread : 'day';
+
+    const repoIds = await this.repoModel
+      .aggregate()
+      .match({ owner: owner })
+      .project({ _id: 1 })
+      .exec();
+
+    const repoDevelopers = [];
+    const developerSet: Set<string> = new Set();
+    for (const repoId of repoIds) {
+      console.log(repoId);
+      const developers = await this.getRepoCommits(repoId._id);
+      repoDevelopers.push(developers);
+      for (const dev of Object.keys(developers)) {
+        developerSet.add(dev);
+      }
+    }
+    console.log(repoDevelopers);
+    console.log(developerSet);
+
+    // get the devSpread
+    const spread = {};
+    for (const dev of developerSet) {
+      var allDevCommits: string[] = [];
+      var repoCount = 0;
+      for (const repo of repoDevelopers) {
+        if (dev in repo) {
+          repoCount += 1;
+          allDevCommits.push(...repo[dev]); // syntax?
+        }
+      }
+      console.log(allDevCommits);
+      spread[dev] = {
+        repos: repoCount,
+        spread: allDevCommits.reduce((acc, curr) => {
+          return acc[curr] ? ++acc[curr] : (acc[curr] = 1), acc;
+        }, {}),
+      };
+      console.log(spread);
+    }
+
+    // calculate day, week, sprint, month spread avg
+    const spreadsPerDevs = {};
+    for (const dev of Object.keys(spread)) {
+      const timestamps: string[] = Object.keys(spread[dev].spread).sort();
+      console.log(timestamps);
+      const end = timestamps[-1];
+      var weekDate = timestamps[0];
+      var sprintDate = timestamps[0];
+      var monthDate = timestamps[0];
+      var spreads = spread[dev].spread[timestamps[0]]; // initial value for days always
+      var week = 0;
+      var sprint = 0;
+      var month = 0;
+      for (let i = 1; i < timestamps.length; i++) {
+        const value = spread[dev].spread[timestamps[i]];
+        spreads += value;
+        if (addDays(weekDate, 7) < new Date(timestamps[i])) {
+          week += value;
+          weekDate = timestamps[i];
+        }
+        if (addDays(sprintDate, 14) < new Date(timestamps[i])) {
+          sprint += value;
+          sprintDate = timestamps[i];
+        }
+        if (addDays(monthDate, 30) < new Date(timestamps[i])) {
+          month += value;
+          monthDate = timestamps[i];
+        }
+      }
+      spreadsPerDevs[dev] = {
+        spread: spreads,
+        days: timestamps.length,
+        weeks: week,
+        sprints: sprint,
+        months: month,
+      };
+    }
+
+    console.log(spreadsPerDevs);
+    // avg spread per dev
+    for (const dev of Object.keys(spreadsPerDevs)) {
+      const devObj = spreadsPerDevs[dev];
+      devObj.daySpread = devObj.spread / devObj.days;
+      if (devObj.weeks != 0) {
+        devObj.weekSpread = devObj.spread / devObj.weeks;
+      }
+      if (devObj.sprints != 0) {
+        devObj.sprintSpread = devObj.spread / devObj.sprints;
+      }
+      if (devObj.months != 0) {
+        devObj.monthSpread = devObj.spread / devObj.months;
+      }
+    }
+
+    console.log(spreadsPerDevs);
+
+    // avg spread per orga
+    const totalSpread = {
+      daySpread: 0,
+      weekSpread: 0,
+      sprintSpread: 0,
+      monthSpread: 0,
+    };
+    for (const dev of Object.keys(spreadsPerDevs)) {
+      const devObj = spreadsPerDevs[dev];
+      totalSpread.daySpread += devObj.daySpread;
+      totalSpread.weekSpread += devObj.weekSpread;
+      totalSpread.sprintSpread += devObj.sprintSpread;
+      totalSpread.monthSpread += devObj.monthSpread;
+    }
+    totalSpread.daySpread += totalSpread.daySpread / developerSet.size;
+    totalSpread.weekSpread += totalSpread.weekSpread / developerSet.size;
+    totalSpread.sprintSpread += totalSpread.sprintSpread / developerSet.size;
+    totalSpread.monthSpread += totalSpread.monthSpread / developerSet.size;
+
+    console.log(totalSpread);
+
+    // how to interpret week, sprint, month avg spread?
+    // maybe additionally just count the spreads, i.e. if there is a spread,
+    // count him, no matter if its 2,3,4 ... repos. All which is not 1 is counted.
+
+    // check if value is greater equals 1, otherwise there is no
+    // week, sprint or month => give the number per time unit
+    // which show the normal case without any spread (i.e. days/time unit)
+
+    function addDays(date: string, days: number) {
+      var result = new Date(date);
+      result.setDate(result.getDate() + days);
+      return result;
+    }
   }
 }
