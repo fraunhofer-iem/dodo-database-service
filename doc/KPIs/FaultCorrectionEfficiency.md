@@ -1,7 +1,7 @@
 # Fault Correction Efficiency
 
 ## Description
-The Fault Correction Efficiency describes the development team's capability to respond to bug reports. In more detail, it assesses if a single fault was corrected within the time frame the organization deems to adhere to for fault corrections.  
+The Fault Correction Efficiency describes the development team's capability to respond to bug reports. In more detail, it assesses if a single fault was corrected within the time frame the organization aims to adhere to for fault corrections.  
 We calculate this qualitative indicator for resolved issues labeled `bug` (or some other equivalent label).  
 A value greater than 1 indicates that the fault was not corrected within the desired time. A value less than 1 indicates that the fault was corrected within the desired time.
 
