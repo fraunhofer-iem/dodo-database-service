@@ -12,13 +12,22 @@ jobs:
     uses: fraunhofer-iem/dodo-database-service/.github/workflows/lint.yml@main
 
   test:
+    needs: lint
     uses: fraunhofer-iem/dodo-database-service/.github/workflows/test.yml@main
   
   format:
     runs-on: ubuntu-latest
-    needs: lint
+    needs: test
 
     steps:
+      - name: checkout
+        uses: actions/checkout@v2
+        
+      - name: node setup
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16.x
+
       - name: format
         run: |
           npm install
