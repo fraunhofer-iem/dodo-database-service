@@ -9,21 +9,10 @@ on:
 
 jobs:
   lint:
-    runs-on: ubuntu-latest
+    uses: fraunhofer-iem/dodo-database-service/.github/workflows/lint.yml@main
 
-    steps:
-      - name: checkout
-        uses: actions/checkout@v2
-        
-      - name: node setup
-        uses: actions/setup-node@v2
-        with:
-          node-version: 14.x
-          
-      - name: lint and format
-        run: |
-          npm install
-          npm run lint
+  test:
+    uses: fraunhofer-iem/dodo-database-service/.github/workflows/test.yml@main
   
   format:
     runs-on: ubuntu-latest
