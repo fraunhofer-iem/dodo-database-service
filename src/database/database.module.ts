@@ -39,7 +39,12 @@ import { DeveloperFocus } from './statistics/developerFocus.service';
       { name: 'Commit', schema: CommitSchema },
     ]),
   ],
+<<<<<<< HEAD
   providers: [DatabaseService, StatisticService, DeveloperFocus],
   exports: [DatabaseService, StatisticService, DeveloperFocus],
+=======
+  providers: [DatabaseService, StatisticService],
+  exports: [DatabaseService, StatisticService],
+>>>>>>> dev
 })
 export class DatabaseModule {}
