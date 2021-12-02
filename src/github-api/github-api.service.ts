@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Octokit } from 'octokit';
 import { DatabaseService } from 'src/database/database.service';
 import { StatisticService } from 'src/database/statistic.service';
+import { DeveloperFocus } from 'src/database/statistics/developerFocus.service';
 import { PullRequest, RepositoryFile, Commit } from './model/PullRequest';
 import { CreateRepositoryDto, RepositoryNameDto } from './model/Repository';
 
@@ -41,6 +42,7 @@ export class GithubApiService {
   constructor(
     private statisticService: StatisticService,
     private dbService: DatabaseService,
+    private devFocus: DeveloperFocus,
   ) {
     // init octokit
     this.octokit = this.getOctokitClient();
@@ -60,8 +62,8 @@ export class GithubApiService {
     // this.statisticService.avgNumberOfAssigneeUntilTicketCloses(repoIdent);
     // this.statisticService.avgTimeTillTicketWasAssigned(repoIdent);
     // this.statisticService.workInProgress(repoIdent);
-    // this.statisticService.devSpread(repoIdent.owner);
-    this.statisticService.devSpreadRepo(repoIdent);
+    // this.statisticService.devSpreadTotal(repoIdent.owner);
+    this.devFocus.devSpreadRepo(repoIdent);
   }
 
   public async storeIssues(repoIdent: RepositoryNameDto) {
