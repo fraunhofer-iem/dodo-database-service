@@ -1,0 +1,37 @@
+name: Tag
+
+on:
+  workflow_call:
+    outputs:
+      new_tag:
+        value: ${{ jobs.tag.outputs.new_tag }}
+      tag:
+        value: ${{ jobs.tag.outputs.tag }}
+      part:
+        value: ${{ jobs.tag.outputs.part }}
+    inputs:
+      suffix:
+        required: false
+        type: string
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    outputs:
+      new_tag: ${{ steps.create-tag.outputs.new_tag }}
+      tag: ${{ steps.create-tag.outputs.tag }}
+      part: ${{ steps.create-tag.outputs.part }}
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: "0"
+
+      - id: create-tag
+        uses: anothrNick/github-tag-action@1.36.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WITH_V: true
+          RELEASE_BRANCHES: main
+          PRERELEASE_SUFFIX: ${{ inputs.suffix }}
