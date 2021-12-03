@@ -1,4 +1,4 @@
-name: Build pipeline
+name: test
 
 on:
   workflow_call:
