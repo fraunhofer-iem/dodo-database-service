@@ -19,6 +19,7 @@ import { PullRequestSchema } from '../../src/database/schemas/pullRequest.schema
 import { PullRequestFileSchema } from '../../src/database/schemas/pullRequestFile.schema';
 import { ReleasesSchema } from '../../src/database/schemas/releases.schema';
 import { RepositoryFileSchema } from '../../src/database/schemas/repositoryFile.schema';
+import { CommitSchema } from '../../src/database/schemas/commit.schema';
 
 /**
  * test suite for all KPIs from statistic service
@@ -37,7 +38,7 @@ describe('StatisticService', () => {
     testMod = await Test.createTestingModule({
       imports: [
         MongooseModule.forRoot(uri),
-        DatabaseModule,
+        // DatabaseModule,
         MongooseModule.forFeature([
           { name: 'Repository', schema: RepositorySchema },
           { name: 'Diff', schema: DiffSchema },
@@ -53,6 +54,7 @@ describe('StatisticService', () => {
           { name: 'Milestone', schema: MilestoneSchema },
           { name: 'IssueWithEvents', schema: IssueWithEventsSchema },
           { name: 'Languages', schema: LanguageSchema },
+          { name: 'Commit', schema: CommitSchema },
         ]),
       ],
       providers: [StatisticService, DatabaseService],
