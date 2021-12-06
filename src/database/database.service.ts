@@ -258,7 +258,7 @@ export class DatabaseService {
     return languages;
   }
 
-  async saveCommits(repoId: string, commit: Commit) {
+  async saveCommit(repoId: string, commit: Commit) {
     this.logger.debug('saving commit to database');
     const commitModel = new this.commitModel();
 
@@ -267,17 +267,17 @@ export class DatabaseService {
     commitModel.login = commit.login;
     commitModel.timestamp = commit.timestamp;
 
-    const savedCommits = await commitModel.save();
+    const savedCommit = await commitModel.save();
 
     await this.repoModel
       .findByIdAndUpdate(repoId, {
-        $push: { commits: savedCommits },
+        $push: { commits: savedCommit },
       })
       .exec();
 
     this.logger.debug('saving commit to database finished');
 
-    return commitModel.save();
+    return savedCommit;
   }
 
   async repoExists(repoIdent: RepositoryNameDto): Promise<boolean> {

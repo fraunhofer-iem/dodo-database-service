@@ -345,12 +345,11 @@ export class GithubApiService {
   }
 
   public async storeCommits(repoIdent: RepositoryNameDto) {
-    if (!this.dbService.repoExists(repoIdent)) {
-      await this.dbService.createRepo(repoIdent);
+    if (!(await this.dbService.repoExists(repoIdent))) {
       this.logger.debug(
-        `create repository for ${repoIdent.owner}/${repoIdent.repo} first`,
+        `No such repo ${repoIdent.owner}/${repoIdent.repo} exists`,
       );
-      this.storeCommits(repoIdent);
+      return;
     }
     this.logger.log(
       `querying commits with developer and timestamp for ${repoIdent.owner}/${repoIdent.repo}`,
@@ -359,12 +358,12 @@ export class GithubApiService {
       repoIdent.owner,
       repoIdent.repo,
     );
-    const commits = await this.octokit.rest.repos
-      .listCommits({
+    const commits = (
+      await this.octokit.rest.repos.listCommits({
         owner: repoIdent.owner,
         repo: repoIdent.repo,
       })
-      .then((res) => res.data);
+    ).data;
     this.logger.debug(
       `saving commits from ${repoIdent.owner}/${repoIdent.repo} to database...`,
     );
@@ -374,7 +373,7 @@ export class GithubApiService {
         login: commit.committer.login,
         timestamp: commit.commit.committer.date,
       };
-      await this.dbService.saveCommits(repoId, commit_obj);
+      await this.dbService.saveCommit(repoId, commit_obj);
     }
     this.logger.debug(
       `saved all commits from ${repoIdent.owner}/${repoIdent.repo} to database succesful`,
