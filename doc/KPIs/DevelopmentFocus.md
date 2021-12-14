@@ -2,10 +2,8 @@
 
 ## Description
 
-We want to know how much the developers need to spread themselves between different projects.  
-Therefore, we measure the contributions of every project member across all projects to assess how much context switches are happening. This describes the developer spread.
-Additionally, we track the kind of tickets every developer works on to see how much work is spent doing bug fixes vs feature development.
-This is then averaged across all developers for each project to get an estimate how the effective work distribution is for every project.
+Development Focus describes the combination of the Developer Spread and the type of tasks the developers work on.\
+E.g. the Developer Focus tells us that a Developer spends 60% time on this project. Of these 60% they spend 30% on bug fixes, 30% on code reviews, and 30% on new features.
 
 ## Calculation
 
@@ -15,3 +13,7 @@ This is then averaged across all developers for each project to get an estimate 
 - [Developer](Developer.md) the name/id to cross reference with tickets
 - [Projects](Project.md)
 - [Organization](Organization.md)
+- [Developer Spread](DeveloperSpread.md)
+
+## Need for additional Input / Interpretation
+* For further interpretation this data can be compared with the planned time distribution. This information can then be used to identify unplanned work.
