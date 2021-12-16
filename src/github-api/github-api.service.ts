@@ -62,7 +62,7 @@ export class GithubApiService {
     // this.statisticService.avgNumberOfAssigneeUntilTicketCloses(repoIdent);
     // this.statisticService.avgTimeTillTicketWasAssigned(repoIdent);
     // this.statisticService.workInProgress(repoIdent);
-    // this.statisticService.devSpreadTotal(repoIdent.owner);
+    this.devFocus.devSpreadTotal(repoIdent.owner);
     this.devFocus.devSpreadRepo(repoIdent);
   }
 
@@ -358,12 +358,10 @@ export class GithubApiService {
       repoIdent.owner,
       repoIdent.repo,
     );
-    const commits = (
-      await this.octokit.rest.repos.listCommits({
-        owner: repoIdent.owner,
-        repo: repoIdent.repo,
-      })
-    ).data;
+    const { data: commits } = await this.octokit.rest.repos.listCommits({
+      owner: repoIdent.owner,
+      repo: repoIdent.repo,
+    });
     this.logger.debug(
       `saving commits from ${repoIdent.owner}/${repoIdent.repo} to database...`,
     );
