@@ -608,4 +608,84 @@ export class StatisticService {
 
     return avg;
   }
+
+  /**
+   * The Time to Resolution describes the development team's capability to respond to bug reports. It assesses the time it took to resolve a single bug report.
+   * We calculate this information point for resolved issues labeled bug (or some other equivalent label).
+   * (issue[label = "bug", state="closed"], T_bugfix) => {
+   * return (issue.closed_at - issue.created_at)
+   *  }
+   *  @param repoIdent
+   *  @param userLimit
+   */
+  async TimeToResolution(repoIdent: RepositoryNameDto, userLimit?: number) {
+    const limit = userLimit ? userLimit : 100;
+
+    const filter = {
+      repo: repoIdent.repo,
+      owner: repoIdent.owner,
+    };
+
+    const getIssuesWithEvents = {
+      from: 'issuewithevents',
+      localField: 'issuesWithEvents',
+      foreignField: '_id',
+      as: 'expandedIssuesWithEvents',
+    };
+
+    const getIssue = {
+      from: 'issues',
+      localField: 'expandedIssuesWithEvents.issue',
+      foreignField: '_id',
+      as: 'expandedIssue',
+    };
+
+    const res: { _id: string; count: number }[] = await this.repoModel
+      .aggregate()
+      .match(filter)
+      .project({ issuesWithEvents: 1 })
+      .unwind('$issuesWithEvents')
+      .lookup(getIssuesWithEvents)
+      .unwind('$expandedIssuesWithEvents')
+      .lookup(getIssue)
+      .unwind('$expandedIssue')
+      .match({ 'expandedIssue.closed_at': { $exists: true, $ne: null } })
+      .project({
+        Issue_created_at_Time: { $toDate: '$expandedIssue.created_at' },
+        Issue_closed_at_Time: { $toDate: '$expandedIssue.closed_at' },
+      })
+      .addFields({
+        _id: null,
+        subtractedDate: {
+          $subtract: ['$Issue_closed_at_Time', '$Issue_created_at_Time'],
+        },
+      })
+      // .limit(limit)
+      .exec();
+
+    var time_to_resolution = []; 
+
+    res.forEach((e) => {
+      //this.logger.log(`the elements are ${e['subtractedDate']}`);
+      const time = msToTime(e['subtractedDate']);
+      time_to_resolution.push(time);
+    });
+
+    //prints the Time To Resolution of each element
+    this.logger.log(time_to_resolution); 
+
+    //to convert ms to time
+    function msToTime(ms: number) {
+      const seconds = ms / 1000;
+      const minutes = ms / (1000 * 60);
+      const hours = ms / (1000 * 60 * 60);
+      const days = ms / (1000 * 60 * 60 * 24);
+      if (seconds < 60) return seconds.toFixed(1) + ' Sec';
+      else if (minutes < 60) return minutes.toFixed(1) + ' Min';
+      else if (hours < 24) return hours.toFixed(1) + ' Hrs';
+      else return days + ' Days';
+    }
+
+    return time_to_resolution;
+  }
 }

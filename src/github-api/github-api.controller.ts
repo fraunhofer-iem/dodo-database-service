@@ -51,8 +51,8 @@ export class GithubApiController {
     return this.ghApiService.storeIssues(repoIdent);
   }
 
-  @Post('languages')
-  async gatherLanguages(@Body() repoIdent: RepositoryNameDto) {
-    return this.ghApiService.storeLanguages(repoIdent);
-  }
+  // @Post('languages')
+  // async gatherLanguages(@Body() repoIdent: RepositoryNameDto) {
+  //   return this.ghApiService.storeLanguages(repoIdent);
+  // }
 }
