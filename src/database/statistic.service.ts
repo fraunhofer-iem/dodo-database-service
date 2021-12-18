@@ -672,7 +672,7 @@ export class StatisticService {
     });
 
     //prints the Time To Resolution of each element
-    this.logger.log(time_to_resolution); 
+    this.logger.log(`time to resolution for every ticket is ${time_to_resolution}`); 
 
     //to convert ms to time
     function msToTime(ms: number) {
