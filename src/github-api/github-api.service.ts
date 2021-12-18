@@ -60,7 +60,7 @@ export class GithubApiService {
     // this.statisticService.avgNumberOfAssigneeUntilTicketCloses(repoIdent);
     // this.statisticService.avgTimeTillTicketWasAssigned(repoIdent);
     // this.statisticService.workInProgress(repoIdent);
-       this.statisticService.meanTimeToResolution(repoIdent);
+    this.statisticService.meanTimeToResolution(repoIdent);
   }
 
   public async storeIssues(repoIdent: RepositoryNameDto) {
