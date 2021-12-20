@@ -9,7 +9,7 @@ The Fault Correction Rate is the amount of closed `bug` issues divided by the to
 ## Calculation
 ```
 (release, issues) => {
-    closed_bugs = issues[ label = bug, state = closed, closed_at <= release.created_at ] 
+    closed_bugs = issues[ label = bug, state = closed, closed_at <= release.created_at, closed_at >= release.previous().created_at ] 
     open_bugs = issues[ label = bug, state = open, created_at <= release.created_at ]
 
     return |closed_bugs| / |closed_bugs| + |open_bugs|
@@ -19,4 +19,4 @@ The Fault Correction Rate is the amount of closed `bug` issues divided by the to
 ## Related Data
 
 - [Issues](Issue.md): `label`, `state`, `created_at`, `closed_at`
-- [Release](Release.md): `created_at`
+- [Release](Release.md): `created_at`, `previous` which is currently not part of the schema

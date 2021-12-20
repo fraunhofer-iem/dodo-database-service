@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Mongoose } from 'mongoose';
+import { Model, Mongoose, OnlyFieldsOfType } from 'mongoose';
 import {
   Diff,
   Releases,
@@ -125,11 +125,7 @@ export class DatabaseService {
 
     const releasesModels = await releasesModel.save();
 
-    await this.repoModel
-      .findByIdAndUpdate(repoId, {
-        $push: { releases: [releasesModels] },
-      })
-      .exec();
+    await this.updateRepo(repoId, { releases: [releasesModels] });
 
     this.logger.debug('saving releases to database finished');
 
@@ -156,11 +152,9 @@ export class DatabaseService {
     createdDiff.repositoryFiles = repoFiles;
     createdDiff.pullRequest = pullRequest;
     const savedDiff = await createdDiff.save();
-    await this.repoModel
-      .findByIdAndUpdate(repoId, {
-        $push: { diffs: [savedDiff] },
-      })
-      .exec();
+
+    await this.updateRepo(repoId, { diffs: [savedDiff] });
+
     this.logger.debug('saving diff to database finished');
   }
 
@@ -253,9 +247,9 @@ export class DatabaseService {
       languageModel.repo_id = repoM._id;
       languageModel.languages = languages;
       const savedLanguages = await languageModel.save();
-      await this.repoModel
-        .findByIdAndUpdate(repoM._id, { languages: savedLanguages })
-        .exec();
+
+      await this.updateRepo(repoM._id, { languages: savedLanguages });
+
       this.logger.debug(
         `stored programming languages from ${repoIdent.owner}/${repoIdent.repo} successful`,
       );
@@ -266,7 +260,7 @@ export class DatabaseService {
     return languages;
   }
 
-  async saveCommits(repoId: string, commit: Commit) {
+  async saveCommit(repoId: string, commit: Commit) {
     this.logger.debug('saving commit to database');
     const commitModel = new this.commitModel();
 
@@ -275,17 +269,13 @@ export class DatabaseService {
     commitModel.login = commit.login;
     commitModel.timestamp = commit.timestamp;
 
-    const savedCommits = await commitModel.save();
+    const savedCommit = await commitModel.save();
 
-    await this.repoModel
-      .findByIdAndUpdate(repoId, {
-        $push: { commits: savedCommits },
-      })
-      .exec();
+    await this.updateRepo(repoId, { commits: savedCommit });
 
     this.logger.debug('saving commit to database finished');
 
-    return commitModel.save();
+    return savedCommit;
   }
 
   async repoExists(repoIdent: RepositoryNameDto): Promise<boolean> {
@@ -294,5 +284,13 @@ export class DatabaseService {
       owner: repoIdent.owner,
     });
     return exists;
+  }
+
+  async updateRepo(repoId: string, push: OnlyFieldsOfType<RepositoryDocument>) {
+    await this.repoModel
+      .findByIdAndUpdate(repoId, {
+        $push: push,
+      })
+      .exec();
   }
 }
