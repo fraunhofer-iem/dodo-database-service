@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Mongoose } from 'mongoose';
+import { Model, Mongoose, OnlyFieldsOfType } from 'mongoose';
 import {
   Diff,
   Releases,
@@ -123,11 +123,7 @@ export class DatabaseService {
 
     const releasesModels = await releasesModel.save();
 
-    await this.repoModel
-      .findByIdAndUpdate(repoId, {
-        $push: { releases: [releasesModels] },
-      })
-      .exec();
+    await this.updateRepo(repoId, { releases: [releasesModels] });
 
     this.logger.debug('saving releases to database finished');
 
@@ -154,11 +150,9 @@ export class DatabaseService {
     createdDiff.repositoryFiles = repoFiles;
     createdDiff.pullRequest = pullRequest;
     const savedDiff = await createdDiff.save();
-    await this.repoModel
-      .findByIdAndUpdate(repoId, {
-        $push: { diffs: [savedDiff] },
-      })
-      .exec();
+
+    await this.updateRepo(repoId, { diffs: [savedDiff] });
+
     this.logger.debug('saving diff to database finished');
   }
 
@@ -245,9 +239,9 @@ export class DatabaseService {
       languageModel.repo_id = repoM._id;
       languageModel.languages = languages;
       const savedLanguages = await languageModel.save();
-      await this.repoModel
-        .findByIdAndUpdate(repoM._id, { languages: savedLanguages })
-        .exec();
+
+      await this.updateRepo(repoM._id, { languages: savedLanguages });
+
       this.logger.debug(
         `stored programming languages from ${repoIdent.owner}/${repoIdent.repo} successful`,
       );
@@ -269,11 +263,7 @@ export class DatabaseService {
 
     const savedCommit = await commitModel.save();
 
-    await this.repoModel
-      .findByIdAndUpdate(repoId, {
-        $push: { commits: savedCommit },
-      })
-      .exec();
+    await this.updateRepo(repoId, { commits: savedCommit });
 
     this.logger.debug('saving commit to database finished');
 
@@ -286,5 +276,13 @@ export class DatabaseService {
       owner: repoIdent.owner,
     });
     return exists;
+  }
+
+  async updateRepo(repoId: string, push: OnlyFieldsOfType<RepositoryDocument>) {
+    await this.repoModel
+      .findByIdAndUpdate(repoId, {
+        $push: push,
+      })
+      .exec();
   }
 }
