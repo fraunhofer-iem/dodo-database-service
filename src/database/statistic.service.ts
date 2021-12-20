@@ -615,14 +615,17 @@ export class StatisticService {
    *  We calculate this qualitative indicator for resolved issues labeled bug (or some other equivalent label).
    *  A value greater than 1 indicates that the fault was not corrected within the desired time.
    *  A value less than 1 indicates that the fault was corrected within the desired time.
-   *  
+   *
    *  (issue[label = "bug", state="closed"], T_bugfix) => {
    *  return (issue.closed_at - issue.created_at) / T_bugfix
    *   }
    *  @param repoIdent
    *  @param userLimit
    */
-   async FaultCorrectionEfficiency(repoIdent: RepositoryNameDto, userLimit?: number) {
+  async FaultCorrectionEfficiency(
+    repoIdent: RepositoryNameDto,
+    userLimit?: number,
+  ) {
     const limit = userLimit ? userLimit : 100;
 
     const filter = {
@@ -668,20 +671,22 @@ export class StatisticService {
       .exec();
 
     // This variable defines the fixed time set for the bugs to be resolved.
-    // Since such an information cannot be derived from git, milestones can be looked at,
-    // however they are hardly properly utilized by most projects.
-    // Such information can be derived from Jira. But for now, it is manually defined.
-    // T_bugfix value is considered to be 14 Days.
-    var T_bugfix = 1209600000;//604800000 ; 
+    // Since such an information cannot be derived from git (milestones can be looked at,
+    // however they are hardly properly utilized by most projects).
+    // Although information like this can be derived from Jira, but for now, it is manually defined.
+    // T_bugfix value is considered to be 14 Days, i.e, 1209600000 ms.
+    var T_bugfix = 1209600000; //604800000 ;
     var fault_correction_efficiency = [];
 
     res.forEach((e) => {
       this.logger.log(e['subtractedDate']);
-      fault_correction_efficiency.push(e['subtractedDate']/T_bugfix);
+      fault_correction_efficiency.push(e['subtractedDate'] / T_bugfix);
     });
 
     //prints the Fault correction efficiency for each element.
-    this.logger.log(`Fault correction efficiency for each element is: \n ${fault_correction_efficiency}`); 
+    this.logger.log(
+      `Fault correction efficiency for each element is: \n ${fault_correction_efficiency}`,
+    );
     return fault_correction_efficiency;
   }
 }
