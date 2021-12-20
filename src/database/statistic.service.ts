@@ -608,4 +608,80 @@ export class StatisticService {
 
     return avg;
   }
+
+  /**
+   *  The Fault Correction Efficiency describes the development team's capability to respond to bug reports.
+   *  In more detail, it assesses if a single fault was corrected within the time frame the organization aims to adhere to for fault corrections.
+   *  We calculate this qualitative indicator for resolved issues labeled bug (or some other equivalent label).
+   *  A value greater than 1 indicates that the fault was not corrected within the desired time.
+   *  A value less than 1 indicates that the fault was corrected within the desired time.
+   *  
+   *  (issue[label = "bug", state="closed"], T_bugfix) => {
+   *  return (issue.closed_at - issue.created_at) / T_bugfix
+   *   }
+   *  @param repoIdent
+   *  @param userLimit
+   */
+   async FaultCorrectionEfficiency(repoIdent: RepositoryNameDto, userLimit?: number) {
+    const limit = userLimit ? userLimit : 100;
+
+    const filter = {
+      repo: repoIdent.repo,
+      owner: repoIdent.owner,
+    };
+
+    const getIssuesWithEvents = {
+      from: 'issuewithevents',
+      localField: 'issuesWithEvents',
+      foreignField: '_id',
+      as: 'expandedIssuesWithEvents',
+    };
+
+    const getIssue = {
+      from: 'issues',
+      localField: 'expandedIssuesWithEvents.issue',
+      foreignField: '_id',
+      as: 'expandedIssue',
+    };
+
+    const res: { _id: string; count: number }[] = await this.repoModel
+      .aggregate()
+      .match(filter)
+      .project({ issuesWithEvents: 1 })
+      .unwind('$issuesWithEvents')
+      .lookup(getIssuesWithEvents)
+      .unwind('$expandedIssuesWithEvents')
+      .lookup(getIssue)
+      .unwind('$expandedIssue')
+      .match({ 'expandedIssue.closed_at': { $exists: true, $ne: null } })
+      .project({
+        Issue_created_at_Time: { $toDate: '$expandedIssue.created_at' },
+        Issue_closed_at_Time: { $toDate: '$expandedIssue.closed_at' },
+      })
+      .addFields({
+        _id: null,
+        subtractedDate: {
+          $subtract: ['$Issue_closed_at_Time', '$Issue_created_at_Time'],
+        },
+      })
+      // .limit(limit)
+      .exec();
+
+    // This variable defines the fixed time set for the bugs to be resolved.
+    // Since such an information cannot be derived from git, milestones can be looked at,
+    // however they are hardly properly utilized by most projects.
+    // Such information can be derived from Jira. But for now, it is manually defined.
+    // T_bugfix value is considered to be 14 Days.
+    var T_bugfix = 1209600000;//604800000 ; 
+    var fault_correction_efficiency = [];
+
+    res.forEach((e) => {
+      this.logger.log(e['subtractedDate']);
+      fault_correction_efficiency.push(e['subtractedDate']/T_bugfix);
+    });
+
+    //prints the Fault correction efficiency for each element.
+    this.logger.log(`Fault correction efficiency for each element is: \n ${fault_correction_efficiency}`); 
+    return fault_correction_efficiency;
+  }
 }
