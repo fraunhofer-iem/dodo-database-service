@@ -608,4 +608,125 @@ export class StatisticService {
 
     return avg;
   }
+
+  /**
+   * The Fault Correction Capability describes the development team's capability to respond to bug reports.
+   * In more detail, it assesses the rate of faults corrected within the time frame the organization aims to adhere to for fault correction.  
+   * For this qualitative indicator we take all issues labeled `bug` (or some other equivalent label) into consideration that have been resolved since the previous release.
+   * 
+   * (release, issues[label = "bug", state = "closed"], T_bug) => {
+   * bugs = [ bug for bug in issues 
+   *          if bug.closed_at <= release.created_at and 
+   *             bug.closed_at >= release.previous().created_at ]
+   *
+   * bugs_corrected_in_time = [ bug for bug in bugs
+   *                            if bug.closed_at - bug.created_at <= T_bug ]
+   *
+   * return |bugs_corrected_in_time| / | bugs | 
+   *  } 
+   * 
+   * @param repoIdent 
+   * @param userLimit 
+   * @returns 
+   */
+  async faultCorrectionCapability(
+    repoIdent: RepositoryNameDto,
+    userLimit?: number,
+  ) {
+    const limit = userLimit ? userLimit : 100;
+
+    const filter = {
+      repo: repoIdent.repo,
+      owner: repoIdent.owner,
+    };
+
+    const getIssuesWithEvents = {
+      from: 'issuewithevents',
+      localField: 'issuesWithEvents',
+      foreignField: '_id',
+      as: 'expandedIssuesWithEvents',
+    };
+
+    const getIssue = {
+      from: 'issues',
+      localField: 'expandedIssuesWithEvents.issue',
+      foreignField: '_id',
+      as: 'expandedIssue',
+    };
+
+    const getReleases = {
+      from: 'releases',
+      localField: 'releases',
+      foreignField: '_id',
+      as: 'expandedReleases',
+    };
+
+    //to obtain releases, sorted on the basis of created_at time
+    const res: { _id: string; count: number }[] = await this.repoModel
+      .aggregate()
+      .match(filter)
+      .unwind('$releases')
+      .lookup(getReleases)
+      .unwind('$expandedReleases')
+      .sort({ 'expandedReleases.created_at': 1 })
+      //.limit(limit)
+      .exec();
+
+    //to obtain closed issues, sorted on the basis of closed_at time
+    const res1: { _id: string; count: number }[] = await this.repoModel
+      .aggregate()
+      .match(filter)
+      .unwind('$issuesWithEvents')
+      .lookup(getIssuesWithEvents)
+      .unwind('$expandedIssuesWithEvents')
+      .lookup(getIssue)
+      .unwind('$expandedIssue')
+      .match({ 'expandedIssue.closed_at': { $exists: true, $ne: null } })
+      .sort({ 'expandedIssue.closed_at': 1 })
+      //.limit(limit)
+      .exec();
+
+    // This variable defines the fixed time set for the bugs to be resolved.
+    // Since such an information cannot be derived from git (milestones can be looked at,
+    // however they are hardly properly utilized by most projects).
+    // Although information like this can be derived from Jira, but for now, it is manually defined.
+    // T_bug value is considered to be 14 Days, i.e, 1209600000 ms.
+    var T_bug = 1209600000; //604800000 (7 days) ;
+    
+    var bug_closedAt = [],
+        bug_createdAt = [],
+        bugs = 0;
+    for (let i = 0; i < res1.length; i++) {
+      for (let j = 1; j < res.length; j++) {
+        if (
+          res1[i]['expandedIssue']['closed_at'] <=
+          res[j]['expandedReleases']['created_at']
+        ) {
+          if (
+            res1[i]['expandedIssue']['closed_at'] >=
+            res[j - 1]['expandedReleases']['created_at']
+          ) {
+            bug_closedAt.push(res1[i]['expandedIssue']['closed_at']);
+            bug_createdAt.push(res1[i]['expandedIssue']['created_at']);
+            bugs += 1;
+          }
+        }
+      }
+    }
+
+    var bugs_corrected_in_time = 0;
+    for (let k = 0; k < bug_closedAt.length; k++) {
+      var start = new Date(bug_createdAt[k]).getTime();
+      var end = new Date(bug_closedAt[k]).getTime();
+      var difference = Math.abs(end - start);
+      if (difference <= T_bug) {
+        bugs_corrected_in_time += 1;
+      }
+    }
+    var fault_correction_capability = Math.abs(bugs_corrected_in_time) / Math.abs(bugs);
+    this.logger.log(
+      `Fault Correction Capability is: ${fault_correction_capability}`,
+    );
+    return fault_correction_capability;
+  }
 }
