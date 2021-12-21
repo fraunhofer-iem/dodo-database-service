@@ -198,11 +198,7 @@ export class DatabaseService {
 
     issueWithEventsModel.issueEventTypes = [];
     const savedIssueWithEvents = await issueWithEventsModel.save();
-    await this.repoModel
-      .findByIdAndUpdate(repoId, {
-        $push: { issuesWithEvents: [savedIssueWithEvents] },
-      })
-      .exec();
+    await this.updateRepo(repoId, { issuesWithEvents: [savedIssueWithEvents] });
 
     this.logger.debug('saving issueWithEvents to database finished');
     return savedIssueWithEvents.id;
