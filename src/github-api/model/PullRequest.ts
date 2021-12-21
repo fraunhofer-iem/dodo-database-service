@@ -10,7 +10,6 @@ export interface IssueEventTypes {
   event?: string;
   commit_url?: string;
   created_at?: string;
-  // assignee?: Assignee;
 }
 
 export interface Issue {
@@ -76,10 +75,6 @@ export interface Milestones {
   updated_at: string;
   closed_at: string;
   due_on: string;
-}
-
-export interface Pull_request {
-  url: string;
 }
 
 export interface Diff {

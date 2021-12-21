@@ -340,7 +340,7 @@ export class GithubApiService {
         repo: repoIdent.repo,
       })
       .then((res) => res.data); // what is the syntax and meaning of this?
-    return await this.dbService.saveLanguages(repoIdent, languages);
+    return this.dbService.saveLanguages(repoIdent, languages);
     // await necassary for return value on request console. Why?
   }
 
