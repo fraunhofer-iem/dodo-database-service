@@ -608,4 +608,131 @@ export class StatisticService {
 
     return avg;
   }
+  /**
+   * The Fault Correction Rate describes the development team's capability to respond to bug reports.
+   * It is a quantitative indicator for which we consider all issues labeled bug (or some other equivalent tag) that existed at the time of a release.
+   * The Fault Correction Rate is the amount of closed bug issues divided by the total amount of bug issues.
+   *
+   * (release, issues) => {
+   * closed_bugs = issues[ label = bug, state = closed, closed_at <= release.created_at, closed_at >= release.previous().created_at ]
+   * open_bugs = issues[ label = bug, state = open, created_at <= release.created_at ]
+   * return |closed_bugs| / |closed_bugs| + |open_bugs|
+   *   }
+   * @param repoIdent
+   * @param userLimit
+   */
+  async faultCorrectionRate(repoIdent: RepositoryNameDto, userLimit?: number) {
+    const limit = userLimit ? userLimit : 100;
+
+    const filter = {
+      repo: repoIdent.repo,
+      owner: repoIdent.owner,
+    };
+
+    const getIssuesWithEvents = {
+      from: 'issuewithevents',
+      localField: 'issuesWithEvents',
+      foreignField: '_id',
+      as: 'expandedIssuesWithEvents',
+    };
+
+    const getIssue = {
+      from: 'issues',
+      localField: 'expandedIssuesWithEvents.issue',
+      foreignField: '_id',
+      as: 'expandedIssue',
+    };
+
+    const getReleases = {
+      from: 'releases',
+      localField: 'releases',
+      foreignField: '_id',
+      as: 'expandedReleases',
+    };
+
+    //to obtain releases, sorted on the basis of created_at time
+    const res: { _id: string; count: number }[] = await this.repoModel
+      .aggregate()
+      .match(filter)
+      .unwind('$releases')
+      .lookup(getReleases)
+      .unwind('$expandedReleases')
+      .sort({ 'expandedReleases.created_at': 1 })
+      //.limit(limit)
+      .exec();
+
+    //to obtain closed issues, sorted on the basis of closed_at time
+    const res1: { _id: string; count: number }[] = await this.repoModel
+      .aggregate()
+      .match(filter)
+      .unwind('$issuesWithEvents')
+      .lookup(getIssuesWithEvents)
+      .unwind('$expandedIssuesWithEvents')
+      .lookup(getIssue)
+      .unwind('$expandedIssue')
+      .match({ 'expandedIssue.closed_at': { $exists: true, $ne: null } })
+      .sort({ 'expandedIssue.closed_at': 1 })
+      //.limit(limit)
+      .exec();
+
+    //to obtain open issues sorted on the basis of created_at time
+    const res2: { _id: string; count: number }[] = await this.repoModel
+      .aggregate()
+      .match(filter)
+      .unwind('$issuesWithEvents')
+      .lookup(getIssuesWithEvents)
+      .unwind('$expandedIssuesWithEvents')
+      .lookup(getIssue)
+      .unwind('$expandedIssue')
+      .match({ 'expandedIssue.closed_at': { $exists: true, $eq: null } })
+      .match({ 'expandedIssue.state': 'open' }) //extra line added to double check :)
+      .sort({ 'expandedIssue.created_at': 1 })
+      //.limit(limit)
+      .exec();
+
+    //this loop matches the condition
+    //closed_bugs = issues[ label = bug, state = closed, closed_at <= release.created_at, closed_at >= release.previous().created_at ]
+    var closed_bugs = 0;
+    for (let i = 0; i < res1.length; i++) {
+      for (let j = 1; j < res.length; j++) {
+        if (
+          res1[i]['expandedIssue']['closed_at'] <=
+          res[j]['expandedReleases']['created_at']
+        ) {
+          if (
+            res1[i]['expandedIssue']['closed_at'] >=
+            res[j - 1]['expandedReleases']['created_at']
+          ) {
+            closed_bugs += 1;
+          }
+        }
+      }
+    }
+
+    //this loop matches below condition
+    //open_bugs = issues[ label = bug, state = open, created_at <= release.created_at ]
+    var open_bugs = 0;
+    for (let k = 0; k < res2.length; k++) {
+      for (let j = 1; j < res.length; j++) {
+        if (
+          res2[k]['expandedIssue']['created_at'] <=
+          res[j]['expandedReleases']['created_at']
+        ) {
+          open_bugs += 1;
+          break;
+        }
+      }
+    }
+
+    this.logger.debug(
+      `open bugs are: ${open_bugs} and closed bugs are: ${closed_bugs}`,
+    );
+
+    var fault_correction_rate =
+      Math.abs(closed_bugs) / (Math.abs(closed_bugs) + Math.abs(open_bugs));
+
+    this.logger.debug(`Fault correction rate is: ${fault_correction_rate}`);
+
+    return fault_correction_rate;
+  }
 }
