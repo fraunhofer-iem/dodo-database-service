@@ -23,6 +23,7 @@ export class DeveloperFocus {
    */
   async getRepoCommits(
     repoId: string,
+    loginFilter?: string[],
     userLimit?: number,
   ): Promise<{ [key: string]: [string] }> {
     const limit = userLimit ? userLimit : 100; // do we need a limit?
@@ -34,45 +35,37 @@ export class DeveloperFocus {
       as: 'expandedCommits',
     };
 
-    // get all commits for the repo with login and timestamp
-    const commits: { expandedCommits: { login: string; timestamp: string } }[] =
-      await this.repoModel
-        .aggregate()
-        .match({ _id: repoId })
-        .project({ commits: 1 })
-        .unwind('$commits')
-        .lookup(getCommits)
-        .unwind('$expandedCommits')
-        .project({
-          'expandedCommits.login': 1,
-          'expandedCommits.timestamp': 1,
-          _id: 0,
-        })
-        .sort({ 'expandedCommits.timestamp': 1 }) // sorted ascending
-        .exec();
+    const query = this.repoModel
+      .aggregate<{ _id: string; timestamps: string[] }>()
+      .match({ _id: repoId })
+      .project({ commits: 1 })
+      .unwind('$commits')
+      .lookup(getCommits)
+      .unwind('$expandedCommits')
+      .project({
+        login: '$expandedCommits.login',
+        timestamp: '$expandedCommits.timestamp',
+        _id: 0,
+      })
+      .sort({ timestamp: 1 }); // sorted ascending
 
-    // create an array for grouping the values
-    const commit_arr: { login: string; timestamp: string }[] = [];
-    commits.forEach((commit) => {
-      commit_arr.push({
-        login: commit.expandedCommits.login,
-        timestamp: commit.expandedCommits.timestamp,
-      });
+    // TODO: WARNING this has not been tested yet !
+    if (loginFilter) {
+      query.match({ login: { $in: loginFilter } });
+    }
+
+    query.group({
+      _id: '$login',
+      timpestamps: { $push: '$timestamp' },
     });
 
+    // get all commits for the repo with login and timestamp
+    const commits = await query.exec();
+
     // group by developer
-    const developers: { [key: string]: [string] } = commit_arr.reduce(
-      (acc, obj) => {
-        const key = obj.login;
-        if (!acc[key]) {
-          // new login key, if it does not exist yet
-          acc[key] = [];
-        }
-        const date = obj.timestamp.slice(0, 10); // we only use the date, not the time
-        if (!acc[key].includes(date)) {
-          // no duplicate timestamps
-          acc[key].push(date);
-        }
+    const developers: { [key: string]: [string] } = commits.reduce(
+      (acc, curr) => {
+        acc[curr._id] = curr.timestamps;
         return acc;
       },
       {},
