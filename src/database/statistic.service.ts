@@ -432,7 +432,7 @@ export class StatisticService {
       .group({ _id: null, totaltime: { $avg: '$_id' } })
       .limit(limit)
       .exec();
-    //console.log(res[0]['totaltime']);
+
     const time = msToTime(res[0]['totaltime']);
     this.logger.log(`Average time until tickets was assigned is ${time}`);
     return time;

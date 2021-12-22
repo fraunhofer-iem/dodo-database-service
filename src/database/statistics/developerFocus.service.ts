@@ -1,14 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { CommonOptions } from 'child_process';
 import { Model } from 'mongoose';
 import { RepositoryNameDto } from 'src/github-api/model/Repository';
-import { AssigneeDocument } from '../schemas/assignee.schema';
-import { AssigneesDocument } from '../schemas/assignees.schema';
-import { IssueDocument } from '../schemas/issue.schema';
-import { IssueEventTypesDocument } from '../schemas/issueEventTypes.schema';
-import { IssueWithEventsDocument } from '../schemas/issueWithEvents.schema';
-import { LabelDocument } from '../schemas/labels.schema';
 import { RepositoryDocument } from '../schemas/repository.schema';
 
 @Injectable()
@@ -18,18 +11,6 @@ export class DeveloperFocus {
   constructor(
     @InjectModel('Repository')
     private readonly repoModel: Model<RepositoryDocument>,
-    @InjectModel('Issue')
-    private readonly issueModel: Model<IssueDocument>,
-    @InjectModel('IssueEventTypes')
-    private readonly issueEventTypesModel: Model<IssueEventTypesDocument>,
-    @InjectModel('IssueWithEvents')
-    private readonly issueWithEventsModel: Model<IssueWithEventsDocument>,
-    @InjectModel('Label')
-    private readonly labelModel: Model<LabelDocument>,
-    @InjectModel('Assignee')
-    private readonly assigneeModel: Model<AssigneeDocument>,
-    @InjectModel('Assignees')
-    private readonly assigneesModel: Model<AssigneesDocument>,
   ) {}
 
   /**
@@ -586,8 +567,8 @@ export class DeveloperFocus {
     const timestamps: string[] = Object.keys(timeSpreadPairs).sort();
     // go through every sorted timestamp and look to successor
     for (let i = 1; i < timestamps.length; ) {
-      let currentDate: string = timestamps[i - 1];
-      let nextDate: string = timestamps[i];
+      const currentDate: string = timestamps[i - 1];
+      const nextDate: string = timestamps[i];
       // check, if the next interval date should actualy be in current interval
       if ((await this.addDays(currentDate, days)) > new Date(timestamps[i])) {
         // append the values together, update the current interval object
@@ -689,9 +670,9 @@ export class DeveloperFocus {
     let sprintSpreadSum = 0;
     let monthSpreadSum = 0;
     // counstruct sets for week, sprint and month categorys to get unique repoIds to calculate the spreads
-    let weekSpread: Set<string> = new Set();
-    let sprintSpread: Set<string> = new Set();
-    let monthSpread: Set<string> = new Set();
+    const weekSpread: Set<string> = new Set();
+    const sprintSpread: Set<string> = new Set();
+    const monthSpread: Set<string> = new Set();
     // always compare the next date; if the interval fits, increase the category counters
     for (let i = 1; i < timestamps.length; i++) {
       // repo array for each timestamp
