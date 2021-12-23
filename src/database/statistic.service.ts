@@ -10,7 +10,7 @@ import { RepositoryFileDocument } from './schemas/repositoryFile.schema';
 import { IssueDocument } from './schemas/issue.schema';
 import { IssueEventTypesDocument } from './schemas/issueEventTypes.schema';
 import { IssueWithEventsDocument } from './schemas/issueWithEvents.schema';
-import { LabelDocument } from './schemas/labels.schema';
+import { LabelsDocument } from './schemas/labels.schema';
 import { AssigneeDocument } from './schemas/assignee.schema';
 import { AssigneesDocument } from './schemas/assignees.schema';
 import { MilestoneDocument } from './schemas/milestone.schema';
@@ -37,7 +37,7 @@ export class StatisticService {
     @InjectModel('IssueWithEvents')
     private readonly issueWithEventsModel: Model<IssueWithEventsDocument>,
     @InjectModel('Label')
-    private readonly labelModel: Model<LabelDocument>,
+    private readonly labelModel: Model<LabelsDocument>,
     @InjectModel('Assignee')
     private readonly assigneeModel: Model<AssigneeDocument>,
     @InjectModel('Assignees')

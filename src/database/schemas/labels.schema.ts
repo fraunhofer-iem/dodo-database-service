@@ -2,7 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
 @Schema()
-export class Label {
+export class Labels {
   @Prop()
   id: number;
 
@@ -24,5 +24,5 @@ export class Label {
   @Prop()
   description: string;
 }
-export type LabelDocument = Label & Document;
-export const LabelSchema = SchemaFactory.createForClass(Label);
+export type LabelsDocument = Labels & Document;
+export const LabelsSchema = SchemaFactory.createForClass(Labels);

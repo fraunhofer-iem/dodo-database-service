@@ -5,7 +5,7 @@ import { DiffSchema } from './schemas/diff.schema';
 import { IssueSchema } from './schemas/issue.schema';
 import { IssueEventTypesSchema } from './schemas/issueEventTypes.schema';
 import { ReleasesSchema } from './schemas/releases.schema';
-import { LabelSchema } from './schemas/labels.schema';
+import { LabelsSchema } from './schemas/labels.schema';
 import { AssigneeSchema } from './schemas/assignee.schema';
 import { AssigneesSchema } from './schemas/assignees.schema';
 import { MilestoneSchema } from './schemas/milestone.schema';
@@ -28,7 +28,7 @@ import { LanguageSchema } from './schemas/language.schema';
       { name: 'PullRequest', schema: PullRequestSchema },
       { name: 'PullRequestFiles', schema: PullRequestFileSchema },
       { name: 'RepositoryFiles', schema: RepositoryFileSchema },
-      { name: 'Label', schema: LabelSchema },
+      { name: 'Labels', schema: LabelsSchema },
       { name: 'Assignee', schema: AssigneeSchema },
       { name: 'Assignees', schema: AssigneesSchema },
       { name: 'Milestone', schema: MilestoneSchema },

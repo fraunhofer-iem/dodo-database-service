@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Label } from './labels.schema';
+import { Labels } from './labels.schema';
 import { Assignee } from './assignee.schema';
 import { Assignees } from './assignees.schema';
 import { Milestone } from './milestone.schema';
@@ -8,7 +8,7 @@ import { Document, Schema as mSchema } from 'mongoose';
 @Schema()
 export class Issue {
   @Prop([{ type: mSchema.Types.ObjectId, ref: 'Labels' }])
-  label: Label[];
+  labels: Labels[];
 
   @Prop({ type: mSchema.Types.ObjectId, ref: 'Assignee' })
   assignee: Assignee;
