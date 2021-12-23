@@ -650,6 +650,13 @@ export class StatisticService {
       as: 'expandedReleases',
     };
 
+    const getLabel = {
+      from: 'labels',
+      localField: 'expandedIssue.label',
+      foreignField: '_id',
+      as: 'expandedLabels',
+    };
+
     //to obtain releases, sorted on the basis of created_at time
     const res: { _id: string; count: number }[] = await this.repoModel
       .aggregate()
@@ -670,6 +677,9 @@ export class StatisticService {
       .unwind('$expandedIssuesWithEvents')
       .lookup(getIssue)
       .unwind('$expandedIssue')
+      .lookup(getLabel)
+      .unwind('$expandedLabels')
+      .match({'expandedLabels.name': {$exists: true, $eq: 'bug'}})
       .match({ 'expandedIssue.closed_at': { $exists: true, $ne: null } })
       .sort({ 'expandedIssue.closed_at': 1 })
       //.limit(limit)
@@ -684,6 +694,9 @@ export class StatisticService {
       .unwind('$expandedIssuesWithEvents')
       .lookup(getIssue)
       .unwind('$expandedIssue')
+      .lookup(getLabel)
+      .unwind('$expandedLabels')
+      .match({'expandedLabels.name': {$exists: true, $eq: 'bug'}})
       .match({ 'expandedIssue.closed_at': { $exists: true, $eq: null } })
       .match({ 'expandedIssue.state': 'open' }) //extra line added to double check :)
       .sort({ 'expandedIssue.created_at': 1 })
