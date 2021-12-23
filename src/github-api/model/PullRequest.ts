@@ -28,10 +28,6 @@ export interface Issue {
   node_id: string;
   locked: boolean;
 }
-
-// type union, because type of REST api response from octokit
-// for labels is this
-export type typedLabel = string | Labels;
 export interface Releases {
   url: string;
   id: number;
@@ -50,6 +46,10 @@ export interface Labels {
   default?: boolean;
   description?: string;
 }
+
+// type union, because type of REST api response from octokit
+// for labels is this
+export type typedLabel = string | Labels;
 
 export interface Assignee {
   login: string;
