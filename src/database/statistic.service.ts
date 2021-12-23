@@ -10,7 +10,7 @@ import { RepositoryFileDocument } from './schemas/repositoryFile.schema';
 import { IssueDocument } from './schemas/issue.schema';
 import { IssueEventTypesDocument } from './schemas/issueEventTypes.schema';
 import { IssueWithEventsDocument } from './schemas/issueWithEvents.schema';
-import { LabelsDocument } from './schemas/labels.schema';
+import { LabelDocument } from './schemas/labels.schema';
 import { AssigneeDocument } from './schemas/assignee.schema';
 import { AssigneesDocument } from './schemas/assignees.schema';
 import { MilestoneDocument } from './schemas/milestone.schema';
@@ -37,7 +37,7 @@ export class StatisticService {
     @InjectModel('IssueWithEvents')
     private readonly issueWithEventsModel: Model<IssueWithEventsDocument>,
     @InjectModel('Label')
-    private readonly labelModel: Model<LabelsDocument>,
+    private readonly labelModel: Model<LabelDocument>,
     @InjectModel('Assignee')
     private readonly assigneeModel: Model<AssigneeDocument>,
     @InjectModel('Assignees')
@@ -607,5 +607,92 @@ export class StatisticService {
     this.logger.log(`avg number of releases per closed issue is ${avg}`);
 
     return avg;
+  }
+/**
+ * The Feature Completion Efficiency describes the development team's capability to add features to the project.
+ * In more detail, it assesses if a single feature was completed within the time frame the organization aims to adhere to for feature completion.
+ * We calculate this qualitative indicator for resolved issues labeled enhancement (or some other equivalent label).
+ * A value greater than 1 indicates that the feature was not completed within the desired time.
+ * A value less than 1 indicates that the feature was completed within the desired time.
+ * 
+ * (issue[label = "enhancement", state="closed"], T_feature) => {
+ *   return (issue.closed_at - issue.created_at) / T_feature
+ *  }
+ * @param repoIdent 
+ * @param userLimit 
+ * @returns 
+ */
+  async FeatureCompletionEfficiency(repoIdent: RepositoryNameDto, userLimit?: number) {
+    const limit = userLimit ? userLimit : 100;
+
+    const filter = {
+      repo: repoIdent.repo,
+      owner: repoIdent.owner,
+    };
+
+    const getIssuesWithEvents = {
+      from: 'issuewithevents',
+      localField: 'issuesWithEvents',
+      foreignField: '_id',
+      as: 'expandedIssuesWithEvents',
+    };
+
+    const getIssue = {
+      from: 'issues',
+      localField: 'expandedIssuesWithEvents.issue',
+      foreignField: '_id',
+      as: 'expandedIssue',
+    };
+
+    const getLabel = {
+      from: 'labels',
+      localField: 'expandedIssue.label',
+      foreignField: '_id',
+      as: 'expandedLabels',
+    };
+
+    
+    //to obtain closed issues, sorted on the basis of closed_at time & label type = enhancement
+    const res1: { _id: string; count: number }[] = await this.repoModel
+      .aggregate()
+      .match(filter)
+      .unwind('$issuesWithEvents')
+      .lookup(getIssuesWithEvents)
+      .unwind('$expandedIssuesWithEvents')
+      .lookup(getIssue)
+      .unwind('$expandedIssue')
+      .lookup(getLabel)
+      .unwind('$expandedLabels')
+      .match({'expandedLabels.name': {$exists: true, $eq: 'enhancement'}})
+      .match({ 'expandedIssue.closed_at': { $exists: true, $ne: null } })
+      .sort({ 'expandedIssue.closed_at': 1 })
+      //.limit(limit)
+      .exec();
+
+    // This variable defines the fixed time set for the feature to be resolved.
+    //this info is manually defined
+    // T_feature value is considered to be 14 Days, i.e, 1209600000 ms.
+    var T_feature = 604800000; //1209600000 (14 days) ;
+    
+    var bug_closedAt = [],
+        bug_createdAt = [];
+    for (let i = 0; i < res1.length; i++) {
+            bug_closedAt.push(res1[i]['expandedIssue']['closed_at']);
+            bug_createdAt.push(res1[i]['expandedIssue']['created_at']);
+          }
+    
+
+    var feature_completion_efficiency = [];
+    for (let k = 0; k < bug_closedAt.length; k++) {
+      var start = new Date(bug_createdAt[k]).getTime();
+      var end = new Date(bug_closedAt[k]).getTime();
+      var difference = Math.abs(end - start);
+      feature_completion_efficiency.push(difference/T_feature); 
+    }
+    
+    this.logger.log(
+      `Feature Completion Efficiency is: ${feature_completion_efficiency}`,
+    );
+    return feature_completion_efficiency;
   }
 }
