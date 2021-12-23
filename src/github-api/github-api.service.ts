@@ -60,7 +60,8 @@ export class GithubApiService {
     // this.statisticService.avgNumberOfAssigneeUntilTicketCloses(repoIdent);
     // this.statisticService.avgTimeTillTicketWasAssigned(repoIdent);
     //this.statisticService.workInProgress(repoIdent);
-    this.statisticService.FeatureCompletionEfficiency(repoIdent);
+    this.statisticService.featureCompletionCapability(repoIdent);
+
 
   }
 

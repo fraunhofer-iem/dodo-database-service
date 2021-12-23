@@ -608,21 +608,30 @@ export class StatisticService {
 
     return avg;
   }
-/**
- * The Feature Completion Efficiency describes the development team's capability to add features to the project.
- * In more detail, it assesses if a single feature was completed within the time frame the organization aims to adhere to for feature completion.
- * We calculate this qualitative indicator for resolved issues labeled enhancement (or some other equivalent label).
- * A value greater than 1 indicates that the feature was not completed within the desired time.
- * A value less than 1 indicates that the feature was completed within the desired time.
- * 
- * (issue[label = "enhancement", state="closed"], T_feature) => {
- *   return (issue.closed_at - issue.created_at) / T_feature
- *  }
- * @param repoIdent 
- * @param userLimit 
- * @returns 
- */
-  async FeatureCompletionEfficiency(repoIdent: RepositoryNameDto, userLimit?: number) {
+
+  /**
+   * The Feature Completion Capability describes the development team's capability to add features to the project.
+   * In more detail, it assesses the rate of features completed within the time frame the organization aims to adhere to for feature completion.
+   * For this qualitative indicator we take all issues labeled enhancement (or some other equivalent label) into consideration that have been resolved since the previous release.
+   * 
+   * (release, issues[label = "enhancement", state = "closed"], T_feature) => {
+   * features = [ feature for feature in issues 
+   *              if feature.closed_at <= release.created_at and 
+   *                 feature.closed_at >= release.previous().created_at ]
+   * 
+   * features_completed_in_time = [ feature for feature in features
+   *                                if feature.closed_at - feature.created_at <= T_feature ]
+   * 
+   * return |features_completed_in_time| / | features | 
+   * }
+   * @param repoIdent 
+   * @param userLimit 
+   * @returns 
+   */
+  async featureCompletionCapability(
+    repoIdent: RepositoryNameDto,
+    userLimit?: number,
+  ) {
     const limit = userLimit ? userLimit : 100;
 
     const filter = {
@@ -644,6 +653,13 @@ export class StatisticService {
       as: 'expandedIssue',
     };
 
+    const getReleases = {
+      from: 'releases',
+      localField: 'releases',
+      foreignField: '_id',
+      as: 'expandedReleases',
+    };
+
     const getLabel = {
       from: 'labels',
       localField: 'expandedIssue.label',
@@ -651,8 +667,18 @@ export class StatisticService {
       as: 'expandedLabels',
     };
 
-    
-    //to obtain closed issues, sorted on the basis of closed_at time & label type = enhancement
+    //to obtain releases, sorted on the basis of created_at time
+    const res: { _id: string; count: number }[] = await this.repoModel
+      .aggregate()
+      .match(filter)
+      .unwind('$releases')
+      .lookup(getReleases)
+      .unwind('$expandedReleases')
+      .sort({ 'expandedReleases.created_at': 1 })
+      //.limit(limit)
+      .exec();
+
+    //to obtain closed issues, sorted on the basis of closed_at time and label = enhancement
     const res1: { _id: string; count: number }[] = await this.repoModel
       .aggregate()
       .match(filter)
@@ -674,25 +700,40 @@ export class StatisticService {
     // T_feature value is considered to be 14 Days, i.e, 1209600000 ms.
     var T_feature = 604800000; //1209600000 (14 days) ;
     
-    var bug_closedAt = [],
-        bug_createdAt = [];
+    var feature_closedAt = [],
+        feature_createdAt = [],
+        feature = 0;
     for (let i = 0; i < res1.length; i++) {
-            bug_closedAt.push(res1[i]['expandedIssue']['closed_at']);
-            bug_createdAt.push(res1[i]['expandedIssue']['created_at']);
+      for (let j = 1; j < res.length; j++) {
+        if (
+          res1[i]['expandedIssue']['closed_at'] <=
+          res[j]['expandedReleases']['created_at']
+        ) {
+          if (
+            res1[i]['expandedIssue']['closed_at'] >=
+            res[j - 1]['expandedReleases']['created_at']
+          ) {
+            feature_closedAt.push(res1[i]['expandedIssue']['closed_at']);
+            feature_createdAt.push(res1[i]['expandedIssue']['created_at']);
+            feature += 1;
           }
-    
-
-    var feature_completion_efficiency = [];
-    for (let k = 0; k < bug_closedAt.length; k++) {
-      var start = new Date(bug_createdAt[k]).getTime();
-      var end = new Date(bug_closedAt[k]).getTime();
-      var difference = Math.abs(end - start);
-      feature_completion_efficiency.push(difference/T_feature); 
+        }
+      }
     }
-    
+
+    var feature_corrected_in_time = 0;
+    for (let k = 0; k < feature_closedAt.length; k++) {
+      var start = new Date(feature_createdAt[k]).getTime();
+      var end = new Date(feature_closedAt[k]).getTime();
+      var difference = Math.abs(end - start);
+      if (difference <= T_feature) {
+        feature_corrected_in_time += 1;
+      }
+    }
+    var feature_completion_capability = Math.abs(feature_corrected_in_time) / Math.abs(feature);
     this.logger.log(
-      `Feature Completion Efficiency is: ${feature_completion_efficiency}`,
+      `Feature Completion Capability is: ${feature_completion_capability}`,
     );
-    return feature_completion_efficiency;
+    return feature_completion_capability;
   }
 }
