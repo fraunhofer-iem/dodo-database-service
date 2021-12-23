@@ -647,6 +647,13 @@ export class StatisticService {
       as: 'expandedIssue',
     };
 
+    const getLabel = {
+      from: 'labels',
+      localField: 'expandedIssue.label',
+      foreignField: '_id',
+      as: 'expandedLabels',
+    };
+
     const res: { _id: string; count: number }[] = await this.repoModel
       .aggregate()
       .match(filter)
@@ -656,6 +663,9 @@ export class StatisticService {
       .unwind('$expandedIssuesWithEvents')
       .lookup(getIssue)
       .unwind('$expandedIssue')
+      .lookup(getLabel)
+      .unwind('$expandedLabels')
+      .match({'expandedLabels.name': {$exists: true, $eq: 'bug'}})
       .match({ 'expandedIssue.closed_at': { $exists: true, $ne: null } })
       .project({
         Issue_created_at_Time: { $toDate: '$expandedIssue.created_at' },
