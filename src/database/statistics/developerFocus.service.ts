@@ -25,7 +25,7 @@ export class DeveloperFocus {
     repoId: string,
     loginFilter?: string[],
     userLimit?: number,
-  ): Promise<{ [key: string]: [string] }> {
+  ): Promise<{ [key: string]: string[] }> {
     const limit = userLimit ? userLimit : 100; // do we need a limit?
 
     const getCommits = {
@@ -49,23 +49,25 @@ export class DeveloperFocus {
       })
       .sort({ timestamp: 1 }); // sorted ascending
 
-    // TODO: WARNING this has not been tested yet !
+    // works fine as I can see it
     if (loginFilter) {
       query.match({ login: { $in: loginFilter } });
     }
 
     query.group({
       _id: '$login',
-      timpestamps: { $push: '$timestamp' },
+      // addToSet for no duplicates, substr for date only
+      timestamps: { $addToSet: { $substr: ['$timestamp', 0, 10] } },
     });
 
     // get all commits for the repo with login and timestamp
     const commits = await query.exec();
 
     // group by developer
-    const developers: { [key: string]: [string] } = commits.reduce(
+    const developers: { [key: string]: string[] } = commits.reduce(
       (acc, curr) => {
-        acc[curr._id] = curr.timestamps;
+        // sort because addToSet is without order, slice for limit
+        acc[curr._id] = curr.timestamps.sort().slice(0, limit);
         return acc;
       },
       {},
@@ -92,7 +94,11 @@ export class DeveloperFocus {
    * For further calculations, the sums of all spreads and the days are
    * precomputed here, too.
    */
-  async devSpread(owner: string): Promise<{
+  async devSpread(
+    owner: string,
+    loginFilter?: string[],
+    userLimit?: number,
+  ): Promise<{
     [key: string]: {
       daySpread: { [key: string]: string[] };
       weekSpread: { [key: string]: string[] };
@@ -118,10 +124,14 @@ export class DeveloperFocus {
     // Store all repo commit objects (grouped by developer) in one object repoDevelopers.
     // The repoId is the first key, then every repoId has developer props
     // with all their commit timestamps array for that repo
-    const repoDevelopers: { [key: string]: { [key: string]: [string] } } = {};
+    const repoDevelopers: { [key: string]: { [key: string]: string[] } } = {};
     const developerSet: Set<string> = new Set(); // store all unique developers
     for (const repoId of repoIds) {
-      const developers = await this.getRepoCommits(repoId._id);
+      const developers = await this.getRepoCommits(
+        repoId._id,
+        loginFilter,
+        userLimit,
+      );
       repoDevelopers[repoId._id] = developers;
       for (const dev of Object.keys(developers)) {
         developerSet.add(dev);
@@ -210,7 +220,11 @@ export class DeveloperFocus {
    * @param owner The organisation which should be analyzed.
    * @returns
    */
-  async devSpreadTotal(owner: string): Promise<{
+  async devSpreadTotal(
+    owner: string,
+    loginFilter?: string[],
+    userLimit?: number,
+  ): Promise<{
     daySpread: number;
     weekSpread: number;
     sprintSpread: number;
@@ -236,7 +250,7 @@ export class DeveloperFocus {
         sprints: number;
         months: number;
       };
-    } = await this.devSpread(owner);
+    } = await this.devSpread(owner, loginFilter, userLimit);
 
     // store the avg spread for each developer here
     // use the precomputed sums and amounts for each time category
@@ -365,7 +379,11 @@ export class DeveloperFocus {
    * Then, only those devs are taken into account, whose contributed to the desired repo in a specific timeslot.
    * @param repoIdent The repo identification including repo id and orga
    */
-  async devSpreadRepo(repoIdent: RepositoryNameDto): Promise<{
+  async devSpreadRepo(
+    repoIdent: RepositoryNameDto,
+    loginFilter?: string[],
+    userLimit?: number,
+  ): Promise<{
     daySpread: number;
     weekSpread: number;
     sprintSpread: number;
@@ -376,7 +394,11 @@ export class DeveloperFocus {
       .findOne({ repo: repoIdent.repo, owner: repoIdent.owner })
       .exec();
     // get the commits for specified repo to get the developers of that repo
-    const commits = await this.getRepoCommits(repoM._id);
+    const commits = await this.getRepoCommits(
+      repoM._id,
+      loginFilter,
+      userLimit,
+    );
     // store the repoId as a string
     const repoID = repoM._id.toString();
     // store the repo developers in an array
