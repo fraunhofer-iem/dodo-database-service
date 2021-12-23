@@ -62,8 +62,24 @@ export class GithubApiService {
     // this.statisticService.avgNumberOfAssigneeUntilTicketCloses(repoIdent);
     // this.statisticService.avgTimeTillTicketWasAssigned(repoIdent);
     // this.statisticService.workInProgress(repoIdent);
-    this.devFocus.devSpreadTotal(repoIdent.owner);
-    this.devFocus.devSpreadRepo(repoIdent);
+    this.devFocus.devSpreadTotal(
+      repoIdent.owner,
+      await this.orgaMembers(repoIdent.owner),
+    );
+    // this.devFocus.devSpreadRepo(repoIdent);
+  }
+
+  public async orgaMembers(owner: string) {
+    // gather all orga members for the repo owner organization
+    const { data: orgaMembers } = await this.octokit.rest.orgs.listMembers({
+      org: owner,
+    });
+    // set for all orga member logins
+    const orgaDevs: string[] = [];
+    orgaMembers.forEach((member) => {
+      orgaDevs.push(member.login);
+    });
+    return orgaDevs;
   }
 
   public async storeIssues(repoIdent: RepositoryNameDto) {
@@ -363,32 +379,18 @@ export class GithubApiService {
       owner: repoIdent.owner,
       repo: repoIdent.repo,
     });
-    // gather all orga members for the repo owner organization
-    const { data: orgaMembers } = await this.octokit.rest.orgs.listMembers({
-      org: repoIdent.owner,
-    });
+
     this.logger.debug(
       `saving commits from ${repoIdent.owner}/${repoIdent.repo} to database...`,
     );
-    // set for all orga member logins
-    const orgaDevs: Set<string> = new Set();
-    orgaMembers.forEach((member) => {
-      orgaDevs.add(member.login);
-    });
+
     for (const commit of commits) {
-      // only consider orga members
-      // TODO: maybe, to test the logic, comment the if condition out
-      // as rest.js and action.js has only two committers in general
-      // and there is only one with very few commits left, if we
-      // filter for orga members
-      if (orgaDevs.has(commit.committer.login)) {
-        const commit_obj: Commit = {
-          url: commit.commit.url,
-          login: commit.committer.login,
-          timestamp: commit.commit.committer.date,
-        };
-        await this.dbService.saveCommit(repoId, commit_obj);
-      }
+      const commit_obj: Commit = {
+        url: commit.commit.url,
+        login: commit.committer.login,
+        timestamp: commit.commit.committer.date,
+      };
+      await this.dbService.saveCommit(repoId, commit_obj);
     }
     this.logger.debug(
       `saved all commits from ${repoIdent.owner}/${repoIdent.repo} to database succesful`,
