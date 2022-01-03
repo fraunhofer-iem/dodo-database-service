@@ -2,6 +2,15 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { RepositoryNameDto } from 'src/github-api/model/Repository';
+import {
+  DevSpread,
+  DevSpreadAvg,
+  DevSpreadDates,
+  DevSpreadTotal,
+  RepoSpread,
+  RepoSpreadAvg,
+  RepoSpreadTotal,
+} from 'src/github-api/model/PullRequest';
 import { RepositoryDocument } from '../schemas/repository.schema';
 
 @Injectable()
@@ -49,7 +58,7 @@ export class DeveloperFocus {
       })
       .sort({ timestamp: 1 }); // sorted ascending
 
-    // works fine as I can see it
+    // works fine as I can see it. I will delete this comment after I have written the tests.
     if (loginFilter) {
       query.match({ login: { $in: loginFilter } });
     }
@@ -98,22 +107,7 @@ export class DeveloperFocus {
     owner: string,
     loginFilter?: string[],
     userLimit?: number,
-  ): Promise<{
-    [key: string]: {
-      daySpread: { [key: string]: string[] };
-      weekSpread: { [key: string]: string[] };
-      sprintSpread: { [key: string]: string[] };
-      monthSpread: { [key: string]: string[] };
-      daySpreadSum: number;
-      weekSpreadSum: number;
-      sprintSpreadSum: number;
-      monthSpreadSum: number;
-      days: number;
-      weeks: number;
-      sprints: number;
-      months: number;
-    };
-  }> {
+  ): Promise<DevSpread> {
     // get all repo ids of the orga (which are already in the db)
     const repoIds = await this.repoModel
       .aggregate()
@@ -183,22 +177,7 @@ export class DeveloperFocus {
     // Now, spreadsPerDevs (the final return value) is beeing calculated.
     // Here, for every developer, all timestamps (or the begin-timestamp of an interval)
     // are beeing stored with an array of corresponding repoIds precisely.
-    const spreadsPerDevs: {
-      [key: string]: {
-        daySpread: { [key: string]: string[] };
-        weekSpread: { [key: string]: string[] };
-        sprintSpread: { [key: string]: string[] };
-        monthSpread: { [key: string]: string[] };
-        daySpreadSum: number;
-        weekSpreadSum: number;
-        sprintSpreadSum: number;
-        monthSpreadSum: number;
-        days: number;
-        weeks: number;
-        sprints: number;
-        months: number;
-      };
-    } = {};
+    const spreadsPerDevs: DevSpread = {};
 
     // for every developer in the spread object,
     // call helper function spreadsGroupedByTimeslots() to pass in
@@ -224,48 +203,17 @@ export class DeveloperFocus {
     owner: string,
     loginFilter?: string[],
     userLimit?: number,
-  ): Promise<{
-    daySpread: number;
-    weekSpread: number;
-    sprintSpread: number;
-    monthSpread: number;
-    days: number;
-    weeks: number;
-    sprints: number;
-    months: number;
-  }> {
+  ): Promise<DevSpreadTotal> {
     // get the spreads per each developer of that orga
-    const spreadsPerDevs: {
-      [key: string]: {
-        daySpread: { [key: string]: string[] };
-        weekSpread: { [key: string]: string[] };
-        sprintSpread: { [key: string]: string[] };
-        monthSpread: { [key: string]: string[] };
-        daySpreadSum: number;
-        weekSpreadSum: number;
-        sprintSpreadSum: number;
-        monthSpreadSum: number;
-        days: number;
-        weeks: number;
-        sprints: number;
-        months: number;
-      };
-    } = await this.devSpread(owner, loginFilter, userLimit);
+    const spreadsPerDevs: DevSpread = await this.devSpread(
+      owner,
+      loginFilter,
+      userLimit,
+    );
 
     // store the avg spread for each developer here
     // use the precomputed sums and amounts for each time category
-    const devSpread: {
-      [key: string]: {
-        daySpread: number;
-        weekSpread: number;
-        sprintSpread: number;
-        monthSpread: number;
-        days: number;
-        weeks: number;
-        sprints: number;
-        months: number;
-      };
-    } = {};
+    const devSpread: DevSpreadAvg = {};
 
     for (const dev of Object.keys(spreadsPerDevs)) {
       // call devObj for better readability
@@ -313,16 +261,7 @@ export class DeveloperFocus {
     // I stored the summed up amount of days, weeks, ... from all developers
     // in the totalSpread object, just to see how many objects of a time category
     // were taken into account for that end result. This can be deleted, if not desired.
-    const totalSpread: {
-      daySpread: number;
-      weekSpread: number;
-      sprintSpread: number;
-      monthSpread: number;
-      days: number;
-      weeks: number;
-      sprints: number;
-      months: number;
-    } = {
+    const totalSpread: DevSpreadTotal = {
       daySpread: 0,
       weekSpread: 0,
       sprintSpread: 0,
@@ -361,13 +300,18 @@ export class DeveloperFocus {
       totalSpread.monthSpread += devObj.monthSpread;
     }
     totalSpread.daySpread = totalSpread.daySpread / allDevelopers.length;
-    totalSpread.weekSpread =
-      totalSpread.weekSpread / (allDevelopers.length - weekCount);
-    totalSpread.sprintSpread =
-      totalSpread.sprintSpread / (allDevelopers.length - sprintCount);
-    totalSpread.monthSpread =
-      totalSpread.monthSpread / (allDevelopers.length - monthCount);
-
+    if (totalSpread.weekSpread != 0) {
+      totalSpread.weekSpread =
+        totalSpread.weekSpread / (allDevelopers.length - weekCount);
+    }
+    if (totalSpread.sprintSpread != 0) {
+      totalSpread.sprintSpread =
+        totalSpread.sprintSpread / (allDevelopers.length - sprintCount);
+    }
+    if (totalSpread.monthSpread != 0) {
+      totalSpread.monthSpread =
+        totalSpread.monthSpread / (allDevelopers.length - monthCount);
+    }
     console.log(totalSpread);
     return totalSpread;
   }
@@ -406,20 +350,11 @@ export class DeveloperFocus {
     // get the precomputed spreads for every organisation developer
     const spreadsPerDevs = await this.devSpread(repoIdent.owner);
 
-    // store all corresponding commits for every timem category,
+    // store all corresponding commits for every time category,
     // in which a developer contributed to the specified repo,
     // with the timestamp and the developer spread in that specific
     // timeslot directly.
-    const dates: {
-      daySpread: { [key: string]: { [key: string]: number } };
-      weekSpread: { [key: string]: { [key: string]: number } };
-      sprintSpread: { [key: string]: { [key: string]: number } };
-      monthSpread: { [key: string]: { [key: string]: number } };
-      days: number;
-      weeks: number;
-      sprints: number;
-      months: number;
-    } = {
+    const dates: RepoSpread = {
       daySpread: {},
       weekSpread: {},
       sprintSpread: {},
@@ -503,12 +438,12 @@ export class DeveloperFocus {
     // this is the presicely repository spread with timestamp:spread pairs for each category
     // the spread is beeing calculated with the sum of the dev spreads which contributed in that timestamp
     // devided trough the amount of devs
-    const repoSpread: {
-      daySpread: { [key: string]: number };
-      weekSpread: { [key: string]: number };
-      sprintSpread: { [key: string]: number };
-      monthSpread: { [key: string]: number };
-    } = { daySpread: {}, weekSpread: {}, sprintSpread: {}, monthSpread: {} };
+    const repoSpread: RepoSpreadTotal = {
+      daySpread: {},
+      weekSpread: {},
+      sprintSpread: {},
+      monthSpread: {},
+    };
     for (const day in dates.daySpread) {
       const daySpread =
         Object.values(dates.daySpread[day]).reduce((a, b) => a + b) /
@@ -538,12 +473,7 @@ export class DeveloperFocus {
     console.log(repoSpread);
 
     // finally, build the average daySpread, weekSpread, ..., of all single daySpreads, weekSpreads, ...
-    const avgRepoSpread: {
-      daySpread: number;
-      weekSpread: number;
-      sprintSpread: number;
-      monthSpread: number;
-    } = {
+    const avgRepoSpread: RepoSpreadAvg = {
       daySpread:
         Object.values(repoSpread.daySpread).reduce((a, b) => a + b) /
         Object.values(repoSpread.daySpread).length,
@@ -629,37 +559,11 @@ export class DeveloperFocus {
    */
   async spreadsGroupedByTimeslots(timeRepoPairs: {
     [key: string]: [string];
-  }): Promise<{
-    daySpread: { [key: string]: string[] };
-    weekSpread: { [key: string]: string[] };
-    sprintSpread: { [key: string]: string[] };
-    monthSpread: { [key: string]: string[] };
-    daySpreadSum: number;
-    weekSpreadSum: number;
-    sprintSpreadSum: number;
-    monthSpreadSum: number;
-    days: number;
-    weeks: number;
-    sprints: number;
-    months: number;
-  }> {
+  }): Promise<DevSpreadDates> {
     // sort the timestamps to ensure correct interval computation
     const timestamps: string[] = Object.keys(timeRepoPairs).sort();
     // the return object dates
-    const dates: {
-      daySpread: { [key: string]: string[] };
-      weekSpread: { [key: string]: string[] };
-      sprintSpread: { [key: string]: string[] };
-      monthSpread: { [key: string]: string[] };
-      daySpreadSum: number;
-      weekSpreadSum: number;
-      sprintSpreadSum: number;
-      monthSpreadSum: number;
-      days: number;
-      weeks: number;
-      sprints: number;
-      months: number;
-    } = {
+    const dates: DevSpreadDates = {
       daySpread: {},
       weekSpread: {},
       sprintSpread: {},
