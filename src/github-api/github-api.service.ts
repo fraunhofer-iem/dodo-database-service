@@ -62,11 +62,14 @@ export class GithubApiService {
     // this.statisticService.avgNumberOfAssigneeUntilTicketCloses(repoIdent);
     // this.statisticService.avgTimeTillTicketWasAssigned(repoIdent);
     // this.statisticService.workInProgress(repoIdent);
-    this.devFocus.devSpreadTotal(
-      repoIdent.owner,
-      await this.orgaMembers(repoIdent.owner),
+    // this.devFocus.devSpreadTotal(
+    //   repoIdent.owner,
+    //   await this.orgaMembers(repoIdent.owner),
+    // );
+    this.devFocus.devSpreadRepo(
+      repoIdent,
+      // await this.orgaMembers(repoIdent.owner),
     );
-    // this.devFocus.devSpreadRepo(repoIdent);
   }
 
   public async orgaMembers(owner: string) {
@@ -74,7 +77,7 @@ export class GithubApiService {
     const { data: orgaMembers } = await this.octokit.rest.orgs.listMembers({
       org: owner,
     });
-    // set for all orga member logins
+    // array for all orga member logins
     const orgaDevs: string[] = [];
     orgaMembers.forEach((member) => {
       orgaDevs.push(member.login);
