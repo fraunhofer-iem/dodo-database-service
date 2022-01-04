@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Logger, Post } from '@nestjs/common';
+import { Body, Controller, Logger, Post } from '@nestjs/common';
 import { ApiOkResponse } from '@nestjs/swagger';
 import { GithubApiService } from './github-api.service';
 import { CreateRepositoryDto, RepositoryNameDto } from './model/Repository';

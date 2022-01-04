@@ -2,20 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { RepositoryNameDto } from 'src/github-api/model/Repository';
-import { DiffDocument } from './schemas/diff.schema';
-import { PullRequestDocument } from './schemas/pullRequest.schema';
-import { PullRequestFileDocument } from './schemas/pullRequestFile.schema';
 import { RepositoryDocument } from './schemas/repository.schema';
-import { RepositoryFileDocument } from './schemas/repositoryFile.schema';
-import { IssueDocument } from './schemas/issue.schema';
-import { IssueEventTypesDocument } from './schemas/issueEventTypes.schema';
-import { IssueWithEventsDocument } from './schemas/issueWithEvents.schema';
-import { LabelDocument } from './schemas/labels.schema';
-import { AssigneeDocument } from './schemas/assignee.schema';
-import { AssigneesDocument } from './schemas/assignees.schema';
-import { MilestoneDocument } from './schemas/milestone.schema';
-import { timestamp } from 'rxjs';
-import { stringify } from 'querystring';
 
 @Injectable()
 export class StatisticService {
@@ -24,28 +11,6 @@ export class StatisticService {
   constructor(
     @InjectModel('Repository')
     private readonly repoModel: Model<RepositoryDocument>,
-    @InjectModel('RepositoryFiles')
-    private readonly repoFileModel: Model<RepositoryFileDocument>,
-    @InjectModel('PullRequestFiles')
-    private readonly pullFileModel: Model<PullRequestFileDocument>,
-    @InjectModel('PullRequest')
-    private readonly pullRequestModel: Model<PullRequestDocument>,
-    @InjectModel('Diff')
-    private readonly diffModel: Model<DiffDocument>,
-    @InjectModel('Issue')
-    private readonly issueModel: Model<IssueDocument>,
-    @InjectModel('IssueEventTypes')
-    private readonly issueEventTypesModel: Model<IssueEventTypesDocument>,
-    @InjectModel('IssueWithEvents')
-    private readonly issueWithEventsModel: Model<IssueWithEventsDocument>,
-    @InjectModel('Label')
-    private readonly labelModel: Model<LabelDocument>,
-    @InjectModel('Assignee')
-    private readonly assigneeModel: Model<AssigneeDocument>,
-    @InjectModel('Assignees')
-    private readonly assigneesModel: Model<AssigneesDocument>,
-    @InjectModel('Milestone')
-    private readonly milestoneModel: Model<MilestoneDocument>,
   ) {}
 
   /**
@@ -121,11 +86,6 @@ export class StatisticService {
     const filter = {
       repo: repoIdent.repo,
       owner: repoIdent.owner,
-    };
-
-    const group = {
-      _id: null,
-      count: { $count: {} },
     };
 
     const getDiffs = {
@@ -384,8 +344,6 @@ export class StatisticService {
       .match({ 'expandedIssue.assignees': { $exists: false } })
       .exec();
 
-    //  this.logger.log(`Closed Tickets with only a single assignee ${res.length}.`);
-
     const res1: { _id: string; count: number }[] = await this.repoModel
       .aggregate()
       .match(filter)
@@ -474,7 +432,7 @@ export class StatisticService {
       .group({ _id: null, totaltime: { $avg: '$_id' } })
       .limit(limit)
       .exec();
-    //console.log(res[0]['totaltime']);
+
     const time = msToTime(res[0]['totaltime']);
     this.logger.log(`Average time until tickets was assigned is ${time}`);
     return time;
