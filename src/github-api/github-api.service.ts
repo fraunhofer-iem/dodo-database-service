@@ -3,6 +3,7 @@ import { Octokit } from 'octokit';
 import { DatabaseService } from 'src/database/database.service';
 import { StatisticService } from 'src/database/statistic.service';
 import { DeveloperFocus } from 'src/database/statistics/developerFocus.service';
+import { IssueLabels } from 'src/database/statistics/issueLabels.service';
 import { PullRequest, RepositoryFile, Commit } from './model/PullRequest';
 import { CreateRepositoryDto, RepositoryNameDto } from './model/Repository';
 
@@ -43,6 +44,7 @@ export class GithubApiService {
     private statisticService: StatisticService,
     private dbService: DatabaseService,
     private devFocus: DeveloperFocus,
+    private issueLabels: IssueLabels,
   ) {
     // init octokit
     this.octokit = this.getOctokitClient();
@@ -66,10 +68,11 @@ export class GithubApiService {
     //   repoIdent.owner,
     //   await this.orgaMembers(repoIdent.owner),
     // );
-    this.devFocus.devSpreadRepo(
-      repoIdent,
-      // await this.orgaMembers(repoIdent.owner),
-    );
+    // this.devFocus.devSpreadRepo(
+    //   repoIdent,
+    //   await this.orgaMembers(repoIdent.owner),
+    // );
+    this.issueLabels.getRepoLabels(repoIdent.repo);
   }
 
   public async orgaMembers(owner: string) {

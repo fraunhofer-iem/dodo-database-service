@@ -18,6 +18,7 @@ import { StatisticService } from './statistic.service';
 import { LanguageSchema } from './schemas/language.schema';
 import { CommitSchema } from './schemas/commit.schema';
 import { DeveloperFocus } from './statistics/developerFocus.service';
+import { IssueLabels } from './statistics/issueLabels.service';
 
 @Module({
   imports: [
@@ -39,7 +40,7 @@ import { DeveloperFocus } from './statistics/developerFocus.service';
       { name: 'Commit', schema: CommitSchema },
     ]),
   ],
-  providers: [DatabaseService, StatisticService, DeveloperFocus],
-  exports: [DatabaseService, StatisticService, DeveloperFocus],
+  providers: [DatabaseService, StatisticService, DeveloperFocus, IssueLabels],
+  exports: [DatabaseService, StatisticService, DeveloperFocus, IssueLabels],
 })
 export class DatabaseModule {}
