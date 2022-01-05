@@ -608,22 +608,25 @@ export class StatisticService {
 
     return avg;
   }
-/**
- * The Feature Completion Rate describes the development team's capability to add features to the project.
- * It is a quantitative indicator for which we consider all issues labeled enhancement (or some other equivalent tag) that existed at the time of a release.
- * The Feature Completion Rate is the amount of closed enhancement issues divided by the total amount of enhancement issues.
- * 
- * (release, issues) => {
- *     closed_features = issues[ label = enhancement, state = closed, closed_at <= release.created_at, closed_at >= release.previous().created_at ] 
- *     open_features = issues[ label = enhancement, state = open, created_at <= release.created_at ]
- *
- *  return |closed_features| / |closed_features| + |open_features|
- * }
- * @param repoIdent 
- * @param userLimit 
- * @returns 
- */
-  async FeatureCompletionRate(repoIdent: RepositoryNameDto, userLimit?: number) {
+  /**
+   * The Feature Completion Rate describes the development team's capability to add features to the project.
+   * It is a quantitative indicator for which we consider all issues labeled enhancement (or some other equivalent tag) that existed at the time of a release.
+   * The Feature Completion Rate is the amount of closed enhancement issues divided by the total amount of enhancement issues.
+   *
+   * (release, issues) => {
+   *     closed_features = issues[ label = enhancement, state = closed, closed_at <= release.created_at, closed_at >= release.previous().created_at ]
+   *     open_features = issues[ label = enhancement, state = open, created_at <= release.created_at ]
+   *
+   *  return |closed_features| / |closed_features| + |open_features|
+   * }
+   * @param repoIdent
+   * @param userLimit
+   * @returns
+   */
+  async FeatureCompletionRate(
+    repoIdent: RepositoryNameDto,
+    userLimit?: number,
+  ) {
     const limit = userLimit ? userLimit : 100;
 
     const filter = {
@@ -681,7 +684,7 @@ export class StatisticService {
       .unwind('$expandedIssue')
       .lookup(getLabel)
       .unwind('$expandedLabels')
-      .match({'expandedLabels.name': {$exists: true, $eq: 'enhancement'}})
+      .match({ 'expandedLabels.name': { $exists: true, $eq: 'enhancement' } })
       .match({ 'expandedIssue.closed_at': { $exists: true, $ne: null } })
       .sort({ 'expandedIssue.closed_at': 1 })
       //.limit(limit)
@@ -698,7 +701,7 @@ export class StatisticService {
       .unwind('$expandedIssue')
       .lookup(getLabel)
       .unwind('$expandedLabels')
-      .match({'expandedLabels.name': {$exists: true, $eq: 'enhancement'}})
+      .match({ 'expandedLabels.name': { $exists: true, $eq: 'enhancement' } })
       .match({ 'expandedIssue.closed_at': { $exists: true, $eq: null } })
       .match({ 'expandedIssue.state': 'open' }) //extra line added to double check
       .sort({ 'expandedIssue.created_at': 1 })
@@ -744,7 +747,8 @@ export class StatisticService {
     );
 
     var feature_completion_rate =
-      Math.abs(closed_features) / (Math.abs(closed_features) + Math.abs(open_features));
+      Math.abs(closed_features) /
+      (Math.abs(closed_features) + Math.abs(open_features));
 
     this.logger.debug(`Feature Completion rate is: ${feature_completion_rate}`);
 
