@@ -1,4 +1,4 @@
-import { DevSpreadDates } from 'src/github-api/model/PullRequest';
+import { DevSpreadDates } from 'src/github-api/model/DevFocus';
 
 /**
  * Helper function to eliminate duplicate weeks, sprints or months
@@ -19,7 +19,7 @@ export function rearangeTimeslots(
   };
   const timestamps: string[] = Object.keys(timeSpreadPairs).sort();
   // go through every sorted timestamp and look to successor
-  for (let i = 1; i < timestamps.length; ) {
+  for (let i = 1; i <= timestamps.length; ) {
     const currentDate: string = timestamps[i - 1];
     const nextDate: string = timestamps[i];
     // check, if the next interval date should actualy be in current interval

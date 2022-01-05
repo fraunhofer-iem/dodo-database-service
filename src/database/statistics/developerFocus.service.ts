@@ -9,7 +9,7 @@ import {
   RepoSpread,
   RepoSpreadAvg,
   RepoSpreadTotal,
-} from 'src/github-api/model/PullRequest';
+} from 'src/github-api/model/DevFocus';
 import { RepositoryDocument } from '../schemas/repository.schema';
 import { rearangeTimeslots, spreadsGroupedByTimeslots } from './dateUtil';
 import {
@@ -17,6 +17,7 @@ import {
   getAvgRepoSpread,
   getSpreadDates,
 } from './spreadUtil';
+import internal from 'stream';
 
 @Injectable()
 export class DeveloperFocus {
@@ -60,8 +61,7 @@ export class DeveloperFocus {
         login: '$expandedCommits.login',
         timestamp: '$expandedCommits.timestamp',
         _id: 0,
-      })
-      .sort({ timestamp: 1 }); // sorted ascending
+      });
 
     // works fine as I can see it. I will delete this comment after I have written the tests.
     if (loginFilter) {
@@ -74,14 +74,18 @@ export class DeveloperFocus {
       timestamps: { $addToSet: { $substr: ['$timestamp', 0, 10] } },
     });
 
-    // get all commits for the repo with login and timestamp
-    const commits = await query.exec();
+    // sort because addToSet is without order, apply the limit
+    const commits = await query
+      .unwind('$timestamps')
+      .sort({ timestamps: 1 })
+      .group({ _id: '$_id', timestamps: { $push: '$timestamps' } })
+      .limit(limit)
+      .exec();
 
     // group by developer
     const developers: { [key: string]: string[] } = commits.reduce(
       (acc, curr) => {
-        // sort because addToSet is without order, slice for limit
-        acc[curr._id] = curr.timestamps.sort().slice(0, limit);
+        acc[curr._id] = curr.timestamps;
         return acc;
       },
       {},
@@ -158,24 +162,34 @@ export class DeveloperFocus {
     });
 
     console.log(spreadsPerDevs);
+
+    for (const dev in spreadsPerDevs) {
+      console.log(dev);
+      for (const spread in spreadsPerDevs[dev]) {
+        for (const timestamp in spreadsPerDevs[dev][spread]) {
+          console.log(spreadsPerDevs[dev][spread][timestamp]);
+        }
+      }
+    }
+
     return spreadsPerDevs;
   }
 
   /**
    *
-   * Adds the given to @param repoId to the timestamp map.
+   * Adds the given @param repoId to the timestamp map.
    * If map doesn't contain the @param timestamps the entry is added.
    */
   private extendExistingDevEntry(
     timestamps: string[],
     repoId: string,
-    devToTimpestamps: Map<string, string[]>,
+    timeStampRepo: Map<string, string[]>,
   ) {
     for (const timeStamp of timestamps) {
-      if (devToTimpestamps.has(timeStamp)) {
-        devToTimpestamps.get(timeStamp).push(repoId);
+      if (timeStampRepo.has(timeStamp)) {
+        timeStampRepo.get(timeStamp).push(repoId);
       } else {
-        devToTimpestamps.set(timeStamp, [repoId]);
+        timeStampRepo.set(timeStamp, [repoId]);
       }
     }
   }
@@ -211,21 +225,19 @@ export class DeveloperFocus {
     loginFilter?: string[],
     userLimit?: number,
   ): Promise<DevSpreadTotal> {
-    // get the spreads per each developer of that orga
     const spreadsPerDevs: DevSpread = await this.devSpread(
       owner,
       loginFilter,
       userLimit,
     );
 
-    // store the avg spread for each developer here
-    // use the precomputed sums and amounts for each time category
+    const allDevelopers: string[] = Object.keys(spreadsPerDevs);
     const devSpread: DevSpreadAvg = {};
 
-    for (const dev of Object.keys(spreadsPerDevs)) {
-      // call devObj for better readability
+    // calculate avg spread for every dev
+    for (const dev of allDevelopers) {
       const devObj = spreadsPerDevs[dev];
-      // init the new object
+
       devSpread[dev] = {
         daySpread: 0,
         weekSpread: 0,
@@ -236,38 +248,34 @@ export class DeveloperFocus {
         sprints: devObj.sprints,
         months: devObj.months,
       };
-      devSpread[dev].daySpread = devObj.daySpreadSum / devObj.days;
-      // if there were no weeks accumulated, skip them
-      if (devObj.weeks != 0) {
-        devSpread[dev].weekSpread = devObj.weekSpreadSum / devObj.weeks;
-      } else {
-        devSpread[dev].weekSpread = 0;
-      }
-      // if there were no sprints accumulated, skip them
-      if (devObj.sprints != 0) {
-        devSpread[dev].sprintSpread = devObj.sprintSpreadSum / devObj.sprints;
-      } else {
-        devSpread[dev].sprintSpread = 0;
-      }
-      // if there were no months accumulated, skip them
-      if (devObj.months != 0) {
-        devSpread[dev].monthSpread = devObj.monthSpreadSum / devObj.months;
-      } else {
-        devSpread[dev].monthSpread = 0;
-      }
+      devSpread[dev].daySpread = this.saveDivision(
+        devObj.daySpreadSum,
+        devObj.days,
+      );
+
+      devSpread[dev].weekSpread = this.saveDivision(
+        devObj.weekSpreadSum,
+        devObj.weeks,
+      );
+
+      devSpread[dev].sprintSpread = this.saveDivision(
+        devObj.sprintSpreadSum,
+        devObj.sprints,
+      );
+
+      devSpread[dev].monthSpread = this.saveDivision(
+        devObj.monthSpreadSum,
+        devObj.months,
+      );
     }
 
-    // TODO: We could also return that object of course, if desired.
     console.log(devSpread);
 
-    // store the array of all developers
-    const allDevelopers: string[] = Object.keys(spreadsPerDevs);
-
-    // compute the avg total spread for the whole orga
-    // store the total spread in here. This is the final return value
-    // I stored the summed up amount of days, weeks, ... from all developers
-    // in the totalSpread object, just to see how many objects of a time category
-    // were taken into account for that end result. This can be deleted, if not desired.
+    // compute the total avg spread relative to all devs
+    // of the whole orga
+    // weekSpread e.g. is sum of all weekSpread values
+    // of all devs divided with the amount of devs
+    // days, weeks, ... is sum of each category from all devs
     const totalSpread: DevSpreadTotal = {
       daySpread: 0,
       weekSpread: 0,
@@ -286,7 +294,7 @@ export class DeveloperFocus {
     let monthCount = 0;
     // sum every avg value for a category of each developer, then devide this trough the amount of developers
     // which have contributed to that category
-    for (const dev of Object.keys(devSpread)) {
+    for (const dev of allDevelopers) {
       const devObj = devSpread[dev];
       totalSpread.days += devObj.days;
       totalSpread.weeks += devObj.weeks;
@@ -306,21 +314,36 @@ export class DeveloperFocus {
       totalSpread.sprintSpread += devObj.sprintSpread;
       totalSpread.monthSpread += devObj.monthSpread;
     }
-    totalSpread.daySpread = totalSpread.daySpread / allDevelopers.length;
-    if (totalSpread.weekSpread != 0) {
-      totalSpread.weekSpread =
-        totalSpread.weekSpread / (allDevelopers.length - weekCount);
-    }
-    if (totalSpread.sprintSpread != 0) {
-      totalSpread.sprintSpread =
-        totalSpread.sprintSpread / (allDevelopers.length - sprintCount);
-    }
-    if (totalSpread.monthSpread != 0) {
-      totalSpread.monthSpread =
-        totalSpread.monthSpread / (allDevelopers.length - monthCount);
-    }
+
+    totalSpread.daySpread = this.saveDivision(
+      totalSpread.daySpread,
+      allDevelopers.length,
+    );
+
+    totalSpread.weekSpread = this.saveDivision(
+      totalSpread.weekSpread,
+      allDevelopers.length - weekCount,
+    );
+
+    totalSpread.sprintSpread = this.saveDivision(
+      totalSpread.sprintSpread,
+      allDevelopers.length - sprintCount,
+    );
+
+    totalSpread.monthSpread = this.saveDivision(
+      totalSpread.monthSpread,
+      allDevelopers.length - monthCount,
+    );
+
     console.log(totalSpread);
     return totalSpread;
+  }
+
+  private saveDivision(a: number, b: number): number {
+    if (isNaN(a / b)) {
+      return 0;
+    }
+    return a / b;
   }
 
   /**
@@ -344,14 +367,14 @@ export class DeveloperFocus {
     const repoM = await this.repoModel
       .findOne({ repo: repoIdent.repo, owner: repoIdent.owner })
       .exec();
-    console.log(repoM);
+
     // get the commits for specified repo to get the developers of that repo
     const commits = await this.getRepoCommits(
       repoM._id,
       loginFilter,
       userLimit,
     );
-    console.log(commits);
+    console.log('commits: ', commits);
     // store the repoId as a string
     const repoID = repoM._id.toString();
     // store the repo developers in an array

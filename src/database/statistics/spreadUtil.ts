@@ -2,7 +2,7 @@ import {
   RepoSpreadTotal,
   RepoSpread,
   DevSpread,
-} from 'src/github-api/model/PullRequest';
+} from 'src/github-api/model/DevFocus';
 
 export function getAvgRepoSpread(total: RepoSpreadTotal) {
   return {
