@@ -231,7 +231,7 @@ export class DatabaseService {
       this.logger.debug(
         `saving programming languages from ${repoIdent.owner}/${repoIdent.repo} to database...`,
       );
-      // const repoID = await this.getRepoByName(repoIdent.owner, repoIdent.repo)
+
       languageModel.repo_id = repoM._id;
       languageModel.languages = languages;
       const savedLanguages = await languageModel.save();
@@ -267,11 +267,10 @@ export class DatabaseService {
   }
 
   async repoExists(repoIdent: RepositoryNameDto): Promise<boolean> {
-    const exists = await this.repoModel.exists({
+    return this.repoModel.exists({
       repo: repoIdent.repo,
       owner: repoIdent.owner,
     });
-    return exists;
   }
 
   async updateRepo(repoId: string, push: OnlyFieldsOfType<RepositoryDocument>) {
