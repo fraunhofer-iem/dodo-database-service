@@ -622,7 +622,7 @@ export class StatisticService {
  * @param userLimit 
  * @returns 
  */
-  async FeatureCompletionEfficiency(repoIdent: RepositoryNameDto, userLimit?: number) {
+  async MeanFaultCorrectionEfficiency(repoIdent: RepositoryNameDto, userLimit?: number) {
     const limit = userLimit ? userLimit : 100;
 
     const filter = {
@@ -644,6 +644,13 @@ export class StatisticService {
       as: 'expandedIssue',
     };
 
+    const getReleases = {
+      from: 'releases',
+      localField: 'releases',
+      foreignField: '_id',
+      as: 'expandedReleases',
+    };
+
     const getLabel = {
       from: 'labels',
       localField: 'expandedIssue.label',
@@ -651,8 +658,18 @@ export class StatisticService {
       as: 'expandedLabels',
     };
 
-    
-    //to obtain closed issues, sorted on the basis of closed_at time & label type = enhancement
+    //to obtain releases, sorted on the basis of created_at time
+    const res: { _id: string; count: number }[] = await this.repoModel
+      .aggregate()
+      .match(filter)
+      .unwind('$releases')
+      .lookup(getReleases)
+      .unwind('$expandedReleases')
+      .sort({ 'expandedReleases.created_at': 1 })
+      //.limit(limit)
+      .exec();
+
+    //to obtain closed issues, sorted on the basis of closed_at time
     const res1: { _id: string; count: number }[] = await this.repoModel
       .aggregate()
       .match(filter)
@@ -663,36 +680,55 @@ export class StatisticService {
       .unwind('$expandedIssue')
       .lookup(getLabel)
       .unwind('$expandedLabels')
-      .match({'expandedLabels.name': {$exists: true, $eq: 'enhancement'}})
+      .match({'expandedLabels.name': {$exists: true, $eq: 'bug'}})
       .match({ 'expandedIssue.closed_at': { $exists: true, $ne: null } })
       .sort({ 'expandedIssue.closed_at': 1 })
       //.limit(limit)
       .exec();
 
-    // This variable defines the fixed time set for the feature to be resolved.
-    //this info is manually defined
-    // T_feature value is considered to be 14 Days, i.e, 1209600000 ms.
-    var T_feature = 604800000; //1209600000 (14 days) ;
-    
-    var bug_closedAt = [],
-        bug_createdAt = [];
+    //this loop matches the condition
+    //closed_bugs = issues[ label = bug, state = closed, closed_at <= release.created_at, closed_at >= release.previous().created_at ]
+    var closed_bugs = 0;
     for (let i = 0; i < res1.length; i++) {
-            bug_closedAt.push(res1[i]['expandedIssue']['closed_at']);
-            bug_createdAt.push(res1[i]['expandedIssue']['created_at']);
+      for (let j = 1; j < res.length; j++) {
+        if (
+          res1[i]['expandedIssue']['closed_at'] <=
+          res[j]['expandedReleases']['created_at']
+        ) {
+          if (
+            res1[i]['expandedIssue']['closed_at'] >=
+            res[j - 1]['expandedReleases']['created_at']
+          ) {
+            closed_bugs += 1;
           }
-    
-
-    var feature_completion_efficiency = [];
-    for (let k = 0; k < bug_closedAt.length; k++) {
-      var start = new Date(bug_createdAt[k]).getTime();
-      var end = new Date(bug_closedAt[k]).getTime();
-      var difference = Math.abs(end - start);
-      feature_completion_efficiency.push(difference/T_feature); 
+        }
+      }
     }
-    
-    this.logger.log(
-      `Feature Completion Efficiency is: ${feature_completion_efficiency}`,
+
+    //this loop matches below condition
+    //open_bugs = issues[ label = bug, state = open, created_at <= release.created_at ]
+    var open_bugs = 0;
+    for (let k = 0; k < res2.length; k++) {
+      for (let j = 1; j < res.length; j++) {
+        if (
+          res2[k]['expandedIssue']['created_at'] <=
+          res[j]['expandedReleases']['created_at']
+        ) {
+          open_bugs += 1;
+          break;
+        }
+      }
+    }
+
+    this.logger.debug(
+      `open bugs are: ${open_bugs} and closed bugs are: ${closed_bugs}`,
     );
-    return feature_completion_efficiency;
+
+    var fault_correction_rate =
+      Math.abs(closed_bugs) / (Math.abs(closed_bugs) + Math.abs(open_bugs));
+
+    this.logger.debug(`Fault correction rate is: ${fault_correction_rate}`);
+
+    return fault_correction_rate;
   }
 }
