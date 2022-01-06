@@ -1,10 +1,8 @@
 {
-  "name": "visu-code-db-service",
+  "name": "dodo-database-service",
   "version": "0.0.1",
-  "description": "",
-  "author": "",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "GPL-3.0",
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "nest build",

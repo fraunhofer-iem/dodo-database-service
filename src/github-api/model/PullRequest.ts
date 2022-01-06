@@ -10,7 +10,6 @@ export interface IssueEventTypes {
   event?: string;
   commit_url?: string;
   created_at?: string;
-  // assignee?: Assignee;
 }
 
 export interface Issue {
@@ -78,10 +77,6 @@ export interface Milestones {
   due_on: string;
 }
 
-export interface Pull_request {
-  url: string;
-}
-
 export interface Diff {
   pullRequest: PullRequest;
   changedFiles: PullRequestFile[];
@@ -126,4 +121,10 @@ export interface RepositoryFile {
 
 export interface Language {
   [key: string]: number;
+}
+
+export interface Commit {
+  url: string;
+  login: string;
+  timestamp: string;
 }

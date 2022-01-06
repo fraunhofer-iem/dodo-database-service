@@ -6,9 +6,6 @@ on:
       tag:
         required: true
         type: string
-    secrets:
-      ORG_ACCESS_TOKEN:
-        required: true
 
   workflow_dispatch:
     inputs:
@@ -25,7 +22,7 @@ jobs:
         with:
           repository: fraunhofer-iem/dodo-deployment
           ref: main
-          token: ${{ secrets.ORG_ACCESS_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           submodules: true
 
       - name: Checkout desired tag (workflow_call)

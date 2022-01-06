@@ -1,6 +1,11 @@
 # Overview
 
-This repository is intended as a playground to calculate and thereby verify some KPIs and metrics defined in the research project [DoDo](https://fraunhofer-iem.github.io/dodo-web/).
+This repository is intended as a playground to calculate and verify KPIs and metrics defined in the research project [DoDo](https://fraunhofer-iem.github.io/dodo-web/).
+The repository contains a description of the calculated KPIs [here](https://github.com/fraunhofer-iem/dodo-database-service/tree/main/doc/KPIs).
+
+## Further Repositories
+An additional project is used to visualize the calculated data and can be found [here](https://github.com/fraunhofer-iem/dodo-github-visualization).\
+To deploy the complete setup using docker and adding traefik for routing between the containers you can use this [repository](https://github.com/fraunhofer-iem/dodo-deployment).
 
 ## Installation
 
