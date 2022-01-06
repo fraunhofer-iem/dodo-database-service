@@ -17,7 +17,6 @@ import {
   getAvgRepoSpread,
   getSpreadDates,
 } from './spreadUtil';
-import internal from 'stream';
 
 @Injectable()
 export class DeveloperFocus {

@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Mongoose, OnlyFieldsOfType } from 'mongoose';
+import { Model, OnlyFieldsOfType } from 'mongoose';
 import {
   Diff,
   Releases,
