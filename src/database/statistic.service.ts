@@ -655,8 +655,15 @@ export class StatisticService {
   async faultCorrectionEfficiency(
     repoIdent: RepositoryNameDto,
     userLimit?: number,
+    timeFrame?: number,
   ) {
     const limit = userLimit ? userLimit : 100;
+    // This variable defines the fixed time set for the bugs to be resolved.
+    // Since such an information cannot be derived from git (milestones can be looked at,
+    // however they are hardly properly utilized by most projects).
+    // Although information like this can be derived from Jira, but for now, it is manually defined.
+    // duration value is considered to be 14 Days, i.e, 1209600000 ms.
+    const duration = timeFrame ? timeFrame : 1209600000;
 
     const filter = {
       repo: repoIdent.repo,
@@ -695,8 +702,8 @@ export class StatisticService {
       .unwind('$expandedIssue')
       .lookup(getLabel)
       .unwind('$expandedLabels')
-      .match({ 'expandedLabels.name': { $exists: true, $eq: 'bug' } })
-      .match({ 'expandedIssue.closed_at': { $exists: true, $ne: null } })
+      // .match({ 'expandedLabels.name': { $exists: true, $eq: 'bug' } })
+      // .match({ 'expandedIssue.closed_at': { $exists: true, $ne: null } })
       .project({
         Issue_created_at_Time: { $toDate: '$expandedIssue.created_at' },
         Issue_closed_at_Time: { $toDate: '$expandedIssue.closed_at' },
@@ -707,26 +714,27 @@ export class StatisticService {
           $subtract: ['$Issue_closed_at_Time', '$Issue_created_at_Time'],
         },
       })
-      // .limit(limit)
       .exec();
 
-    // This variable defines the fixed time set for the bugs to be resolved.
-    // Since such an information cannot be derived from git (milestones can be looked at,
-    // however they are hardly properly utilized by most projects).
-    // Although information like this can be derived from Jira, but for now, it is manually defined.
-    // T_bugfix value is considered to be 14 Days, i.e, 1209600000 ms.
-    const T_bugfix = 1209600000; //604800000 ;
-    const fault_correction_efficiency = [];
-
-    res.forEach((e) => {
-      this.logger.log(e['subtractedDate']);
-      fault_correction_efficiency.push(e['subtractedDate'] / T_bugfix);
-    });
+    const inTime = res.reduce((prev, curr) => {
+      if (this.wasCorrectedInTime(curr['subtractedDate'], duration)) {
+        return prev + 1;
+      } else {
+        return prev;
+      }
+    }, 0);
+    console.log(inTime);
 
     //prints the Fault correction efficiency for each element.
     this.logger.log(
-      `Fault correction efficiency for each element is: \n ${fault_correction_efficiency}`,
+      `${inTime} of ${res.length} tickets were corrected in ${msToDateString(
+        duration,
+      )} `,
     );
-    return fault_correction_efficiency;
+    return { noInTime: inTime, total: res.length };
+  }
+
+  wasCorrectedInTime(time: number, maximumDuration: number): boolean {
+    return time > maximumDuration;
   }
 }
