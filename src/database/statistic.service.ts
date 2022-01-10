@@ -2,18 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { RepositoryNameDto } from 'src/github-api/model/Repository';
-import { DiffDocument } from './schemas/diff.schema';
-import { PullRequestDocument } from './schemas/pullRequest.schema';
-import { PullRequestFileDocument } from './schemas/pullRequestFile.schema';
 import { RepositoryDocument } from './schemas/repository.schema';
-import { RepositoryFileDocument } from './schemas/repositoryFile.schema';
-import { IssueDocument } from './schemas/issue.schema';
-import { IssueEventTypesDocument } from './schemas/issueEventTypes.schema';
-import { IssueWithEventsDocument } from './schemas/issueWithEvents.schema';
-import { LabelDocument } from './schemas/labels.schema';
-import { AssigneeDocument } from './schemas/assignee.schema';
-import { AssigneesDocument } from './schemas/assignees.schema';
-import { MilestoneDocument } from './schemas/milestone.schema';
+import { msToDateString } from './statistics/dateUtil';
 
 @Injectable()
 export class StatisticService {
@@ -22,28 +12,6 @@ export class StatisticService {
   constructor(
     @InjectModel('Repository')
     private readonly repoModel: Model<RepositoryDocument>,
-    @InjectModel('RepositoryFiles')
-    private readonly repoFileModel: Model<RepositoryFileDocument>,
-    @InjectModel('PullRequestFiles')
-    private readonly pullFileModel: Model<PullRequestFileDocument>,
-    @InjectModel('PullRequest')
-    private readonly pullRequestModel: Model<PullRequestDocument>,
-    @InjectModel('Diff')
-    private readonly diffModel: Model<DiffDocument>,
-    @InjectModel('Issue')
-    private readonly issueModel: Model<IssueDocument>,
-    @InjectModel('IssueEventTypes')
-    private readonly issueEventTypesModel: Model<IssueEventTypesDocument>,
-    @InjectModel('IssueWithEvents')
-    private readonly issueWithEventsModel: Model<IssueWithEventsDocument>,
-    @InjectModel('Label')
-    private readonly labelModel: Model<LabelDocument>,
-    @InjectModel('Assignee')
-    private readonly assigneeModel: Model<AssigneeDocument>,
-    @InjectModel('Assignees')
-    private readonly assigneesModel: Model<AssigneesDocument>,
-    @InjectModel('Milestone')
-    private readonly milestoneModel: Model<MilestoneDocument>,
   ) {}
 
   /**
@@ -119,11 +87,6 @@ export class StatisticService {
     const filter = {
       repo: repoIdent.repo,
       owner: repoIdent.owner,
-    };
-
-    const group = {
-      _id: null,
-      count: { $count: {} },
     };
 
     const getDiffs = {
@@ -382,8 +345,6 @@ export class StatisticService {
       .match({ 'expandedIssue.assignees': { $exists: false } })
       .exec();
 
-    //  this.logger.log(`Closed Tickets with only a single assignee ${res.length}.`);
-
     const res1: { _id: string; count: number }[] = await this.repoModel
       .aggregate()
       .match(filter)
@@ -472,22 +433,10 @@ export class StatisticService {
       .group({ _id: null, totaltime: { $avg: '$_id' } })
       .limit(limit)
       .exec();
-    //console.log(res[0]['totaltime']);
-    const time = msToTime(res[0]['totaltime']);
+
+    const time = msToDateString(res[0]['totaltime']);
     this.logger.log(`Average time until tickets was assigned is ${time}`);
     return time;
-
-    //function to convert ms to hour/minutes/seconds
-    function msToTime(ms: number) {
-      const seconds = ms / 1000;
-      const minutes = ms / (1000 * 60);
-      const hours = ms / (1000 * 60 * 60);
-      const days = ms / (1000 * 60 * 60 * 24);
-      if (seconds < 60) return seconds.toFixed(1) + ' Sec';
-      else if (minutes < 60) return minutes.toFixed(1) + ' Min';
-      else if (hours < 24) return hours.toFixed(1) + ' Hrs';
-      else return days + ' Days';
-    }
   }
 
   /**
@@ -610,6 +559,87 @@ export class StatisticService {
   }
 
   /**
+   * The Time to Resolution describes the development team's capability to respond to bug reports. It assesses the time it took to resolve a single bug report.
+   * We calculate this information point for resolved issues labeled bug (or some other equivalent label).
+   * (issue[label = "bug", state="closed"], T_bugfix) => {
+   * return (issue.closed_at - issue.created_at)
+   *  }
+   *  @param repoIdent
+   *  @param labelName
+   *  @param userLimit
+   */
+  async timeToResolution(
+    repoIdent: RepositoryNameDto,
+    labelName?: string,
+    userLimit?: number,
+  ) {
+    const limit = userLimit ? userLimit : 100;
+
+    const filter = {
+      repo: repoIdent.repo,
+      owner: repoIdent.owner,
+    };
+
+    const getIssuesWithEvents = {
+      from: 'issuewithevents',
+      localField: 'issuesWithEvents',
+      foreignField: '_id',
+      as: 'expandedIssuesWithEvents',
+    };
+
+    const getIssue = {
+      from: 'issues',
+      localField: 'expandedIssuesWithEvents.issue',
+      foreignField: '_id',
+      as: 'expandedIssue',
+    };
+
+    const getLabel = {
+      from: 'labels',
+      localField: 'expandedIssue.label',
+      foreignField: '_id',
+      as: 'expandedLabels',
+    };
+
+    const res: { _id: string; avg: number }[] = await this.repoModel
+      .aggregate()
+      .match(filter)
+      .project({ issuesWithEvents: 1 })
+      .unwind('$issuesWithEvents')
+      .lookup(getIssuesWithEvents)
+      .unwind('$expandedIssuesWithEvents')
+      .lookup(getIssue)
+      .unwind('$expandedIssue')
+      // TODO: for now we ignore the labels and calculate the time for every ticket regardless of the label
+      // .lookup(getLabel)
+      // .unwind('$expandedLabels')
+      // .match({ 'expandedLabels.name': { $exists: true, $eq: 'bug' } })
+      .match({ 'expandedIssue.closed_at': { $exists: true, $ne: null } })
+      .project({
+        issueCreatedAtTime: { $toDate: '$expandedIssue.created_at' },
+        issueClosedAtTime: { $toDate: '$expandedIssue.closed_at' },
+      })
+      .addFields({
+        subtractedDate: {
+          $subtract: ['$issueClosedAtTime', '$issueCreatedAtTime'],
+        },
+      })
+      .group({
+        _id: '$_id',
+        avg: { $avg: '$subtractedDate' },
+      })
+      .exec();
+
+    this.logger.log(
+      `average time to resolution for each ticket is ${msToDateString(
+        res[0].avg,
+      )}`,
+    );
+
+    return res;
+  }
+
+  /**
    *  The Fault Correction Efficiency describes the development team's capability to respond to bug reports.
    *  In more detail, it assesses if a single fault was corrected within the time frame the organization aims to adhere to for fault corrections.
    *  We calculate this qualitative indicator for resolved issues labeled bug (or some other equivalent label).
@@ -622,7 +652,7 @@ export class StatisticService {
    *  @param repoIdent
    *  @param userLimit
    */
-  async FaultCorrectionEfficiency(
+  async faultCorrectionEfficiency(
     repoIdent: RepositoryNameDto,
     userLimit?: number,
   ) {
@@ -665,7 +695,7 @@ export class StatisticService {
       .unwind('$expandedIssue')
       .lookup(getLabel)
       .unwind('$expandedLabels')
-      .match({'expandedLabels.name': {$exists: true, $eq: 'bug'}})
+      .match({ 'expandedLabels.name': { $exists: true, $eq: 'bug' } })
       .match({ 'expandedIssue.closed_at': { $exists: true, $ne: null } })
       .project({
         Issue_created_at_Time: { $toDate: '$expandedIssue.created_at' },
@@ -685,8 +715,8 @@ export class StatisticService {
     // however they are hardly properly utilized by most projects).
     // Although information like this can be derived from Jira, but for now, it is manually defined.
     // T_bugfix value is considered to be 14 Days, i.e, 1209600000 ms.
-    var T_bugfix = 1209600000; //604800000 ;
-    var fault_correction_efficiency = [];
+    const T_bugfix = 1209600000; //604800000 ;
+    const fault_correction_efficiency = [];
 
     res.forEach((e) => {
       this.logger.log(e['subtractedDate']);
