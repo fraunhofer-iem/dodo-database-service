@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { RepositoryNameDto } from 'src/github-api/model/Repository';
 import { RepositoryDocument } from './schemas/repository.schema';
+import { msToDateString } from './statistics/dateUtil';
 
 @Injectable()
 export class StatisticService {
@@ -433,21 +434,9 @@ export class StatisticService {
       .limit(limit)
       .exec();
 
-    const time = msToTime(res[0]['totaltime']);
+    const time = msToDateString(res[0]['totaltime']);
     this.logger.log(`Average time until tickets was assigned is ${time}`);
     return time;
-
-    //function to convert ms to hour/minutes/seconds
-    function msToTime(ms: number) {
-      const seconds = ms / 1000;
-      const minutes = ms / (1000 * 60);
-      const hours = ms / (1000 * 60 * 60);
-      const days = ms / (1000 * 60 * 60 * 24);
-      if (seconds < 60) return seconds.toFixed(1) + ' Sec';
-      else if (minutes < 60) return minutes.toFixed(1) + ' Min';
-      else if (hours < 24) return hours.toFixed(1) + ' Hrs';
-      else return days + ' Days';
-    }
   }
 
   /**
@@ -576,9 +565,14 @@ export class StatisticService {
    * return (issue.closed_at - issue.created_at)
    *  }
    *  @param repoIdent
+   *  @param labelName
    *  @param userLimit
    */
-  async TimeToResolution(repoIdent: RepositoryNameDto, userLimit?: number) {
+  async timeToResolution(
+    repoIdent: RepositoryNameDto,
+    labelName?: string,
+    userLimit?: number,
+  ) {
     const limit = userLimit ? userLimit : 100;
 
     const filter = {
@@ -607,7 +601,7 @@ export class StatisticService {
       as: 'expandedLabels',
     };
 
-    const res: { _id: string; count: number }[] = await this.repoModel
+    const res: { _id: string; avg: number }[] = await this.repoModel
       .aggregate()
       .match(filter)
       .project({ issuesWithEvents: 1 })
@@ -616,46 +610,32 @@ export class StatisticService {
       .unwind('$expandedIssuesWithEvents')
       .lookup(getIssue)
       .unwind('$expandedIssue')
-      .lookup(getLabel)
-      .unwind('$expandedLabels')
-      .match({'expandedLabels.name': {$exists: true, $eq: 'bug'}})
+      // TODO: for now we ignore the labels and calculate the time for every ticket regardless of the label
+      // .lookup(getLabel)
+      // .unwind('$expandedLabels')
+      // .match({ 'expandedLabels.name': { $exists: true, $eq: 'bug' } })
       .match({ 'expandedIssue.closed_at': { $exists: true, $ne: null } })
       .project({
-        Issue_created_at_Time: { $toDate: '$expandedIssue.created_at' },
-        Issue_closed_at_Time: { $toDate: '$expandedIssue.closed_at' },
+        issueCreatedAtTime: { $toDate: '$expandedIssue.created_at' },
+        issueClosedAtTime: { $toDate: '$expandedIssue.closed_at' },
       })
       .addFields({
-        _id: null,
         subtractedDate: {
-          $subtract: ['$Issue_closed_at_Time', '$Issue_created_at_Time'],
+          $subtract: ['$issueClosedAtTime', '$issueCreatedAtTime'],
         },
       })
-      // .limit(limit)
+      .group({
+        _id: '$_id',
+        avg: { $avg: '$subtractedDate' },
+      })
       .exec();
 
-    var time_to_resolution = []; 
+    this.logger.log(
+      `average time to resolution for each ticket is ${msToDateString(
+        res[0].avg,
+      )}`,
+    );
 
-    res.forEach((e) => {
-      //this.logger.log(`the elements are ${e['subtractedDate']}`);
-      const time = msToTime(e['subtractedDate']);
-      time_to_resolution.push(time);
-    });
-
-    //prints the Time To Resolution of each element
-    this.logger.log(`time to resolution for every ticket is ${time_to_resolution}`); 
-
-    //to convert ms to time
-    function msToTime(ms: number) {
-      const seconds = ms / 1000;
-      const minutes = ms / (1000 * 60);
-      const hours = ms / (1000 * 60 * 60);
-      const days = ms / (1000 * 60 * 60 * 24);
-      if (seconds < 60) return seconds.toFixed(1) + ' Sec';
-      else if (minutes < 60) return minutes.toFixed(1) + ' Min';
-      else if (hours < 24) return hours.toFixed(1) + ' Hrs';
-      else return days + ' Days';
-    }
-
-    return time_to_resolution;
+    return res;
   }
 }
