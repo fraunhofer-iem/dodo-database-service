@@ -638,4 +638,103 @@ export class StatisticService {
 
     return res;
   }
+
+  /**
+   *  The Fault Correction Efficiency describes the development team's capability to respond to bug reports.
+   *  In more detail, it assesses if a single fault was corrected within the time frame the organization aims to adhere to for fault corrections.
+   *  We calculate this qualitative indicator for resolved issues labeled bug (or some other equivalent label).
+   *  A value greater than 1 indicates that the fault was not corrected within the desired time.
+   *  A value less than 1 indicates that the fault was corrected within the desired time.
+   *
+   *  (issue[label = "bug", state="closed"], T_bugfix) => {
+   *  return (issue.closed_at - issue.created_at) / T_bugfix
+   *   }
+   *  @param repoIdent
+   *  @param userLimit
+   */
+  async faultCorrectionEfficiency(
+    repoIdent: RepositoryNameDto,
+    userLimit?: number,
+    timeFrame?: number,
+  ) {
+    const limit = userLimit ? userLimit : 100;
+    // This variable defines the fixed time set for the bugs to be resolved.
+    // Since such an information cannot be derived from git (milestones can be looked at,
+    // however they are hardly properly utilized by most projects).
+    // Although information like this can be derived from Jira, but for now, it is manually defined.
+    // duration value is considered to be 14 Days, i.e, 1209600000 ms.
+    const duration = timeFrame ? timeFrame : 1209600000;
+
+    const filter = {
+      repo: repoIdent.repo,
+      owner: repoIdent.owner,
+    };
+
+    const getIssuesWithEvents = {
+      from: 'issuewithevents',
+      localField: 'issuesWithEvents',
+      foreignField: '_id',
+      as: 'expandedIssuesWithEvents',
+    };
+
+    const getIssue = {
+      from: 'issues',
+      localField: 'expandedIssuesWithEvents.issue',
+      foreignField: '_id',
+      as: 'expandedIssue',
+    };
+
+    const getLabel = {
+      from: 'labels',
+      localField: 'expandedIssue.label',
+      foreignField: '_id',
+      as: 'expandedLabels',
+    };
+
+    const res: { _id: string; count: number }[] = await this.repoModel
+      .aggregate()
+      .match(filter)
+      .project({ issuesWithEvents: 1 })
+      .unwind('$issuesWithEvents')
+      .lookup(getIssuesWithEvents)
+      .unwind('$expandedIssuesWithEvents')
+      .lookup(getIssue)
+      .unwind('$expandedIssue')
+      .lookup(getLabel)
+      .unwind('$expandedLabels')
+      // .match({ 'expandedLabels.name': { $exists: true, $eq: 'bug' } })
+      // .match({ 'expandedIssue.closed_at': { $exists: true, $ne: null } })
+      .project({
+        Issue_created_at_Time: { $toDate: '$expandedIssue.created_at' },
+        Issue_closed_at_Time: { $toDate: '$expandedIssue.closed_at' },
+      })
+      .addFields({
+        _id: null,
+        subtractedDate: {
+          $subtract: ['$Issue_closed_at_Time', '$Issue_created_at_Time'],
+        },
+      })
+      .exec();
+
+    const inTime = res.reduce((prev, curr) => {
+      if (this.wasCorrectedInTime(curr['subtractedDate'], duration)) {
+        return prev + 1;
+      } else {
+        return prev;
+      }
+    }, 0);
+    console.log(inTime);
+
+    //prints the Fault correction efficiency for each element.
+    this.logger.log(
+      `${inTime} of ${res.length} tickets were corrected in ${msToDateString(
+        duration,
+      )} `,
+    );
+    return { noInTime: inTime, total: res.length };
+  }
+
+  wasCorrectedInTime(time: number, maximumDuration: number): boolean {
+    return time > maximumDuration;
+  }
 }

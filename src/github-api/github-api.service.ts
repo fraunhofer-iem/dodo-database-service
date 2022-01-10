@@ -62,9 +62,11 @@ export class GithubApiService {
     // this.statisticService.avgNumberOfAssigneeUntilTicketCloses(repoIdent);
     //this.statisticService.avgTimeTillTicketWasAssigned(repoIdent);
     //this.statisticService.workInProgress(repoIdent);
-    this.statisticService.timeToResolution(repoIdent);
+    // this.statisticService.timeToResolution(repoIdent);
 
     // this.statisticService.avgTimeTillTicketWasAssigned(repoIdent);
+    //this.statisticService.workInProgress(repoIdent);
+    this.statisticService.faultCorrectionEfficiency(repoIdent);
     // this.statisticService.workInProgress(repoIdent);
     // this.devFocus.devSpreadTotal(
     //  repoIdent.owner,
