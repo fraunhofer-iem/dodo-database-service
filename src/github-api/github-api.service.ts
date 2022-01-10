@@ -2,7 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Octokit } from 'octokit';
 import { DatabaseService } from 'src/database/database.service';
 import { StatisticService } from 'src/database/statistic.service';
-import { PullRequest, RepositoryFile, Releases } from './model/PullRequest';
+import { DeveloperFocus } from 'src/database/statistics/developerFocus.service';
+import { PullRequest, RepositoryFile, Commit } from './model/PullRequest';
 import { CreateRepositoryDto, RepositoryNameDto } from './model/Repository';
 
 export interface Tree {
@@ -41,6 +42,7 @@ export class GithubApiService {
   constructor(
     private statisticService: StatisticService,
     private dbService: DatabaseService,
+    private devFocus: DeveloperFocus,
   ) {
     // init octokit
     this.octokit = this.getOctokitClient();
@@ -58,11 +60,33 @@ export class GithubApiService {
     // this.statisticService.numberOfAssignee(repoIdent);
     // this.statisticService.numberOfOpenTickets(repoIdent);
     // this.statisticService.avgNumberOfAssigneeUntilTicketCloses(repoIdent);
-     //this.statisticService.avgTimeTillTicketWasAssigned(repoIdent);
+    //this.statisticService.avgTimeTillTicketWasAssigned(repoIdent);
     //this.statisticService.workInProgress(repoIdent);
-       this.statisticService.TimeToResolution(repoIdent);
+    this.statisticService.TimeToResolution(repoIdent);
 
+    // this.statisticService.avgTimeTillTicketWasAssigned(repoIdent);
+    // this.statisticService.workInProgress(repoIdent);
+    this.devFocus.devSpreadTotal(
+      repoIdent.owner,
+      //   await this.orgaMembers(repoIdent.owner),
+    );
+    // this.devFocus.devSpreadRepo(
+    //   repoIdent,
+    // await this.orgaMembers(repoIdent.owner),
+    // );
+  }
 
+  public async orgaMembers(owner: string) {
+    // gather all orga members for the repo owner organization
+    const { data: orgaMembers } = await this.octokit.rest.orgs.listMembers({
+      org: owner,
+    });
+    // array for all orga member logins
+    const orgaDevs: string[] = [];
+    orgaMembers.forEach((member) => {
+      orgaDevs.push(member.login);
+    });
+    return orgaDevs;
   }
 
   public async storeIssues(repoIdent: RepositoryNameDto) {
@@ -96,7 +120,10 @@ export class GithubApiService {
     });
     for (const issu of issues) {
       // first store issue
-      const issuId = await this.dbService.saveIssue(issu, repoId);
+      const issuId = await this.dbService.saveIssue(
+        { ...issu, labels: [] }, // TODO: workaround because the current label handling seems to be very broken and we ignore it for now
+        repoId,
+      );
       // then query the event types and store them
       await this.getAndStoreIssueEventTypes(
         owner,
@@ -324,5 +351,56 @@ export class GithubApiService {
         are files.`,
     );
     return files;
+  }
+
+  public async storeLanguages(repoIdent: RepositoryNameDto) {
+    this.logger.log(
+      `querying languages for ${repoIdent.owner}/${repoIdent.repo}`,
+    );
+    const languages = await this.octokit.rest.repos
+      .listLanguages({
+        owner: repoIdent.owner,
+        repo: repoIdent.repo,
+      })
+      .then((res) => res.data); // what is the syntax and meaning of this?
+    return this.dbService.saveLanguages(repoIdent, languages);
+    // await necassary for return value on request console. Why?
+  }
+
+  public async storeCommits(repoIdent: RepositoryNameDto) {
+    if (!(await this.dbService.repoExists(repoIdent))) {
+      this.logger.debug(
+        `No such repo ${repoIdent.owner}/${repoIdent.repo} exists`,
+      );
+      return;
+    }
+    this.logger.log(
+      `querying commits with developer and timestamp for ${repoIdent.owner}/${repoIdent.repo}`,
+    );
+    const repoId = await this.dbService.getRepoByName(
+      repoIdent.owner,
+      repoIdent.repo,
+    );
+    // gather all commits for the repo
+    const { data: commits } = await this.octokit.rest.repos.listCommits({
+      owner: repoIdent.owner,
+      repo: repoIdent.repo,
+    });
+
+    this.logger.debug(
+      `saving commits from ${repoIdent.owner}/${repoIdent.repo} to database...`,
+    );
+
+    for (const commit of commits) {
+      const commit_obj: Commit = {
+        url: commit.commit.url,
+        login: commit.committer.login,
+        timestamp: commit.commit.committer.date,
+      };
+      await this.dbService.saveCommit(repoId, commit_obj);
+    }
+    this.logger.debug(
+      `saved all commits from ${repoIdent.owner}/${repoIdent.repo} to database succesful`,
+    );
   }
 }

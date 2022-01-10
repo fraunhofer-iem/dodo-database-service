@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Logger, Post } from '@nestjs/common';
+import { Body, Controller, Logger, Post } from '@nestjs/common';
 import { ApiOkResponse } from '@nestjs/swagger';
 import { GithubApiService } from './github-api.service';
 import { CreateRepositoryDto, RepositoryNameDto } from './model/Repository';
@@ -51,8 +51,13 @@ export class GithubApiController {
     return this.ghApiService.storeIssues(repoIdent);
   }
 
-  // @Post('languages')
-  // async gatherLanguages(@Body() repoIdent: RepositoryNameDto) {
-  //   return this.ghApiService.storeLanguages(repoIdent);
-  // }
+  @Post('languages')
+  async gatherLanguages(@Body() repoIdent: RepositoryNameDto) {
+    return this.ghApiService.storeLanguages(repoIdent);
+  }
+
+  @Post('commits')
+  async gatherCommits(@Body() repoIdent: RepositoryNameDto) {
+    return this.ghApiService.storeCommits(repoIdent);
+  }
 }
