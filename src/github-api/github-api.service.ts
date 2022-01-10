@@ -60,12 +60,16 @@ export class GithubApiService {
     // this.statisticService.numberOfAssignee(repoIdent);
     // this.statisticService.numberOfOpenTickets(repoIdent);
     // this.statisticService.avgNumberOfAssigneeUntilTicketCloses(repoIdent);
+    //this.statisticService.avgTimeTillTicketWasAssigned(repoIdent);
+    //this.statisticService.workInProgress(repoIdent);
+    this.statisticService.timeToResolution(repoIdent);
+
     // this.statisticService.avgTimeTillTicketWasAssigned(repoIdent);
     // this.statisticService.workInProgress(repoIdent);
-    this.devFocus.devSpreadTotal(
-      repoIdent.owner,
-      //   await this.orgaMembers(repoIdent.owner),
-    );
+    // this.devFocus.devSpreadTotal(
+    //  repoIdent.owner,
+    //   await this.orgaMembers(repoIdent.owner),
+    //);
     // this.devFocus.devSpreadRepo(
     //   repoIdent,
     // await this.orgaMembers(repoIdent.owner),
