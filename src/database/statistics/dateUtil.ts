@@ -144,3 +144,288 @@ export function spreadsGroupedByTimeslots(timeRepoPairs: {
   dates.months = Object.keys(dates.monthSpread).length;
   return dates;
 }
+
+export function getSpreadsForDev(timeRepoPairs: {
+  [key: string]: string[];
+}): DevSpreadDates {
+  // sort because timestamp order is broken after mixing them together from different repos
+  const timestamps: string[] = Object.keys(timeRepoPairs).sort();
+
+  let dates: DevSpreadDates = generateDayWeekSprintMonthSpread(
+    timeRepoPairs,
+    timestamps,
+  );
+  dates = calculateSprintsOfWeeks(dates);
+  return dates;
+}
+
+function generateDayWeekSprintMonthSpread1(
+  timeRepoPairs: {
+    [key: string]: string[];
+  },
+  timestamps: string[],
+) {
+  const dates: DevSpreadDates = {
+    daySpread: {},
+    weekSpread: {},
+    sprintSpread: {},
+    monthSpread: {},
+    daySpreadSum: 0,
+    weekSpreadSum: 0,
+    sprintSpreadSum: 0,
+    monthSpreadSum: 0,
+    days: 0,
+    weeks: 0,
+    sprints: 0,
+    months: 0,
+  };
+  // first day spread entry is always first entry of sorted timestamps
+  dates.daySpread[timestamps[0]] = timeRepoPairs[timestamps[0]];
+
+  // compare values for each category
+  let weekDate = timestamps[0];
+  let sprintDate = timestamps[0];
+  let monthDate = timestamps[0];
+
+  if (timestamps.length == 1) {
+    dates.weekSpread[timestamps[0]] = timeRepoPairs[timestamps[0]];
+    const month = new Date(monthDate).getMonth() + 1;
+    dates.monthSpread[month] = timeRepoPairs[timestamps[0]];
+  }
+
+  // sums of the lenghts of all repoId arrays in a category
+  // init all except sprint, because exact two following weeks are necessary
+  let daySpreadSum = timeRepoPairs[timestamps[0]].length;
+  let weekSpreadSum = timeRepoPairs[timestamps[0]].length;
+  let sprintSpreadSum = 0;
+  let monthSpreadSum = timeRepoPairs[timestamps[0]].length;
+
+  // TODO: must the init set entrys have to be from timestamps[0]??
+  const weekSpread: Set<string> = new Set(timeRepoPairs[timestamps[0]]);
+  const sprintSpread: Set<string> = new Set();
+  const monthSpread: Set<string> = new Set(timeRepoPairs[timestamps[0]]);
+
+  for (let i = 1; i < timestamps.length; i++) {
+    // repo array for each timestamp
+    const repoArr = timeRepoPairs[timestamps[i]];
+    dates.daySpread[timestamps[i]] = repoArr; // always add entry to the daySpread category
+    daySpreadSum += timeRepoPairs[timestamps[i]].length;
+
+    repoArr.forEach((repo) => {
+      weekSpread.add(repo);
+      sprintSpread.add(repo);
+      monthSpread.add(repo);
+    });
+
+    const currentWeek = getCalendarWeek(weekDate);
+    const currentSprint = getCalendarWeek(sprintDate);
+    const currentMonth = new Date(monthDate);
+    const nextCalenderDate = getCalendarWeek(timestamps[i]);
+    const nextMonth = new Date(timestamps[i]);
+
+    if (!datesAreInSameWeek(currentWeek, nextCalenderDate)) {
+      dates.weekSpread[currentWeek] = Array.from(weekSpread);
+      weekSpreadSum += weekSpread.size;
+      weekSpread.clear();
+      weekDate = timestamps[i];
+
+      if (datesAreSprint(currentSprint, nextCalenderDate)) {
+        dates.sprintSpread[currentSprint] = Array.from(sprintSpread);
+        sprintSpreadSum += sprintSpread.size;
+        sprintSpread.clear();
+        sprintDate = timestamps[i];
+      }
+    } else if (i == timestamps.length - 1) {
+      dates.weekSpread[currentWeek] = Array.from(weekSpread);
+      weekSpreadSum += weekSpread.size;
+    }
+
+    if (!datesAreInSameMonth(currentMonth.getMonth(), nextMonth.getMonth())) {
+      dates.monthSpread[currentMonth.getMonth()] = Array.from(monthSpread);
+      monthSpreadSum += monthSpread.size;
+      monthSpread.clear();
+      monthDate = timestamps[i];
+    }
+    // maybe just set the initial start month always!
+    // wenn der letzte eintrag ein neuer monat ist, gilt das if darüber
+    // wenn der letzte eintrag noch kein neuer monat ist, wird der aktuelle noch eingefügt
+    else if (i == timestamps.length - 1) {
+      // const yetMonths = Object.keys(dates.monthSpread);
+      // console.log(yetMonths);
+      // const lastMonth = new Date(yetMonths[yetMonths.length - 1]);
+      // if (!datesAreInSameMonth(lastMonth, nextMonth)) {
+      console.log(monthSpread);
+      dates.monthSpread[currentMonth.getMonth()] = Array.from(monthSpread);
+      monthSpreadSum += monthSpread.size;
+      // }
+    }
+  }
+  dates.daySpreadSum = daySpreadSum;
+  dates.weekSpreadSum = weekSpreadSum;
+  dates.sprintSpreadSum = sprintSpreadSum;
+  dates.monthSpreadSum = monthSpreadSum;
+  dates.days = Object.keys(dates.daySpread).length;
+  dates.weeks = Object.keys(dates.weekSpread).length;
+  dates.sprints = Object.keys(dates.sprintSpread).length;
+  dates.months = Object.keys(dates.monthSpread).length;
+  return dates;
+}
+
+function generateDayWeekSprintMonthSpread(
+  timeRepoPairs: {
+    [key: string]: string[];
+  },
+  timestamps: string[],
+) {
+  const dates: DevSpreadDates = {
+    daySpread: {},
+    weekSpread: {},
+    sprintSpread: {},
+    monthSpread: {},
+    daySpreadSum: 0,
+    weekSpreadSum: 0,
+    sprintSpreadSum: 0,
+    monthSpreadSum: 0,
+    days: 0,
+    weeks: 0,
+    sprints: 0,
+    months: 0,
+  };
+  // compare values for each category
+  let weekDate = timestamps[0];
+  let sprintDate = timestamps[0];
+  let monthDate = timestamps[0];
+
+  // first day spread entry is always first entry of sorted timestamps
+  dates.daySpread[timestamps[0]] = timeRepoPairs[timestamps[0]];
+  const week = getCalendarWeek(weekDate);
+  dates.weekSpread[week] = timeRepoPairs[timestamps[0]];
+  const month = new Date(monthDate).getMonth() + 1;
+  dates.monthSpread[month] = timeRepoPairs[timestamps[0]];
+
+  // sums of the lenghts of all repoId arrays in a category
+  // init all except sprint, because exact two following weeks are necessary
+  let daySpreadSum = timeRepoPairs[timestamps[0]].length;
+  let weekSpreadSum = 0;
+  let sprintSpreadSum = 0;
+  let monthSpreadSum = 0;
+
+  for (let i = 1; i < timestamps.length; i++) {
+    const repoArr = timeRepoPairs[timestamps[i]];
+    dates.daySpread[timestamps[i]] = repoArr; // always add entry to the daySpread category
+    daySpreadSum += timeRepoPairs[timestamps[i]].length;
+
+    // console.log(repoArr);
+    const currentWeek = getCalendarWeek(weekDate);
+    const currentSprint = getCalendarWeek(sprintDate);
+    const currentMonth = new Date(monthDate).getMonth() + 1;
+    const nextCalenderDate = getCalendarWeek(timestamps[i]);
+    const nextMonth = new Date(timestamps[i]).getMonth() + 1;
+
+    if (!datesAreInSameWeek(currentWeek, nextCalenderDate)) {
+      dates.weekSpread[nextCalenderDate] = repoArr;
+      weekDate = timestamps[i];
+      weekSpreadSum += dates.weekSpread[currentWeek].length;
+      console.log(dates.weekSpread[currentWeek]);
+      console.log(currentWeek, dates.weekSpread[currentWeek].length);
+      // if (datesAreSprint(currentSprint, nextCalenderDate)) {
+      //   dates.sprintSpread[currentWeek] = Array.from(sprintSpread);
+      //   sprintSpreadSum += sprintSpread.size;
+      //   sprintSpread.clear();
+      //   sprintDate = timestamps[i];
+      // }
+    } else {
+      const currentRepos = dates.weekSpread[currentWeek];
+      const mergedRepos = [].concat(currentRepos, repoArr);
+      dates.weekSpread[currentWeek] = Array.from(new Set(mergedRepos));
+    }
+    if (!datesAreInSameMonth(currentMonth, nextMonth)) {
+      dates.monthSpread[nextMonth] = repoArr;
+      monthDate = timestamps[i];
+      monthSpreadSum += dates.monthSpread[currentMonth].length;
+    } else {
+      const currentRepos = dates.monthSpread[currentMonth];
+      const mergedRepos = [].concat(currentRepos, repoArr);
+      dates.monthSpread[currentMonth] = Array.from(new Set(mergedRepos));
+    }
+    // add the repo amounts for the next week/month in last step
+    // as they are not considered otherwise
+    if (i == timestamps.length - 1) {
+      weekSpreadSum += dates.weekSpread[nextCalenderDate].length;
+      monthSpreadSum += dates.monthSpread[nextMonth].length;
+    }
+  }
+
+  dates.daySpreadSum = daySpreadSum;
+  dates.weekSpreadSum = weekSpreadSum;
+  dates.sprintSpreadSum = sprintSpreadSum;
+  dates.monthSpreadSum = monthSpreadSum;
+  dates.days = Object.keys(dates.daySpread).length;
+  dates.weeks = Object.keys(dates.weekSpread).length;
+  dates.sprints = Object.keys(dates.sprintSpread).length;
+  dates.months = Object.keys(dates.monthSpread).length;
+  return dates;
+}
+
+function getCalendarWeek(strDate: string): number {
+  const date = new Date(strDate);
+  date.setHours(0, 0, 0, 0);
+  // Thursday in current week decides the year.
+  date.setDate(date.getDate() + 3 - ((date.getDay() + 6) % 7));
+  // January 4 is always in week 1.
+  var week1 = new Date(date.getFullYear(), 0, 4);
+  // Adjust to Thursday in week 1 and count number of weeks from date to week1.
+  return (
+    1 +
+    Math.round(
+      ((date.getTime() - week1.getTime()) / 86400000 -
+        3 +
+        ((week1.getDay() + 6) % 7)) /
+        7,
+    )
+  );
+}
+
+function datesAreInSameWeek(week1: number, week2: number): boolean {
+  if (week1 == week2) {
+    return true;
+  }
+  return false;
+}
+
+function datesAreInSameMonth(month1: number, month2: number): boolean {
+  if (month1 == month2) {
+    return true;
+  }
+  return false;
+}
+
+function datesAreSprint(week1: number, week2: number): boolean {
+  if (Math.abs(week1 - week2) == 1) {
+    return true;
+  }
+  return false;
+}
+
+function calculateSprintsOfWeeks(dates: DevSpreadDates) {
+  const weekSpread = dates.weekSpread;
+  const weeks = Object.keys(weekSpread);
+  let sprintSpreadSum = 0;
+  for (let i = 0; i < weeks.length; ) {
+    let currentWeek = Number(weeks[i]);
+    let nextWeek = Number(weeks[i + 1]);
+    if (datesAreSprint(currentWeek, nextWeek)) {
+      const currentRepos = weekSpread[currentWeek];
+      const nextRepos = weekSpread[nextWeek];
+      const mergedRepos = [].concat(currentRepos, nextRepos);
+      dates.sprintSpread[currentWeek] = Array.from(new Set(mergedRepos));
+      sprintSpreadSum += dates.sprintSpread[currentWeek].length;
+      i += 2;
+    } else {
+      i += 1;
+    }
+  }
+  dates.sprintSpreadSum = sprintSpreadSum;
+  dates.sprints = Object.keys(dates.sprintSpread).length;
+  return dates;
+}

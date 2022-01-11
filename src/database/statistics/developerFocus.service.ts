@@ -11,7 +11,7 @@ import {
   RepoSpreadTotal,
 } from 'src/github-api/model/DevFocus';
 import { RepositoryDocument } from '../schemas/repository.schema';
-import { rearangeTimeslots, spreadsGroupedByTimeslots } from './dateUtil';
+import { rearangeTimeslots, getSpreadsForDev } from './dateUtil';
 import {
   getRepoSpreadTotal,
   getAvgRepoSpread,
@@ -32,7 +32,8 @@ export class DeveloperFocus {
    * from the db (login, timestamp). It returns
    * all timestamps grouped by developer login.
    * @param repoId The _id of the repository model
-   * @param userLimit Not currently used
+   * @param loginFilter developer logins which should be considered
+   * @param userLimit limit the amount of commits
    * @returns developers = {login1: [timestamp1, timestamp2, ...], login2: [timestamp1, timestamp2], ...}
    */
   async getRepoCommits(
@@ -40,7 +41,7 @@ export class DeveloperFocus {
     loginFilter?: string[],
     userLimit?: number,
   ): Promise<{ [key: string]: string[] }> {
-    const limit = userLimit ? userLimit : 100; // do we need a limit?
+    const limit = userLimit ? userLimit : 100;
 
     const getCommits = {
       from: 'commits',
@@ -90,6 +91,7 @@ export class DeveloperFocus {
       {},
     );
 
+    console.log(developers);
     return developers;
   }
 
@@ -156,8 +158,9 @@ export class DeveloperFocus {
 
     devToTimestampToRepo.forEach((timeToRepo, dev) => {
       const timeToRepoObj = Object.fromEntries(timeToRepo);
-      // TODO: refactor spreadsGroupedByTimeslots
-      spreadsPerDevs[dev] = spreadsGroupedByTimeslots(timeToRepoObj);
+      // console.log('timeToRepoObj:');
+      // console.log(timeToRepoObj);
+      spreadsPerDevs[dev] = getSpreadsForDev(timeToRepoObj);
     });
 
     console.log(spreadsPerDevs);
@@ -165,6 +168,10 @@ export class DeveloperFocus {
     for (const dev in spreadsPerDevs) {
       console.log(dev);
       for (const spread in spreadsPerDevs[dev]) {
+        if (spread == 'daySpreadSum') {
+          break;
+        }
+        console.log(spread);
         for (const timestamp in spreadsPerDevs[dev][spread]) {
           console.log(spreadsPerDevs[dev][spread][timestamp]);
         }
