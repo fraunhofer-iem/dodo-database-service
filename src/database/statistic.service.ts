@@ -608,21 +608,31 @@ export class StatisticService {
 
     return avg;
   }
-/**
- * The Feature Completion Efficiency describes the development team's capability to add features to the project.
- * In more detail, it assesses if a single feature was completed within the time frame the organization aims to adhere to for feature completion.
- * We calculate this qualitative indicator for resolved issues labeled enhancement (or some other equivalent label).
- * A value greater than 1 indicates that the feature was not completed within the desired time.
- * A value less than 1 indicates that the feature was completed within the desired time.
- * 
- * (issue[label = "enhancement", state="closed"], T_feature) => {
- *   return (issue.closed_at - issue.created_at) / T_feature
- *  }
- * @param repoIdent 
- * @param userLimit 
- * @returns 
- */
-  async MeanFaultCorrectionEfficiency(repoIdent: RepositoryNameDto, userLimit?: number) {
+  /**
+   * The Mean Fault Correction Efficiency describes the development team's capability to respond to bug reports.
+   * It assesses if faults were generally corrected within the time frame the organization aims to adhere to for fault corrections.
+   * We calculate this qualitative indicator as the average Fault Correction Efficiency of all issues labeled bug (or some other equivalent label) that have been resolved since the previous release.
+   * A value greater than 1 indicates that faults were not corrected within the desired time.
+   * A value less than 1 indicates that faults were corrected within the desired time.
+   *
+   * (release, issues[label = "bug", state="closed"]) => {
+   *   bugs = [ bug for bug in issues
+   *            if bug.closed_at <= release.created_at and
+   *               bug.closed_at >= release.previous().created_at ]
+   *
+   *   fault_correction_efficiencies = [faultCorrectionEfficiency(bug) for bug in bugs]
+   *
+   *   return avg(fault_correction_efficiencies)
+   * }
+   *
+   * @param repoIdent
+   * @param userLimit
+   * @returns
+   */
+  async MeanFaultCorrectionEfficiency(
+    repoIdent: RepositoryNameDto,
+    userLimit?: number,
+  ) {
     const limit = userLimit ? userLimit : 100;
 
     const filter = {
@@ -680,15 +690,19 @@ export class StatisticService {
       .unwind('$expandedIssue')
       .lookup(getLabel)
       .unwind('$expandedLabels')
-      .match({'expandedLabels.name': {$exists: true, $eq: 'bug'}})
+      .match({ 'expandedLabels.name': { $exists: true, $eq: 'bug' } })
       .match({ 'expandedIssue.closed_at': { $exists: true, $ne: null } })
       .sort({ 'expandedIssue.closed_at': 1 })
       //.limit(limit)
       .exec();
 
-    //this loop matches the condition
-    //closed_bugs = issues[ label = bug, state = closed, closed_at <= release.created_at, closed_at >= release.previous().created_at ]
-    var closed_bugs = 0;
+    // This variable defines the fixed time set for the bugs to be resolved.
+    // Since such an information cannot be derived from git (milestones can be looked at,
+    // however they are hardly properly utilized by most projects).
+    // Although information like this can be derived from Jira, but for now, it is manually defined.
+    // T_bugfix value is considered to be 14 Days, i.e, 1209600000 ms.
+    var T_bugfix = 1209600000; //604800000 ;
+    var fault_correction_efficiency = [];
     for (let i = 0; i < res1.length; i++) {
       for (let j = 1; j < res.length; j++) {
         if (
@@ -699,36 +713,28 @@ export class StatisticService {
             res1[i]['expandedIssue']['closed_at'] >=
             res[j - 1]['expandedReleases']['created_at']
           ) {
-            closed_bugs += 1;
+            var ms_closed_at = Date.parse(
+              res1[i]['expandedIssue']['closed_at'],
+            );
+            var ms_created_at = Date.parse(
+              res1[i]['expandedIssue']['created_at'],
+            );
+            fault_correction_efficiency.push(
+              (ms_closed_at - ms_created_at) / T_bugfix,
+            );
           }
         }
       }
     }
-
-    //this loop matches below condition
-    //open_bugs = issues[ label = bug, state = open, created_at <= release.created_at ]
-    var open_bugs = 0;
-    for (let k = 0; k < res2.length; k++) {
-      for (let j = 1; j < res.length; j++) {
-        if (
-          res2[k]['expandedIssue']['created_at'] <=
-          res[j]['expandedReleases']['created_at']
-        ) {
-          open_bugs += 1;
-          break;
-        }
-      }
-    }
+    this.logger.log(fault_correction_efficiency);
+    var mean_fault_correction_efficiency =
+      fault_correction_efficiency.reduce((a, b) => a + b, 0) /
+      fault_correction_efficiency.length;
 
     this.logger.debug(
-      `open bugs are: ${open_bugs} and closed bugs are: ${closed_bugs}`,
+      `Mean Fault correction efficiency is: ${mean_fault_correction_efficiency}`,
     );
 
-    var fault_correction_rate =
-      Math.abs(closed_bugs) / (Math.abs(closed_bugs) + Math.abs(open_bugs));
-
-    this.logger.debug(`Fault correction rate is: ${fault_correction_rate}`);
-
-    return fault_correction_rate;
+    return mean_fault_correction_efficiency;
   }
 }
