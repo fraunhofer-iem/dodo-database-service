@@ -704,7 +704,6 @@ export class StatisticService {
     var feature_completion_efficiency = [];
     for (let i = 0; i < res1.length; i++) {
       for (let j = 1; j < res.length; j++) {
-    
         if (
           res1[i]['expandedIssue']['closed_at'] <=
           res[j]['expandedReleases']['created_at']
