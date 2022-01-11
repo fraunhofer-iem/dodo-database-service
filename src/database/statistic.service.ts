@@ -608,28 +608,29 @@ export class StatisticService {
 
     return avg;
   }
+
   /**
-   * The Mean Fault Correction Efficiency describes the development team's capability to respond to bug reports.
-   * It assesses if faults were generally corrected within the time frame the organization aims to adhere to for fault corrections.
-   * We calculate this qualitative indicator as the average Fault Correction Efficiency of all issues labeled bug (or some other equivalent label) that have been resolved since the previous release.
-   * A value greater than 1 indicates that faults were not corrected within the desired time.
-   * A value less than 1 indicates that faults were corrected within the desired time.
+   * The Mean Feature Completion Efficiency describes the development team's capability to add features to the project.
+   * It assesses if features were generally completed within the time frame the organization aims to adhere to for feature completion.
+   * We calculate this qualitative indicator as the average Feature Completion Efficiency of all issues labeled enhancement (or some other equivalent label) that have been resolved since the previous release.
+   * A value greater than 1 indicates that features were not completed within the desired time.
+   * A value less than 1 indicates that features were completed within the desired time.
    *
-   * (release, issues[label = "bug", state="closed"]) => {
-   *   bugs = [ bug for bug in issues
-   *            if bug.closed_at <= release.created_at and
-   *               bug.closed_at >= release.previous().created_at ]
+   * (release, issues[label = "enhancement", state="closed"]) => {
+   * features = [ feature for feature in issues
+   *              if feature.closed_at <= release.created_at and
+   *                 feature.closed_at >= release.previous().created_at ]
    *
-   *   fault_correction_efficiencies = [faultCorrectionEfficiency(bug) for bug in bugs]
+   * feature_completion_efficiencies = [featureCompletionEfficiency(feature) for feature in features]
    *
-   *   return avg(fault_correction_efficiencies)
+   * return avg(feature_completion_efficiencies)
    * }
    *
    * @param repoIdent
    * @param userLimit
    * @returns
    */
-  async MeanFaultCorrectionEfficiency(
+  async MeanFeatureCompletionEfficiency(
     repoIdent: RepositoryNameDto,
     userLimit?: number,
   ) {
@@ -679,7 +680,7 @@ export class StatisticService {
       //.limit(limit)
       .exec();
 
-    //to obtain closed issues, sorted on the basis of closed_at time
+    //to obtain closed issues, sorted on the basis of closed_at time & label type = enhancement
     const res1: { _id: string; count: number }[] = await this.repoModel
       .aggregate()
       .match(filter)
@@ -690,21 +691,20 @@ export class StatisticService {
       .unwind('$expandedIssue')
       .lookup(getLabel)
       .unwind('$expandedLabels')
-      .match({ 'expandedLabels.name': { $exists: true, $eq: 'bug' } })
+      .match({ 'expandedLabels.name': { $exists: true, $eq: 'enhancement' } })
       .match({ 'expandedIssue.closed_at': { $exists: true, $ne: null } })
       .sort({ 'expandedIssue.closed_at': 1 })
       //.limit(limit)
       .exec();
 
-    // This variable defines the fixed time set for the bugs to be resolved.
-    // Since such an information cannot be derived from git (milestones can be looked at,
-    // however they are hardly properly utilized by most projects).
-    // Although information like this can be derived from Jira, but for now, it is manually defined.
-    // T_bugfix value is considered to be 14 Days, i.e, 1209600000 ms.
-    var T_bugfix = 1209600000; //604800000 ;
-    var fault_correction_efficiency = [];
+    // This variable defines the fixed time set for the feature to be resolved.
+    // this info is manually defined
+    // T_feature value is considered to be 14 Days, i.e, 1209600000 ms.
+    var T_feature = 1209600000; //604800000 (7 Days) ;
+    var feature_completion_efficiency = [];
     for (let i = 0; i < res1.length; i++) {
       for (let j = 1; j < res.length; j++) {
+    
         if (
           res1[i]['expandedIssue']['closed_at'] <=
           res[j]['expandedReleases']['created_at']
@@ -719,22 +719,22 @@ export class StatisticService {
             var ms_created_at = Date.parse(
               res1[i]['expandedIssue']['created_at'],
             );
-            fault_correction_efficiency.push(
-              (ms_closed_at - ms_created_at) / T_bugfix,
+            feature_completion_efficiency.push(
+              (ms_closed_at - ms_created_at) / T_feature,
             );
           }
         }
       }
     }
-    this.logger.log(fault_correction_efficiency);
-    var mean_fault_correction_efficiency =
-      fault_correction_efficiency.reduce((a, b) => a + b, 0) /
-      fault_correction_efficiency.length;
+    this.logger.log(feature_completion_efficiency);
+    var mean_feature_completion_efficiency =
+      feature_completion_efficiency.reduce((a, b) => a + b, 0) /
+      feature_completion_efficiency.length;
 
     this.logger.debug(
-      `Mean Fault correction efficiency is: ${mean_fault_correction_efficiency}`,
+      `Mean Feature Completion Efficiency is: ${mean_feature_completion_efficiency}`,
     );
 
-    return mean_fault_correction_efficiency;
+    return mean_feature_completion_efficiency;
   }
 }
