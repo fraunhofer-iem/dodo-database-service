@@ -59,7 +59,6 @@ export class DatabaseService {
     private readonly issueWithEventsModel: Model<IssueWithEventsDocument>,
     @InjectModel('Languages')
     private readonly languageModel: Model<LanguageDocument>,
-   
   ) {}
   /**
    * Creates the specified repository if it doesn't exist.
@@ -171,13 +170,13 @@ export class DatabaseService {
 
     issueModel.state = issue.state;
     issueModel.node_id = issue.node_id;
-   // fill the labels array for the issue document
-   const issueLabels: Label[] = [];
-   for (const eachLabel of issue.labels) {
-     const labelM = await this.labelModel.create(eachLabel);
-     issueLabels.push(labelM);
-   }
-   issueModel.label = issueLabels;
+    // fill the labels array for the issue document
+    const issueLabels: Label[] = [];
+    for (const eachLabel of issue.labels) {
+      const labelM = await this.labelModel.create(eachLabel);
+      issueLabels.push(labelM);
+    }
+    issueModel.label = issueLabels;
 
     const assigneee = await this.assigneeModel.create(issue.assignee);
     issueModel.assignee = assigneee;

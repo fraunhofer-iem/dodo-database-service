@@ -61,7 +61,6 @@ export class GithubApiService {
     // this.statisticService.avgTimeTillTicketWasAssigned(repoIdent);
     //this.statisticService.workInProgress(repoIdent);
     this.statisticService.MeanFaultCorrectionEfficiency(repoIdent);
-
   }
 
   public async storeIssues(repoIdent: RepositoryNameDto) {
