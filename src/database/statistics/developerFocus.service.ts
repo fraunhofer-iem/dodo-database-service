@@ -11,8 +11,9 @@ import {
   RepoSpreadTotal,
 } from 'src/github-api/model/DevFocus';
 import { RepositoryDocument } from '../schemas/repository.schema';
-import { rearangeTimeslots, getSpreadsForDev } from './dateUtil';
+import { getSpreadsForDev } from './dateUtil';
 import {
+  rearangeTimeslots,
   getRepoSpreadTotal,
   getAvgRepoSpread,
   getSpreadDates,
@@ -28,12 +29,12 @@ export class DeveloperFocus {
   ) {}
 
   /**
-   * Helper function to query all commmits of a given repo
+   * Query all commmits of a given repo
    * from the db (login, timestamp). It returns
    * all timestamps grouped by developer login.
-   * @param repoId The _id of the repository model
+   * @param repoId the _id of the repository model
    * @param loginFilter developer logins which should be considered
-   * @param userLimit limit the amount of commits
+   * @param userLimit limits the amount of commits
    * @returns developers = {login1: [timestamp1, timestamp2, ...], login2: [timestamp1, timestamp2], ...}
    */
   async getRepoCommits(
@@ -113,6 +114,21 @@ export class DeveloperFocus {
    * For further calculations, the sums of all spreads and the days are
    * precomputed here, too.
    */
+
+  /**
+   * Calculates the spread for each developer of an organization.
+   * Therefor, every repo related to specified orga currently stored
+   * in DB is taken into account.
+   * E.g. a developer has contributed to repository A on day X,
+   * he has a spread of 1. If he had contributed to repo A, B and C on day Y,
+   * he would have a spread of 3.
+   * The same holds for other categorys, so if the dev had contributed
+   * in repo A, B, C and D in week Z, he would have a spread of 4 in that week.
+   * @param owner the owner name of the oranization whose dev spreads should be computed.
+   * @param loginFilter developer logins which should be considered.
+   * @param userLimit limits the amount of commits.
+   * @returns the spread data for every developer in an object.
+   */
   async devSpread(
     owner: string,
     loginFilter?: string[],
@@ -158,13 +174,12 @@ export class DeveloperFocus {
 
     devToTimestampToRepo.forEach((timeToRepo, dev) => {
       const timeToRepoObj = Object.fromEntries(timeToRepo);
-      // console.log('timeToRepoObj:');
-      // console.log(timeToRepoObj);
       spreadsPerDevs[dev] = getSpreadsForDev(timeToRepoObj);
     });
 
     console.log(spreadsPerDevs);
 
+    // just to print all repository arrays for every spread category after calculation
     for (const dev in spreadsPerDevs) {
       console.log(dev);
       for (const spread in spreadsPerDevs[dev]) {
@@ -219,12 +234,14 @@ export class DeveloperFocus {
   }
 
   /**
-   * Calculate the avg spread for every developer of that orga
-   * and then the total avg spread for that organisation as a consequence.
-   * The function uses the precomputed result spreadsPerDevs from
-   * devSpread() function.
-   * @param owner The organisation which should be analyzed.
-   * @returns
+   * Calculates the avg spread values for every developer of the orga.
+   * Then, with that avg values, the overall avg spread values
+   * for the whole orga is being calculated.
+   * The function uses the precomputed spread data spreadsPerDevs.
+   * @param owner the organization which should be analyzed.
+   * @returns the total avg dev spread of an orga containing the categorys
+   * days, weeks, sprints and months, including the total amounts
+   * of the categorys from all developers.
    */
   async devSpreadTotal(
     owner: string,
@@ -277,11 +294,8 @@ export class DeveloperFocus {
 
     console.log(devSpread);
 
-    // compute the total avg spread relative to all devs
-    // of the whole orga
-    // weekSpread e.g. is sum of all weekSpread values
-    // of all devs divided with the amount of devs
-    // days, weeks, ... is sum of each category from all devs
+    // compute the total avg spread, i.e. the sum of all spread
+    // values in a category relative to the number of devs.
     const totalSpread: DevSpreadTotal = {
       daySpread: 0,
       weekSpread: 0,
@@ -293,32 +307,24 @@ export class DeveloperFocus {
       months: 0,
     };
 
-    // counters to check, which of the devs have not got a value in a category
-    // then, subtract them from the developer amount for that avg calculation
-    let weekCount = 0;
+    // counter to check, if one dev got not any sprints
+    // --> exclude him in the total sprint spread calculation
     let sprintCount = 0;
-    let monthCount = 0;
-    // sum every avg value for a category of each developer, then devide this trough the amount of developers
-    // which have contributed to that category
+
     for (const dev of allDevelopers) {
       const devObj = devSpread[dev];
-      totalSpread.days += devObj.days;
-      totalSpread.weeks += devObj.weeks;
-      if (devObj.weeks == 0) {
-        weekCount += 1;
-      }
-      totalSpread.sprints += devObj.sprints;
+
       if (devObj.sprints == 0) {
         sprintCount += 1;
-      }
-      totalSpread.months += devObj.months;
-      if (devObj.months == 0) {
-        monthCount += 1;
       }
       totalSpread.daySpread += devObj.daySpread;
       totalSpread.weekSpread += devObj.weekSpread;
       totalSpread.sprintSpread += devObj.sprintSpread;
       totalSpread.monthSpread += devObj.monthSpread;
+
+      totalSpread.days += devObj.days;
+      totalSpread.weeks += devObj.weeks;
+      totalSpread.sprints += devObj.sprints;
     }
 
     totalSpread.daySpread = this.saveDivision(
@@ -328,7 +334,7 @@ export class DeveloperFocus {
 
     totalSpread.weekSpread = this.saveDivision(
       totalSpread.weekSpread,
-      allDevelopers.length - weekCount,
+      allDevelopers.length,
     );
 
     totalSpread.sprintSpread = this.saveDivision(
@@ -338,7 +344,7 @@ export class DeveloperFocus {
 
     totalSpread.monthSpread = this.saveDivision(
       totalSpread.monthSpread,
-      allDevelopers.length - monthCount,
+      allDevelopers.length,
     );
 
     console.log(totalSpread);

@@ -127,3 +127,54 @@ export function getSpreadDates(
 
   return dates;
 }
+
+/**
+ * Helper function to eliminate duplicate weeks, sprints or months
+ * because the calculated intervals per developer may differ
+ * and would have been taken as separate intervals into account,
+ * altough it was the same interval of commiting.
+ * @param timeSpreadPairs An object with timestamps as keys, and an object with developer:sprad pairs as a value
+ * @param days The days, the interval blongs to, i.e. 7 (weeks), 14 (sprint), 30(month)
+ * @returns
+ */
+export function rearangeTimeslots(
+  timeSpreadPairs: { [key: string]: { [key: string]: number } },
+  days: number,
+): { [key: string]: { [key: string]: number } } {
+  // copy the old timeSpreadPairs to modify on that
+  const newTimeSpreadPairs: { [key: string]: { [key: string]: number } } = {
+    ...timeSpreadPairs,
+  };
+  const timestamps: string[] = Object.keys(timeSpreadPairs).sort();
+  // go through every sorted timestamp and look to successor
+  for (let i = 1; i <= timestamps.length; ) {
+    const currentDate: string = timestamps[i - 1];
+    const nextDate: string = timestamps[i];
+    // check, if the next interval date should actualy be in current interval
+    if (addDays(currentDate, days) > new Date(timestamps[i])) {
+      // append the values together, update the current interval object
+      const devSpreadObj1 = timeSpreadPairs[currentDate];
+      const devSpreadObj2 = timeSpreadPairs[nextDate];
+      const mergedObj = { ...devSpreadObj1, ...devSpreadObj2 };
+      newTimeSpreadPairs[currentDate] = mergedObj;
+      // delete the unnessacary date and skip the next date
+      delete newTimeSpreadPairs[nextDate];
+      i += 2;
+    } else {
+      i += 1;
+    }
+  }
+  return newTimeSpreadPairs;
+}
+
+/**
+ * Helper function to add a number of days to an existing date.
+ * @param date The date, which should be increased.
+ * @param days The number of days, which should be added to the date.
+ * @returns The new increased date in Date() format
+ */
+export function addDays(date: string, days: number): Date {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+}
