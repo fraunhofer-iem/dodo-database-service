@@ -97,25 +97,6 @@ export class DeveloperFocus {
   }
 
   /**
-   * The function calculates the spread for each developer
-   * for timeslots days, weeks, sprints and months
-   * over the whole organisation which is specified.
-   * Therefor, it takes every repo into account, which is currently
-   * stored for the organisation. E.g. a developer has contributed
-   * to repository A on day X, he has a spread of 1. If he had contributed
-   * to repo A, B and C on day Y, he would have a spread of 3.
-   * The same holds for other intervals, so if the dev had contributed
-   * in repo A, B, C and D in week Z, he would have a spread of 4 in that week.
-   * @param owner The organisation whose dev spreads should be analysed.
-   * @returns An Object with login as key for each developer. Every developer
-   * then has daySpread, weekSpread, sprintSpread and monthSpread props, in which
-   * every timestamp (beginning timestamp for intervals) is stored,
-   * with an array of the repoIds, the dev has contributed the same time.
-   * For further calculations, the sums of all spreads and the days are
-   * precomputed here, too.
-   */
-
-  /**
    * Calculates the spread for each developer of an organization.
    * Therefor, every repo related to specified orga currently stored
    * in DB is taken into account.
