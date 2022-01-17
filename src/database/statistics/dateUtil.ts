@@ -257,10 +257,18 @@ function datesAreSprint(week1: number, week2: number): boolean {
   return Math.abs(week1 - week2) == 1;
 }
 
-function getMonthNumber(date: string) {
+/**
+ * For a given string @param date, @return the correct month index
+ * as a number
+ */
+function getMonthNumber(date: string): number {
   return new Date(date).getMonth() + 1;
 }
 
-function getYear(date: string) {
+/**
+ * For a given string @param date, @return the full year
+ * as a number
+ */
+function getYear(date: string): number {
   return new Date(date).getFullYear();
 }
