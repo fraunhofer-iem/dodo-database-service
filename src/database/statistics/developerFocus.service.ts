@@ -40,10 +40,8 @@ export class DeveloperFocus {
   async getRepoCommits(
     repoId: string,
     loginFilter?: string[],
-    userLimit?: number,
+    userLimit: number = 100,
   ): Promise<{ [key: string]: string[] }> {
-    const limit = userLimit ? userLimit : 100;
-
     const getCommits = {
       from: 'commits',
       localField: 'commits',
@@ -80,7 +78,7 @@ export class DeveloperFocus {
       .unwind('$timestamps')
       .sort({ timestamps: 1 })
       .group({ _id: '$_id', timestamps: { $push: '$timestamps' } })
-      .limit(limit)
+      .limit(userLimit)
       .exec();
 
     // group by developer
@@ -237,6 +235,16 @@ export class DeveloperFocus {
 
     const allDevelopers: string[] = Object.keys(spreadsPerDevs);
     const devSpread: DevSpreadAvg = {};
+    const totalSpread: DevSpreadTotal = {
+      daySpread: 0,
+      weekSpread: 0,
+      sprintSpread: 0,
+      monthSpread: 0,
+      days: 0,
+      weeks: 0,
+      sprints: 0,
+      months: 0,
+    };
 
     // calculate avg spread for every dev
     for (const dev of allDevelopers) {
@@ -271,65 +279,38 @@ export class DeveloperFocus {
         devObj.monthSpreadSum,
         devObj.months,
       );
-    }
-
-    console.log(devSpread);
-
-    // compute the total avg spread, i.e. the sum of all spread
-    // values in a category relative to the number of devs.
-    const totalSpread: DevSpreadTotal = {
-      daySpread: 0,
-      weekSpread: 0,
-      sprintSpread: 0,
-      monthSpread: 0,
-      days: 0,
-      weeks: 0,
-      sprints: 0,
-      months: 0,
-    };
-
-    // counter to check, if one dev got not any sprints
-    // --> exclude him in the total sprint spread calculation
-    let sprintCount = 0;
-
-    for (const dev of allDevelopers) {
-      const devObj = devSpread[dev];
-
-      if (devObj.sprints == 0) {
-        sprintCount += 1;
-      }
-      totalSpread.daySpread += devObj.daySpread;
-      totalSpread.weekSpread += devObj.weekSpread;
-      totalSpread.sprintSpread += devObj.sprintSpread;
-      totalSpread.monthSpread += devObj.monthSpread;
 
       totalSpread.days += devObj.days;
       totalSpread.weeks += devObj.weeks;
       totalSpread.sprints += devObj.sprints;
+      totalSpread.months += devObj.months;
     }
 
-    totalSpread.daySpread = this.saveDivision(
-      totalSpread.daySpread,
-      allDevelopers.length,
-    );
+    console.log(devSpread);
 
-    totalSpread.weekSpread = this.saveDivision(
-      totalSpread.weekSpread,
-      allDevelopers.length,
-    );
+    // compute the weighted avg for each category for all devs
+    // sum of all values per category for each dev multiplied by it's weight
+    // weight = number of a devs items in a category / number of total items in a category
 
-    totalSpread.sprintSpread = this.saveDivision(
-      totalSpread.sprintSpread,
-      allDevelopers.length - sprintCount,
-    );
+    for (const dev of allDevelopers) {
+      const devObj = devSpread[dev];
 
-    totalSpread.monthSpread = this.saveDivision(
-      totalSpread.monthSpread,
-      allDevelopers.length,
-    );
+      totalSpread.daySpread += devObj.daySpread * getWeight(dev, 'days');
+      totalSpread.weekSpread += devObj.weekSpread * getWeight(dev, 'weeks');
+      // if dev has no sprints, exlude him from the calculation
+      if (!(devObj.sprints == 0)) {
+        totalSpread.sprintSpread +=
+          devObj.sprintSpread * getWeight(dev, 'sprints');
+      }
+      totalSpread.monthSpread += devObj.monthSpread * getWeight(dev, 'months');
+    }
 
     console.log(totalSpread);
     return totalSpread;
+
+    function getWeight(dev: string, interval: string) {
+      return devSpread[dev][interval] / totalSpread[interval];
+    }
   }
 
   private saveDivision(a: number, b: number): number {

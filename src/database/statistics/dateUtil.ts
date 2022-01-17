@@ -60,14 +60,17 @@ function calculateDayWeekMonthSpread(
   // values to compare with next timestamp in the loop
   let weekDate = timestamps[0];
   let monthDate = timestamps[0];
+  let yearDate = timestamps[0];
 
   // initialize all spread objects with the first timestamp and related repoID arr,
   // as the first timestamp relates to first day, first week and first month at all.
   dates.daySpread[timestamps[0]] = timeRepoPairs[timestamps[0]];
   const week = getCalendarWeek(weekDate);
-  dates.weekSpread[week] = timeRepoPairs[timestamps[0]];
-  const month = new Date(monthDate).getMonth() + 1;
-  dates.monthSpread[month] = timeRepoPairs[timestamps[0]];
+  dates.weekSpread[getYear(yearDate) + '-' + week] =
+    timeRepoPairs[timestamps[0]];
+  const month = getMonthNumber(monthDate);
+  dates.monthSpread[getYear(yearDate) + '-' + month] =
+    timeRepoPairs[timestamps[0]];
 
   // only apply on daySpreadSum, because week and month may not be complete yet
   let daySpreadSum = timeRepoPairs[timestamps[0]].length;
@@ -81,35 +84,78 @@ function calculateDayWeekMonthSpread(
     daySpreadSum += timeRepoPairs[timestamps[i]].length;
 
     const currentWeek = getCalendarWeek(weekDate);
-    const currentMonth = new Date(monthDate).getMonth() + 1;
+    const currentMonth = getMonthNumber(monthDate);
+    const currentYear = getYear(yearDate);
     const nextWeek = getCalendarWeek(timestamps[i]);
-    const nextMonth = new Date(timestamps[i]).getMonth() + 1;
+    const nextMonth = getMonthNumber(timestamps[i]);
+    const nextYear = getYear(timestamps[i]);
 
-    if (!weeksAreEqual(currentWeek, nextWeek)) {
-      dates.weekSpread[nextWeek] = repoArr;
+    if (
+      !weeksAreEqual(currentWeek, nextWeek) &&
+      yearsAreEqual(currentYear, nextYear)
+    ) {
+      dates.weekSpread[currentYear + '-' + nextWeek] = repoArr;
       weekDate = timestamps[i];
-      weekSpreadSum += dates.weekSpread[currentWeek].length;
-    } else {
+      weekSpreadSum += dates.weekSpread[currentYear + '-' + currentWeek].length;
+    } else if (
+      weeksAreEqual(currentWeek, nextWeek) &&
+      !yearsAreEqual(currentYear, nextYear)
+    ) {
+      dates.weekSpread[nextYear + '-' + nextWeek] = repoArr;
+      weekDate = timestamps[i];
+      weekSpreadSum += dates.weekSpread[currentYear + '-' + currentWeek].length;
+    } else if (
+      weeksAreEqual(currentWeek, nextWeek) &&
+      yearsAreEqual(currentYear, nextYear)
+    ) {
       // add repo Ids to current week entry and make set for no duplicates
-      const currentRepos = dates.weekSpread[currentWeek];
+      const currentRepos = dates.weekSpread[currentYear + '-' + currentWeek];
       const mergedRepos = [].concat(currentRepos, repoArr);
-      dates.weekSpread[currentWeek] = Array.from(new Set(mergedRepos));
+      dates.weekSpread[currentYear + '-' + currentWeek] = Array.from(
+        new Set(mergedRepos),
+      );
     }
-    if (!monthsAreEqual(currentMonth, nextMonth)) {
-      dates.monthSpread[nextMonth] = repoArr;
+
+    if (
+      !monthsAreEqual(currentMonth, nextMonth) &&
+      yearsAreEqual(currentYear, nextYear)
+    ) {
+      dates.monthSpread[currentYear + '-' + nextMonth] = repoArr;
       monthDate = timestamps[i];
-      monthSpreadSum += dates.monthSpread[currentMonth].length;
-    } else {
+      monthSpreadSum +=
+        dates.monthSpread[currentYear + '-' + currentMonth].length;
+    } else if (
+      monthsAreEqual(currentMonth, nextMonth) &&
+      !yearsAreEqual(currentYear, nextYear)
+    ) {
+      dates.monthSpread[nextYear + '-' + nextMonth] = repoArr;
+      monthDate = timestamps[i];
+      monthSpreadSum +=
+        dates.monthSpread[currentYear + '-' + currentMonth].length;
+    } else if (
+      monthsAreEqual(currentMonth, nextMonth) &&
+      yearsAreEqual(currentYear, nextYear)
+    ) {
       // add repo Ids to current month entry and make set for no duplicates
-      const currentRepos = dates.monthSpread[currentMonth];
+      const currentRepos = dates.monthSpread[currentYear + '-' + currentMonth];
       const mergedRepos = [].concat(currentRepos, repoArr);
-      dates.monthSpread[currentMonth] = Array.from(new Set(mergedRepos));
+      dates.monthSpread[currentYear + '-' + currentMonth] = Array.from(
+        new Set(mergedRepos),
+      );
     }
+
+    // set year counter
+    if (!yearsAreEqual(currentYear, nextYear)) {
+      yearDate = timestamps[i];
+    }
+
     // add the current repo amounts for next week/month in last step
     // as they are not considered otherwise
     if (i == timestamps.length - 1) {
-      weekSpreadSum += dates.weekSpread[nextWeek].length;
-      monthSpreadSum += dates.monthSpread[nextMonth].length;
+      weekSpreadSum +=
+        dates.weekSpread[getYear(yearDate) + '-' + nextWeek].length;
+      monthSpreadSum +=
+        dates.monthSpread[getYear(yearDate) + '-' + nextMonth].length;
     }
   }
 
@@ -151,10 +197,7 @@ function getCalendarWeek(strDate: string): number {
  * @return true, else false.
  */
 function weeksAreEqual(week1: number, week2: number): boolean {
-  if (week1 == week2) {
-    return true;
-  }
-  return false;
+  return week1 == week2;
 }
 
 /**
@@ -162,10 +205,15 @@ function weeksAreEqual(week1: number, week2: number): boolean {
  * @return true, else false.
  */
 function monthsAreEqual(month1: number, month2: number): boolean {
-  if (month1 == month2) {
-    return true;
-  }
-  return false;
+  return month1 == month2;
+}
+
+/**
+ * If two months @param year1 and @param year2 are equal,
+ * @return true, else false.
+ */
+function yearsAreEqual(year1: number, year2: number): boolean {
+  return year1 == year2;
 }
 
 /**
@@ -206,8 +254,13 @@ function calculateSprintsByWeeks(dates: DevSpreadDates): DevSpreadDates {
  * @return true, else false.
  */
 function datesAreSprint(week1: number, week2: number): boolean {
-  if (Math.abs(week1 - week2) == 1) {
-    return true;
-  }
-  return false;
+  return Math.abs(week1 - week2) == 1;
+}
+
+function getMonthNumber(date: string) {
+  return new Date(date).getMonth() + 1;
+}
+
+function getYear(date: string) {
+  return new Date(date).getFullYear();
 }
