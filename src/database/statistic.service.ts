@@ -788,7 +788,8 @@ export class StatisticService {
     };
 
     //to obtain releases, sorted on the basis of created_at time
-    const res: { _id: string; count: number }[] = await this.repoModel
+    //TODO: limit amount of data returned, by using a projection
+    const releases: { _id: string; count: number }[] = await this.repoModel
       .aggregate()
       .match(filter)
       .unwind('$releases')
@@ -799,7 +800,7 @@ export class StatisticService {
       .exec();
 
     //to obtain closed issues, sorted on the basis of closed_at time
-    const res1: { _id: string; count: number }[] = await this.repoModel
+    const closedIssues: { _id: string; count: number }[] = await this.repoModel
       .aggregate()
       .match(filter)
       .unwind('$issuesWithEvents')
@@ -809,14 +810,14 @@ export class StatisticService {
       .unwind('$expandedIssue')
       .lookup(getLabel)
       .unwind('$expandedLabels')
-      .match({ 'expandedLabels.name': { $exists: true, $eq: 'bug' } })
+      .match({ 'expandedLabels.name': { $exists: true, $eq: 'bug' } }) // TODO: extract issue label as variable/parameter
       .match({ 'expandedIssue.closed_at': { $exists: true, $ne: null } })
       .sort({ 'expandedIssue.closed_at': 1 })
       //.limit(limit)
       .exec();
 
     //to obtain open issues sorted on the basis of created_at time
-    const res2: { _id: string; count: number }[] = await this.repoModel
+    const openIssues: { _id: string; count: number }[] = await this.repoModel
       .aggregate()
       .match(filter)
       .unwind('$issuesWithEvents')
@@ -827,7 +828,7 @@ export class StatisticService {
       .lookup(getLabel)
       .unwind('$expandedLabels')
       .match({ 'expandedLabels.name': { $exists: true, $eq: 'bug' } })
-      .match({ 'expandedIssue.closed_at': { $exists: true, $eq: null } })
+      .match({ 'expandedIssue.closed_at': { $exists: true, $eq: null } }) // why do we check for existens and equalls null?
       .match({ 'expandedIssue.state': 'open' }) //extra line added to double check :)
       .sort({ 'expandedIssue.created_at': 1 })
       //.limit(limit)
@@ -835,47 +836,76 @@ export class StatisticService {
 
     //this loop matches the condition
     //closed_bugs = issues[ label = bug, state = closed, closed_at <= release.created_at, closed_at >= release.previous().created_at ]
-    var closed_bugs = 0;
-    for (let i = 0; i < res1.length; i++) {
-      for (let j = 1; j < res.length; j++) {
-        if (
-          res1[i]['expandedIssue']['closed_at'] <=
-          res[j]['expandedReleases']['created_at']
-        ) {
-          if (
-            res1[i]['expandedIssue']['closed_at'] >=
-            res[j - 1]['expandedReleases']['created_at']
-          ) {
-            closed_bugs += 1;
-          }
-        }
-      }
-    }
-
-    //this loop matches below condition
-    //open_bugs = issues[ label = bug, state = open, created_at <= release.created_at ]
-    var open_bugs = 0;
-    for (let k = 0; k < res2.length; k++) {
-      for (let j = 1; j < res.length; j++) {
-        if (
-          res2[k]['expandedIssue']['created_at'] <=
-          res[j]['expandedReleases']['created_at']
-        ) {
-          open_bugs += 1;
-          break;
-        }
-      }
-    }
-
+    const closedBugs = this.getNoClosedBugs(closedIssues, releases);
+    const openBugs = this.getNoOpenBugs(openIssues, releases);
     this.logger.debug(
-      `open bugs are: ${open_bugs} and closed bugs are: ${closed_bugs}`,
+      `open bugs are: ${openBugs} and closed bugs are: ${closedBugs}`,
     );
 
-    var fault_correction_rate =
-      Math.abs(closed_bugs) / (Math.abs(closed_bugs) + Math.abs(open_bugs));
+    const fault_correction_rate =
+      Math.abs(closedBugs) / (Math.abs(closedBugs) + Math.abs(openBugs));
 
     this.logger.debug(`Fault correction rate is: ${fault_correction_rate}`);
 
     return fault_correction_rate;
+  }
+
+  /**
+   *
+   * closed_bugs = issues[ label = bug, state = closed, closed_at <= release.created_at, closed_at >= release.previous().created_at ]
+   * @param closedIssues
+   * @param releases
+   * @returns
+   */
+  getNoClosedBugs(closedIssues: any[], releases: any[]): number {
+    let closedBugs = 0;
+    for (const closedIssue of closedIssues) {
+      for (let j = 1; j < releases.length; j++) {
+        if (
+          this.closedBeforeRelease(closedIssue, releases[j]) &&
+          this.closedAfterRelease(closedIssue, releases[j - 1])
+        ) {
+          closedBugs += 1;
+        }
+      }
+    }
+
+    return closedBugs;
+  }
+
+  getNoOpenBugs(openIssues: any[], releases: any[]): number {
+    //this loop matches below condition
+    //open_bugs = issues[ label = bug, state = open, created_at <= release.created_at ]
+    let openBugs = 0;
+    for (const openIssue of openIssues) {
+      for (let j = 1; j < releases.length; j++) {
+        if (this.openBeforeRelease(openIssue, releases[j])) {
+          openBugs += 1;
+          break;
+        }
+      }
+    }
+    return openBugs;
+  }
+
+  openBeforeRelease(issue, release) {
+    return (
+      issue['expandedIssue']['created_at'] <=
+      release['expandedReleases']['created_at']
+    );
+  }
+
+  closedBeforeRelease(issue, release) {
+    return (
+      issue['expandedIssue']['closed_at'] <=
+      release['expandedReleases']['created_at']
+    );
+  }
+
+  closedAfterRelease(issue, release) {
+    return (
+      issue['expandedIssue']['closed_at'] >=
+      release['expandedReleases']['created_at']
+    );
   }
 }
