@@ -1,10 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Aggregate, Model } from 'mongoose';
+import { Model } from 'mongoose';
+import { Issue } from 'src/github-api/model/PullRequest';
 import { RepositoryNameDto } from 'src/github-api/model/Repository';
 import { RepositoryDocument } from '../schemas/repository.schema';
 import { getIssueQuery } from './lib/issueQuery';
-import { getRepoFilter } from './lib/repoQuery';
+import { getReleaseQuery } from './lib/releaseQuery';
 
 @Injectable()
 export class FaultCorrection {
@@ -37,24 +38,22 @@ export class FaultCorrection {
 
     //to obtain releases, sorted on the basis of created_at time
     //TODO: limit amount of data returned, by using a projection
-    const releases: { _id: string; count: number }[] =
-      await this.getReleaseQuery(repoIdent).exec();
+    const releases: { _id: string; count: number }[] = await getReleaseQuery(
+      this.repoModel,
+      repoIdent,
+    ).exec();
 
     //console.log(releases);
 
-    const issues: {
-      expandedIssue: {
-        state: string;
-        created_at: string;
-        closed_at: string;
-        title: string;
-        expandedLabels: { name: string }[];
-      };
-    }[] = await getIssueQuery(this.repoModel, repoIdent, labelNames).exec();
+    const issues: Issue[] = await getIssueQuery(
+      this.repoModel,
+      repoIdent,
+      labelNames,
+    ).exec();
 
     console.log(issues);
     for (const issu of issues) {
-      for (const data of issu.expandedIssue.expandedLabels) {
+      for (const data of issu.labels) {
         console.log(data);
       }
     }
@@ -74,23 +73,6 @@ export class FaultCorrection {
 
     // return fault_correction_rate;
     return 0;
-  }
-
-  getReleaseQuery(repo: RepositoryNameDto): Aggregate<any[]> {
-    const getReleases = {
-      from: 'releases',
-      localField: 'releases',
-      foreignField: '_id',
-      as: 'expandedReleases',
-    };
-
-    return this.repoModel
-      .aggregate()
-      .match(getRepoFilter(repo))
-      .unwind('$releases')
-      .lookup(getReleases)
-      .unwind('$expandedReleases')
-      .sort({ 'expandedReleases.created_at': 1 });
   }
 
   closedTicketsForRelease(
