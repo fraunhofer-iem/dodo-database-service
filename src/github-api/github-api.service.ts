@@ -3,6 +3,7 @@ import { Octokit } from 'octokit';
 import { DatabaseService } from 'src/database/database.service';
 import { StatisticService } from 'src/database/statistic.service';
 import { DeveloperFocus } from 'src/database/statistics/developerFocus.service';
+import { FaultCorrection } from 'src/database/statistics/faultCorrection.service';
 import { PullRequest, RepositoryFile, Commit } from './model/PullRequest';
 import { CreateRepositoryDto, RepositoryNameDto } from './model/Repository';
 
@@ -43,6 +44,7 @@ export class GithubApiService {
     private statisticService: StatisticService,
     private dbService: DatabaseService,
     private devFocus: DeveloperFocus,
+    private faultCorrection: FaultCorrection,
   ) {
     // init octokit
     this.octokit = this.getOctokitClient();
@@ -66,7 +68,7 @@ export class GithubApiService {
 
     // this.statisticService.avgTimeTillTicketWasAssigned(repoIdent);
     //this.statisticService.workInProgress(repoIdent);
-    this.statisticService.faultCorrectionRate(repoIdent, [
+    this.faultCorrection.faultCorrectionRate(repoIdent, [
       'support',
       'awaiting response',
     ]);
