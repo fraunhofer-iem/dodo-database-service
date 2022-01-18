@@ -751,7 +751,11 @@ export class StatisticService {
    * @param repoIdent
    * @param userLimit
    */
-  async faultCorrectionRate(repoIdent: RepositoryNameDto, userLimit?: number) {
+  async faultCorrectionRate(
+    repoIdent: RepositoryNameDto,
+    labelNames?: string[],
+    userLimit?: number,
+  ) {
     const limit = userLimit ? userLimit : 100;
 
     const filter = {
@@ -784,7 +788,7 @@ export class StatisticService {
       from: 'labels',
       localField: 'expandedIssue.label',
       foreignField: '_id',
-      as: 'expandedLabels',
+      as: 'expandedIssue.expandedLabels',
     };
 
     //to obtain releases, sorted on the basis of created_at time
@@ -799,57 +803,70 @@ export class StatisticService {
       //.limit(limit)
       .exec();
 
+    //console.log(releases);
+
     //to obtain closed issues, sorted on the basis of closed_at time
-    const closedIssues: { _id: string; count: number }[] = await this.repoModel
+    const issueQuery: any = this.repoModel
       .aggregate()
       .match(filter)
+      .project({ issuesWithEvents: 1 })
       .unwind('$issuesWithEvents')
       .lookup(getIssuesWithEvents)
       .unwind('$expandedIssuesWithEvents')
       .lookup(getIssue)
       .unwind('$expandedIssue')
       .lookup(getLabel)
-      .unwind('$expandedLabels')
-      .match({ 'expandedLabels.name': { $exists: true, $eq: 'bug' } }) // TODO: extract issue label as variable/parameter
-      .match({ 'expandedIssue.closed_at': { $exists: true, $ne: null } })
-      .sort({ 'expandedIssue.closed_at': 1 })
-      //.limit(limit)
-      .exec();
+      .project({ expandedIssue: 1 });
 
-    //to obtain open issues sorted on the basis of created_at time
-    const openIssues: { _id: string; count: number }[] = await this.repoModel
-      .aggregate()
-      .match(filter)
-      .unwind('$issuesWithEvents')
-      .lookup(getIssuesWithEvents)
-      .unwind('$expandedIssuesWithEvents')
-      .lookup(getIssue)
-      .unwind('$expandedIssue')
-      .lookup(getLabel)
-      .unwind('$expandedLabels')
-      .match({ 'expandedLabels.name': { $exists: true, $eq: 'bug' } })
-      .match({ 'expandedIssue.closed_at': { $exists: true, $eq: null } }) // why do we check for existens and equalls null?
-      .match({ 'expandedIssue.state': 'open' }) //extra line added to double check :)
+    if (labelNames) {
+      const match = labelNames.reduce(
+        (acc, curr) => {
+          acc.$and.push({
+            'expandedIssue.expandedLabels': { $elemMatch: { name: curr } },
+          });
+          return acc;
+        },
+        {
+          $and: [],
+        },
+      );
+      issueQuery.match(match);
+    }
+
+    const issues = await issueQuery.issueQuery
       .sort({ 'expandedIssue.created_at': 1 })
-      //.limit(limit)
       .exec();
 
-    //this loop matches the condition
-    //closed_bugs = issues[ label = bug, state = closed, closed_at <= release.created_at, closed_at >= release.previous().created_at ]
-    const closedBugs = this.getNoClosedBugs(closedIssues, releases);
-    const openBugs = this.getNoOpenBugs(openIssues, releases);
-    this.logger.debug(
-      `open bugs are: ${openBugs} and closed bugs are: ${closedBugs}`,
-    );
+    console.log(issues);
+    for (const issu of issues) {
+      for (const data of issu.expandedIssue.expandedLabels) {
+        console.log(data);
+      }
+    }
+    console.log(issues.length);
+    // //this loop matches the condition
+    // //closed_bugs = issues[ label = bug, state = closed, closed_at <= release.created_at, closed_at >= release.previous().created_at ]
+    // const closedBugs = this.getNoClosedBugs(closedIssues, releases);
+    // const openBugs = this.getNoOpenBugs(openIssues, releases);
+    // this.logger.debug(
+    //   `open bugs are: ${openBugs} and closed bugs are: ${closedBugs}`,
+    // );
 
-    const fault_correction_rate =
-      Math.abs(closedBugs) / (Math.abs(closedBugs) + Math.abs(openBugs));
+    // const fault_correction_rate =
+    //   Math.abs(closedBugs) / (Math.abs(closedBugs) + Math.abs(openBugs));
 
-    this.logger.debug(`Fault correction rate is: ${fault_correction_rate}`);
+    // this.logger.debug(`Fault correction rate is: ${fault_correction_rate}`);
 
-    return fault_correction_rate;
+    // return fault_correction_rate;
+    return 0;
   }
 
+  closedTicketsForRelease(
+    tickets: any[],
+    releases: any[],
+  ): { [release: string]: number } {
+    return {};
+  }
   /**
    *
    * closed_bugs = issues[ label = bug, state = closed, closed_at <= release.created_at, closed_at >= release.previous().created_at ]
