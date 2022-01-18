@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { release } from 'os';
 import { Issue } from 'src/github-api/model/PullRequest';
 import { RepositoryNameDto } from 'src/github-api/model/Repository';
 import { RepositoryDocument } from '../schemas/repository.schema';
@@ -38,11 +39,8 @@ export class FaultCorrection {
 
     //to obtain releases, sorted on the basis of created_at time
     //TODO: limit amount of data returned, by using a projection
-    const releases: { _id: string; count: number }[] = await getReleaseQuery(
-      this.repoModel,
-      repoIdent,
-    ).exec();
-
+    const releases = await getReleaseQuery(this.repoModel, repoIdent).exec();
+    console.log(releases);
     //console.log(releases);
 
     const issues: Issue[] = await getIssueQuery(
@@ -51,13 +49,6 @@ export class FaultCorrection {
       labelNames,
     ).exec();
 
-    console.log(issues);
-    for (const issu of issues) {
-      for (const data of issu.labels) {
-        console.log(data);
-      }
-    }
-    console.log(issues.length);
     // //this loop matches the condition
     // //closed_bugs = issues[ label = bug, state = closed, closed_at <= release.created_at, closed_at >= release.previous().created_at ]
     // const closedBugs = this.getNoClosedBugs(closedIssues, releases);
