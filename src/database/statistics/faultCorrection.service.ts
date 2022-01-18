@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { release } from 'os';
-import { Issue } from 'src/github-api/model/PullRequest';
+import { Issue, Release } from 'src/github-api/model/PullRequest';
 import { RepositoryNameDto } from 'src/github-api/model/Repository';
 import { RepositoryDocument } from '../schemas/repository.schema';
 import { getIssueQuery } from './lib/issueQuery';
@@ -33,101 +33,61 @@ export class FaultCorrection {
   async faultCorrectionRate(
     repoIdent: RepositoryNameDto,
     labelNames?: string[],
-    userLimit?: number,
   ) {
-    const limit = userLimit ? userLimit : 100;
-
-    //to obtain releases, sorted on the basis of created_at time
-    //TODO: limit amount of data returned, by using a projection
     const releases = await getReleaseQuery(this.repoModel, repoIdent).exec();
     console.log(releases);
-    //console.log(releases);
-
     const issues: Issue[] = await getIssueQuery(
       this.repoModel,
       repoIdent,
       labelNames,
     ).exec();
+    // {releaseId: {Issues[], faultCorrectionRate }}
 
-    // //this loop matches the condition
-    // //closed_bugs = issues[ label = bug, state = closed, closed_at <= release.created_at, closed_at >= release.previous().created_at ]
-    // const closedBugs = this.getNoClosedBugs(closedIssues, releases);
-    // const openBugs = this.getNoOpenBugs(openIssues, releases);
-    // this.logger.debug(
-    //   `open bugs are: ${openBugs} and closed bugs are: ${closedBugs}`,
-    // );
+    // we start at 1, because everything happening before the first release doesn't provide
+    // helpful information.
+    const issuesInTimespan = new Map<
+      Release,
+      { closed: Issue[]; open: Issue[] }
+    >();
+    for (let i = 1; i < releases.length; i++) {
+      const currRelease = releases[i];
+      const prevRelease = releases[i - 1];
+      issuesInTimespan.set(currRelease, { open: [], closed: [] });
+      // TODO: date conversion
 
-    // const fault_correction_rate =
-    //   Math.abs(closedBugs) / (Math.abs(closedBugs) + Math.abs(openBugs));
-
-    // this.logger.debug(`Fault correction rate is: ${fault_correction_rate}`);
-
-    // return fault_correction_rate;
-    return 0;
-  }
-
-  closedTicketsForRelease(
-    tickets: any[],
-    releases: any[],
-  ): { [release: string]: number } {
-    return {};
-  }
-  /**
-   *
-   * closed_bugs = issues[ label = bug, state = closed, closed_at <= release.created_at, closed_at >= release.previous().created_at ]
-   * @param closedIssues
-   * @param releases
-   * @returns
-   */
-  getNoClosedBugs(closedIssues: any[], releases: any[]): number {
-    let closedBugs = 0;
-    for (const closedIssue of closedIssues) {
-      for (let j = 1; j < releases.length; j++) {
+      for (const currIssue of issues) {
         if (
-          this.closedBeforeRelease(closedIssue, releases[j]) &&
-          this.closedAfterRelease(closedIssue, releases[j - 1])
+          currIssue.state === 'closed' &&
+          currIssue.closed_at <= currRelease.created_at &&
+          currIssue.closed_at >= prevRelease.created_at
         ) {
-          closedBugs += 1;
+          // closed issues in interval
+          issuesInTimespan.get(currRelease).closed.push(currIssue);
         }
+
+        if (
+          currIssue.created_at <= currRelease.created_at &&
+          currIssue.closed_at >= currRelease.created_at
+        ) {
+          // open during interval
+          issuesInTimespan.get(currRelease).open.push(currIssue);
+        }
+        // get all open issues in timespan prev -> curr
+        // count how many have been closed in timepsan prev -> curr
       }
     }
 
-    return closedBugs;
-  }
-
-  getNoOpenBugs(openIssues: any[], releases: any[]): number {
-    //this loop matches below condition
-    //open_bugs = issues[ label = bug, state = open, created_at <= release.created_at ]
-    let openBugs = 0;
-    for (const openIssue of openIssues) {
-      for (let j = 1; j < releases.length; j++) {
-        if (this.openBeforeRelease(openIssue, releases[j])) {
-          openBugs += 1;
-          break;
-        }
+    issuesInTimespan.forEach((v, k) => {
+      if (v.closed.length > 0 && v.open.length > 0) {
+        console.log('release');
+        console.log(k);
+        console.log('closed');
+        console.log(v.closed);
+        console.log('open');
+        console.log(v.open);
       }
-    }
-    return openBugs;
-  }
+    });
 
-  openBeforeRelease(issue, release) {
-    return (
-      issue['expandedIssue']['created_at'] <=
-      release['expandedReleases']['created_at']
-    );
-  }
-
-  closedBeforeRelease(issue, release) {
-    return (
-      issue['expandedIssue']['closed_at'] <=
-      release['expandedReleases']['created_at']
-    );
-  }
-
-  closedAfterRelease(issue, release) {
-    return (
-      issue['expandedIssue']['closed_at'] >=
-      release['expandedReleases']['created_at']
-    );
+    return 0;
   }
 }
