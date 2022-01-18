@@ -3,6 +3,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Aggregate, Model } from 'mongoose';
 import { RepositoryNameDto } from 'src/github-api/model/Repository';
 import { RepositoryDocument } from '../schemas/repository.schema';
+import { getIssueQuery } from './lib/issueQuery';
+import { getRepoFilter } from './lib/repoQuery';
 
 @Injectable()
 export class FaultCorrection {
@@ -48,7 +50,7 @@ export class FaultCorrection {
         title: string;
         expandedLabels: { name: string }[];
       };
-    }[] = await this.getIssueQuery(repoIdent, labelNames).exec();
+    }[] = await getIssueQuery(this.repoModel, repoIdent, labelNames).exec();
 
     console.log(issues);
     for (const issu of issues) {
@@ -74,13 +76,6 @@ export class FaultCorrection {
     return 0;
   }
 
-  getRepoFilter(repo: RepositoryNameDto) {
-    return {
-      repo: repo.repo,
-      owner: repo.owner,
-    };
-  }
-
   getReleaseQuery(repo: RepositoryNameDto): Aggregate<any[]> {
     const getReleases = {
       from: 'releases',
@@ -91,69 +86,11 @@ export class FaultCorrection {
 
     return this.repoModel
       .aggregate()
-      .match(this.getRepoFilter(repo))
+      .match(getRepoFilter(repo))
       .unwind('$releases')
       .lookup(getReleases)
       .unwind('$expandedReleases')
       .sort({ 'expandedReleases.created_at': 1 });
-  }
-
-  getIssueQuery(
-    repo: RepositoryNameDto,
-    labelNames?: string[],
-  ): Aggregate<any[]> {
-    const getIssuesWithEvents = {
-      from: 'issuewithevents',
-      localField: 'issuesWithEvents',
-      foreignField: '_id',
-      as: 'expandedIssuesWithEvents',
-    };
-
-    const getIssue = {
-      from: 'issues',
-      localField: 'expandedIssuesWithEvents.issue',
-      foreignField: '_id',
-      as: 'expandedIssue',
-    };
-
-    const getLabel = {
-      from: 'labels',
-      localField: 'expandedIssue.label',
-      foreignField: '_id',
-      as: 'expandedIssue.expandedLabels',
-    };
-
-    const query = this.repoModel
-      .aggregate()
-      .match(this.getRepoFilter(repo))
-      .project({ issuesWithEvents: 1 })
-      .unwind('$issuesWithEvents')
-      .lookup(getIssuesWithEvents)
-      .unwind('$expandedIssuesWithEvents')
-      .lookup(getIssue)
-      .unwind('$expandedIssue')
-      .lookup(getLabel)
-      .project({ expandedIssue: 1 });
-
-    if (labelNames) {
-      query.match(this.getMatchQueryForLabelNames(labelNames));
-    }
-    query.sort({ 'expandedIssue.created_at': 1 });
-    return query;
-  }
-
-  getMatchQueryForLabelNames(labelNames: string[]) {
-    return labelNames.reduce(
-      (acc, curr) => {
-        acc.$and.push({
-          'expandedIssue.expandedLabels': { $elemMatch: { name: curr } },
-        });
-        return acc;
-      },
-      {
-        $and: [],
-      },
-    );
   }
 
   closedTicketsForRelease(
