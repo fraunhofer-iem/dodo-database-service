@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { release } from 'os';
 import { Issue, Release } from 'src/github-api/model/PullRequest';
 import { RepositoryNameDto } from 'src/github-api/model/Repository';
 import { RepositoryDocument } from '../schemas/repository.schema';
@@ -34,26 +33,65 @@ export class FaultCorrection {
     repoIdent: RepositoryNameDto,
     labelNames?: string[],
   ) {
-    const releases = await getReleaseQuery(this.repoModel, repoIdent).exec();
-    console.log(releases);
-    const issues: Issue[] = await getIssueQuery(
-      this.repoModel,
-      repoIdent,
-      labelNames,
-    ).exec();
-    // {releaseId: {Issues[], faultCorrectionRate }}
+    const queries = [
+      getReleaseQuery(this.repoModel, repoIdent).exec(),
+      getIssueQuery(this.repoModel, repoIdent, labelNames).exec(),
+    ];
+    const promiseResults = await Promise.all(queries);
 
-    // we start at 1, because everything happening before the first release doesn't provide
-    // helpful information.
+    const releases = promiseResults[0] as Release[];
+    const issues = promiseResults[1] as Issue[];
+
+    const issuesInTimespan = this.createReleaseToIssue(releases, issues);
+
+    return this.calculateCorrectionRate(issuesInTimespan);
+  }
+
+  calculateCorrectionRate(
+    issuesInTimespan: Map<
+      Release,
+      { closed: Issue[]; open: Issue[]; rate: number }
+    >,
+  ) {
+    let avgRate = 0;
+    let noEmptyReleases = 0;
+    issuesInTimespan.forEach((issue) => {
+      const noOpen = issue.open.length;
+      const noClosed = issue.closed.length;
+      if (noOpen > 0 && noClosed > 0) {
+        issue.rate =
+          issue.closed.length / (issue.open.length + issue.closed.length);
+        avgRate += issue.rate;
+      } else {
+        noEmptyReleases += 1;
+      }
+    });
+    avgRate = avgRate / (issuesInTimespan.size - noEmptyReleases);
+
+    return { avgRate: avgRate, rawData: this.mapToJson(issuesInTimespan) };
+  }
+
+  mapToJson(
+    map: Map<Release, { closed: Issue[]; open: Issue[]; rate: number }>,
+  ) {
+    const json = {};
+    map.forEach((value, key) => {
+      json[key.id] = { ...value, release: key };
+    });
+    return json;
+  }
+
+  createReleaseToIssue(releases: Release[], issues: Issue[]) {
     const issuesInTimespan = new Map<
       Release,
-      { closed: Issue[]; open: Issue[] }
+      { closed: Issue[]; open: Issue[]; rate: number }
     >();
+    // we start at 1, because everything happening before the first release doesn't provide
+    // helpful information.
     for (let i = 1; i < releases.length; i++) {
       const currRelease = releases[i];
       const prevRelease = releases[i - 1];
-      issuesInTimespan.set(currRelease, { open: [], closed: [] });
-      // TODO: date conversion
+      issuesInTimespan.set(currRelease, { open: [], closed: [], rate: 0 });
 
       for (const currIssue of issues) {
         if (
@@ -69,25 +107,12 @@ export class FaultCorrection {
           currIssue.created_at <= currRelease.created_at &&
           currIssue.closed_at >= currRelease.created_at
         ) {
-          // open during interval
+          // open issues in interval
           issuesInTimespan.get(currRelease).open.push(currIssue);
         }
-        // get all open issues in timespan prev -> curr
-        // count how many have been closed in timepsan prev -> curr
       }
     }
 
-    issuesInTimespan.forEach((v, k) => {
-      if (v.closed.length > 0 && v.open.length > 0) {
-        console.log('release');
-        console.log(k);
-        console.log('closed');
-        console.log(v.closed);
-        console.log('open');
-        console.log(v.open);
-      }
-    });
-
-    return 0;
+    return issuesInTimespan;
   }
 }

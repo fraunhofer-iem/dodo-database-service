@@ -68,7 +68,7 @@ export class GithubApiService {
 
     // this.statisticService.avgTimeTillTicketWasAssigned(repoIdent);
     //this.statisticService.workInProgress(repoIdent);
-    this.faultCorrection.faultCorrectionRate(repoIdent, [
+    return await this.faultCorrection.faultCorrectionRate(repoIdent, [
       'support',
       'awaiting response',
     ]);
