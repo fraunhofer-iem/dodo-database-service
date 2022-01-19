@@ -19,6 +19,7 @@ import { LanguageSchema } from './schemas/language.schema';
 import { CommitSchema } from './schemas/commit.schema';
 import { DeveloperFocus } from './statistics/developerFocus.service';
 import { FaultCorrection } from './statistics/faultCorrection.service';
+import { FeatureCompletion } from './statistics/featureCompletion.service';
 
 @Module({
   imports: [
@@ -45,7 +46,8 @@ import { FaultCorrection } from './statistics/faultCorrection.service';
     StatisticService,
     DeveloperFocus,
     FaultCorrection,
+    FeatureCompletion,
   ],
-  exports: [DatabaseService, StatisticService, DeveloperFocus, FaultCorrection],
+  exports: [DatabaseService, StatisticService, DeveloperFocus, FaultCorrection, FeatureCompletion],
 })
 export class DatabaseModule {}
