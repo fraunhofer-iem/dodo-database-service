@@ -4,8 +4,10 @@ import { Model } from 'mongoose';
 import { Issue, Release } from 'src/github-api/model/PullRequest';
 import { RepositoryNameDto } from 'src/github-api/model/Repository';
 import { RepositoryDocument } from '../schemas/repository.schema';
+import { calculateAvgRate, mapReleasesToIssues } from './issueUtil';
 import { getIssueQuery } from './lib/issueQuery';
 import { getReleaseQuery } from './lib/releaseQuery';
+import { transformMapToObject } from './lib/transformMapToObject';
 
 @Injectable()
 export class FaultCorrection {
@@ -42,77 +44,11 @@ export class FaultCorrection {
     const releases = promiseResults[0] as Release[];
     const issues = promiseResults[1] as Issue[];
 
-    const issuesInTimespan = this.createReleaseToIssue(releases, issues);
+    const releaseIssueMap = mapReleasesToIssues(releases, issues);
 
-    return this.calculateCorrectionRate(issuesInTimespan);
-  }
-
-  calculateCorrectionRate(
-    issuesInTimespan: Map<
-      Release,
-      { closed: Issue[]; open: Issue[]; rate: number }
-    >,
-  ) {
-    let avgRate = 0;
-    let noEmptyReleases = 0;
-    issuesInTimespan.forEach((issue) => {
-      const noOpen = issue.open.length;
-      const noClosed = issue.closed.length;
-      if (noOpen > 0 && noClosed > 0) {
-        issue.rate =
-          issue.closed.length / (issue.open.length + issue.closed.length);
-        avgRate += issue.rate;
-      } else {
-        noEmptyReleases += 1;
-      }
-    });
-    avgRate = avgRate / (issuesInTimespan.size - noEmptyReleases);
-
-    return { avgRate: avgRate, rawData: this.mapToJson(issuesInTimespan) };
-  }
-
-  mapToJson(
-    map: Map<Release, { closed: Issue[]; open: Issue[]; rate: number }>,
-  ) {
-    const json = {};
-    map.forEach((value, key) => {
-      json[key.id] = { ...value, release: key };
-    });
-    return json;
-  }
-
-  createReleaseToIssue(releases: Release[], issues: Issue[]) {
-    const issuesInTimespan = new Map<
-      Release,
-      { closed: Issue[]; open: Issue[]; rate: number }
-    >();
-    // we start at 1, because everything happening before the first release doesn't provide
-    // helpful information.
-    for (let i = 1; i < releases.length; i++) {
-      const currRelease = releases[i];
-      const prevRelease = releases[i - 1];
-      issuesInTimespan.set(currRelease, { open: [], closed: [], rate: 0 });
-
-      for (const currIssue of issues) {
-        if (
-          currIssue.state === 'closed' &&
-          currIssue.closed_at <= currRelease.created_at &&
-          currIssue.closed_at >= prevRelease.created_at
-        ) {
-          // closed issues in interval
-          issuesInTimespan.get(currRelease).closed.push(currIssue);
-        }
-
-        if (
-          currIssue.created_at <= currRelease.created_at &&
-          currIssue.closed_at >= currRelease.created_at
-        ) {
-          // open issues in interval
-          issuesInTimespan.get(currRelease).open.push(currIssue);
-        }
-      }
-    }
-
-    return issuesInTimespan;
+    return {
+      avgRate: calculateAvgRate(releaseIssueMap),
+      rawData: transformMapToObject(releaseIssueMap),
+    };
   }
 }
