@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, OnlyFieldsOfType } from 'mongoose';
 import {
   Diff,
-  Releases,
+  Release,
   Issue,
   IssueEventTypes,
   Language,
@@ -105,21 +105,21 @@ export class DatabaseService {
 
   /**
    * function to save releases
-   * @param releases
+   * @param release
    * @param repoId
    * @returns
    */
-  async saveReleases(releases: Releases, repoId: string) {
+  async saveReleases(release: Release, repoId: string) {
     this.logger.debug('saving Releases to database');
     const releasesModel = new this.releasesModel();
 
-    this.logger.debug(releases);
-    releasesModel.url = releases.url;
-    releasesModel.id = releases.id;
-    releasesModel.node_id = releases.node_id;
-    releasesModel.name = releases.name;
-    releasesModel.created_at = releases.created_at;
-    releasesModel.published_at = releases.published_at;
+    this.logger.debug(release);
+    releasesModel.url = release.url;
+    releasesModel.id = release.id;
+    releasesModel.node_id = release.node_id;
+    releasesModel.name = release.name;
+    releasesModel.created_at = release.created_at;
+    releasesModel.published_at = release.published_at;
 
     const releasesModels = await releasesModel.save();
 
