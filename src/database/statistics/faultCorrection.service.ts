@@ -6,6 +6,7 @@ import { RepositoryNameDto } from 'src/github-api/model/Repository';
 import { RepositoryDocument } from '../schemas/repository.schema';
 import {
   calculateAvgCapability,
+  calculateAvgEfficiency,
   calculateAvgRate,
   mapReleasesToIssues,
 } from './issueUtil';
@@ -99,5 +100,29 @@ export class FaultCorrection {
     );
 
     return { avgCapability, rawData: transformMapToObject(capabilityMap) };
+  }
+
+  async faultCorrectionEfficiency(
+    repoIdent: RepositoryNameDto,
+    labelNames?: string[],
+    timeToCorrect: number = 14 * 24 * 60 * 60 * 1000,
+  ) {
+    const queries = [
+      getReleaseQuery(this.repoModel, repoIdent).exec(),
+      getIssueQuery(this.repoModel, repoIdent, labelNames).exec(),
+    ];
+    const promiseResults = await Promise.all(queries);
+
+    const releases = promiseResults[0] as Release[];
+    const issues = promiseResults[1] as Issue[];
+
+    const releaseIssueMap = mapReleasesToIssues(releases, issues);
+
+    const { efficiencyMap, avgEfficiency } = calculateAvgEfficiency(
+      releaseIssueMap,
+      timeToCorrect,
+    );
+
+    return { avgEfficiency, rawData: transformMapToObject(efficiencyMap) };
   }
 }

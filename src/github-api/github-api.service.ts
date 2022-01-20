@@ -80,6 +80,10 @@ export class GithubApiService {
     //   'support',
     //   'awaiting response',
     // ]);
+    return await this.faultCorrection.faultCorrectionEfficiency(repoIdent, [
+      'support',
+      'awaiting response',
+    ]);
     // return await this.featureCompletion.featureCompletionRate(repoIdent, [
     //   'feature',
     // ]);
