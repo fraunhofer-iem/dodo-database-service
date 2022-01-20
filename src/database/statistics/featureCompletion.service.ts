@@ -4,7 +4,12 @@ import { Model } from 'mongoose';
 import { Issue, Release } from 'src/github-api/model/PullRequest';
 import { RepositoryNameDto } from 'src/github-api/model/Repository';
 import { RepositoryDocument } from '../schemas/repository.schema';
-import { calculateAvgCapability, calculateAvgRate, mapReleasesToIssues } from './issueUtil';
+import {
+  calculateAvgCapability,
+  calculateAvgEfficiency,
+  calculateAvgRate,
+  mapReleasesToIssues,
+} from './issueUtil';
 import { getIssueQuery } from './lib/issueQuery';
 import { getReleaseQuery } from './lib/releaseQuery';
 import { transformMapToObject } from './lib/transformMapToObject';
@@ -53,7 +58,6 @@ export class FeatureCompletion {
     };
   }
 
-
   /**
    * The Feature Completion Capability describes the development team's capability to add features to the project.
    * In more detail, it assesses the rate of features completed within the time frame the organization aims to adhere to for feature completion.
@@ -76,7 +80,7 @@ export class FeatureCompletion {
   async featureCompletionCapability(
     repoIdent: RepositoryNameDto,
     labelNames?: string[],
-    timeToComplete: number = 14*24*60*60*1000,
+    timeToComplete: number = 14 * 24 * 60 * 60 * 1000,
   ) {
     const queries = [
       getReleaseQuery(this.repoModel, repoIdent).exec(),
@@ -95,5 +99,29 @@ export class FeatureCompletion {
     );
 
     return { avgCapability, rawData: transformMapToObject(capabilityMap) };
+  }
+
+  async featureCompletionEfficiency(
+    repoIdent: RepositoryNameDto,
+    labelNames?: string[],
+    timeToComplete: number = 14 * 24 * 60 * 60 * 1000,
+  ) {
+    const queries = [
+      getReleaseQuery(this.repoModel, repoIdent).exec(),
+      getIssueQuery(this.repoModel, repoIdent, labelNames).exec(),
+    ];
+    const promiseResults = await Promise.all(queries);
+
+    const releases = promiseResults[0] as Release[];
+    const issues = promiseResults[1] as Issue[];
+
+    const releaseIssueMap = mapReleasesToIssues(releases, issues);
+
+    const { efficiencyMap, avgEfficiency } = calculateAvgEfficiency(
+      releaseIssueMap,
+      timeToComplete,
+    );
+
+    return { avgEfficiency, rawData: transformMapToObject(efficiencyMap) };
   }
 }
