@@ -46,10 +46,10 @@ export class FeatureCompletion {
     const issues = promiseResults[1] as Issue[];
 
     const releaseIssueMap = mapReleasesToIssues(releases, issues);
-
+    const { avgRate, rateMap } = calculateAvgRate(releaseIssueMap);
     return {
-      avgRate: calculateAvgRate(releaseIssueMap),
-      rawData: transformMapToObject(releaseIssueMap),
+      avgRate: avgRate,
+      rawData: transformMapToObject(rateMap),
     };
   }
 

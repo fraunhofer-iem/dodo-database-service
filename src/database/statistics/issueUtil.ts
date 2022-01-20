@@ -3,7 +3,7 @@ import { Issue, Release } from 'src/github-api/model/PullRequest';
 export function mapReleasesToIssues(releases: Release[], issues: Issue[]) {
   const issuesInTimespan = new Map<
     number,
-    { closed: Issue[]; open: Issue[]; rate: number; release: Release }
+    { closed: Issue[]; open: Issue[]; release: Release }
   >();
   // we start at 1, because everything happening before the first release doesn't provide
   // helpful information.
@@ -13,7 +13,6 @@ export function mapReleasesToIssues(releases: Release[], issues: Issue[]) {
     issuesInTimespan.set(currRelease.id, {
       open: [],
       closed: [],
-      rate: 0,
       release: currRelease,
     });
 
@@ -43,11 +42,20 @@ export function mapReleasesToIssues(releases: Release[], issues: Issue[]) {
 export function calculateAvgRate(
   releaseIssueMap: Map<
     number,
-    { closed: Issue[]; open: Issue[]; rate: number; release: Release }
+    { closed: Issue[]; open: Issue[]; release: Release }
   >,
 ) {
   let sumOfRates = 0;
   let noOfEmptyReleases = 0;
+  const rateMap = new Map<
+    number,
+    {
+      closed: Issue[];
+      open: Issue[];
+      release: Release;
+      rate: number;
+    }
+  >();
   releaseIssueMap.forEach((currData) => {
     const rate = calculateRate(currData);
     if (rate === undefined) {
@@ -55,15 +63,18 @@ export function calculateAvgRate(
     } else {
       sumOfRates += rate;
     }
+    rateMap.set(currData.release.id, { ...currData, rate: rate });
   });
 
-  return sumOfRates / (releaseIssueMap.size - noOfEmptyReleases);
+  return {
+    rateMap: rateMap,
+    avgRate: sumOfRates / (releaseIssueMap.size - noOfEmptyReleases),
+  };
 }
 
 function calculateRate(data: {
   closed: Issue[];
   open: Issue[];
-  rate: number;
   release: Release;
 }) {
   const noOfOpenIssues = data.open.length;
@@ -71,7 +82,6 @@ function calculateRate(data: {
   if (noOfOpenIssues == 0 && noOfClosedIssues == 0) {
     return undefined;
   } else {
-    data.rate = noOfClosedIssues / (noOfOpenIssues + noOfClosedIssues);
+    return noOfClosedIssues / (noOfOpenIssues + noOfClosedIssues);
   }
-  return data.rate;
 }
