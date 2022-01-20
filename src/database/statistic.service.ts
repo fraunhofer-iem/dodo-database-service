@@ -825,7 +825,7 @@ export class StatisticService {
       .unwind('$expandedIssue')
       .lookup(getLabel)
       .unwind('$expandedLabels')
-      .match({'expandedLabels.name': {$exists: true, $eq: 'enhancement'}})
+      .match({'expandedLabels.name': {$exists: true, $eq: 'feature'}})
       .match({ 'expandedIssue.closed_at': { $exists: true, $ne: null } })
       .sort({ 'expandedIssue.closed_at': 1 })
       //.limit(limit)

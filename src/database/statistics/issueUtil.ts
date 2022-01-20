@@ -49,12 +49,12 @@ export function calculateAvgRate(
   let sumOfRates = 0;
   let noOfEmptyReleases = 0;
   releaseIssueMap.forEach((currData) => {
-      const rate = calculateRate(currData)
-      if (rate === undefined) {
-          noOfEmptyReleases += 1
-      } else {
-          sumOfRates += rate
-      }
+    const rate = calculateRate(currData);
+    if (rate === undefined) {
+      noOfEmptyReleases += 1;
+    } else {
+      sumOfRates += rate;
+    }
   });
 
   return sumOfRates / (releaseIssueMap.size - noOfEmptyReleases);
@@ -69,7 +69,7 @@ function calculateRate(data: {
   const noOfOpenIssues = data.open.length;
   const noOfClosedIssues = data.closed.length;
   if (noOfOpenIssues == 0 && noOfClosedIssues == 0) {
-    return undefined
+    return undefined;
   } else {
     data.rate = noOfClosedIssues / (noOfOpenIssues + noOfClosedIssues);
   }
