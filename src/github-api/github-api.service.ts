@@ -74,9 +74,7 @@ export class GithubApiService {
     //   'support',
     //   'awaiting response',
     // ]);
-    return await this.featureCompletion.featureCompletionRate(repoIdent, [
-      'feature',
-    ]);
+    return this.faultCorrection.faultCorrectionCapability(repoIdent);
     //this.statisticService.faultCorrectionEfficiency(repoIdent);
     // this.statisticService.workInProgress(repoIdent);
     // this.devFocus.devSpreadTotal(
