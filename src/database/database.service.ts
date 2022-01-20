@@ -14,7 +14,7 @@ import { DiffDocument } from './schemas/diff.schema';
 import { IssueDocument } from './schemas/issue.schema';
 import { IssueEventTypesDocument } from './schemas/issueEventTypes.schema';
 import { ReleasesDocument } from './schemas/releases.schema';
-import { LabelDocument } from './schemas/labels.schema';
+import { Label, LabelDocument } from './schemas/labels.schema';
 import { AssigneeDocument } from './schemas/assignee.schema';
 import { AssigneesDocument } from './schemas/assignees.schema';
 import { MilestoneDocument } from './schemas/milestone.schema';
@@ -62,7 +62,6 @@ export class DatabaseService {
     @InjectModel('Commit')
     private readonly commitModel: Model<CommitDocument>,
   ) {}
-
   /**
    * Creates the specified repository if it doesn't exist.
    * If it exists it returns the id of the existing one.
@@ -167,8 +166,13 @@ export class DatabaseService {
 
     issueModel.state = issue.state;
     issueModel.node_id = issue.node_id;
-    const labelss = await this.labelModel.create(issue.labels);
-    issueModel.label = labelss;
+    // fill the labels array for the issue document
+    const issueLabels: Label[] = [];
+    for (const eachLabel of issue.labels) {
+      const labelM = await this.labelModel.create(eachLabel);
+      issueLabels.push(labelM);
+    }
+    issueModel.label = issueLabels;
 
     const assigneee = await this.assigneeModel.create(issue.assignee);
     issueModel.assignee = assigneee;
