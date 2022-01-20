@@ -75,8 +75,8 @@ export class FeatureCompletion {
    */
   async featureCompletionCapability(
     repoIdent: RepositoryNameDto,
-    allowedTime: number,
     labelNames?: string[],
+    timeToComplete: number = 14*24*60*60,
   ) {
     const queries = [
       getReleaseQuery(this.repoModel, repoIdent).exec(),

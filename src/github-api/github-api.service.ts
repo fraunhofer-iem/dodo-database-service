@@ -70,7 +70,9 @@ export class GithubApiService {
 
     // this.statisticService.avgTimeTillTicketWasAssigned(repoIdent);
     //this.statisticService.workInProgress(repoIdent);
-    this.statisticService.featureCompletionCapability(repoIdent);
+    return await this.featureCompletion.featureCompletionCapability(repoIdent, [
+      'feature',
+    ]);
 
     // return await this.faultCorrection.faultCorrectionRate(repoIdent, [
     //   'support',
