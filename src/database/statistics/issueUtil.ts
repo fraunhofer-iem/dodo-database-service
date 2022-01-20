@@ -39,7 +39,7 @@ export function mapReleasesToIssues(releases: Release[], issues: Issue[]) {
   return issuesInTimespan;
 }
 
-export function calculateAvgClosedOpenRate(
+export function calculateAvgRate(
   releaseIssueMap: Map<
     number,
     { closed: Issue[]; open: Issue[]; release: Release }
@@ -76,7 +76,7 @@ function calculateRate(data: {
   closed: Issue[];
   open: Issue[];
   release: Release;
-}) {
+}): number {
   const noOfOpenIssues = data.open.length;
   const noOfClosedIssues = data.closed.length;
   if (noOfOpenIssues == 0 && noOfClosedIssues == 0) {
@@ -86,39 +86,72 @@ function calculateRate(data: {
   }
 }
 
-export function calculateAvgClosedInTimeRate(
+export function calculateAvgCapability(
   releaseIssueMap: Map<
     number,
     { closed: Issue[]; open: Issue[]; release: Release }
   >,
-  timeToCorrect: number,
+  allowedTime: number,
 ) {
-  const releaseInTime = new Map<
+  const capabilityMap = new Map<
     number,
-    { closedInTime: Issue[]; rate: number; release: Release }
+    {
+      successes: Issue[];
+      failures: Issue[];
+      capability: number;
+      release: Release;
+    }
   >();
 
-  let sumOfRates = 0;
+  let sumOfCapabilities = 0;
+  let noOfEmptyReleases = 0;
 
-  releaseIssueMap.forEach((value, key) => {
-    const closedInTime = value.closed.filter((closedIssue) => {
-      const closedAt = new Date(closedIssue.closed_at).valueOf();
-      const createdAt = new Date(closedIssue.created_at).valueOf();
-
-      return closedAt - createdAt <= timeToCorrect;
+  releaseIssueMap.forEach((currData) => {
+    const capability = calculateCapability(currData, allowedTime);
+    if (!currData.closed.length) {
+      noOfEmptyReleases += 1;
+    } else {
+      sumOfCapabilities += capability.capability
+    }
+    capabilityMap.set(currData.release.id, {
+      ...capability,
+      release: currData.release,
     });
-
-    const rate = closedInTime.length / value.closed.length;
-    releaseInTime.set(key, {
-      closedInTime,
-      rate: rate,
-      release: value.release,
-    });
-    sumOfRates += rate;
   });
 
   return {
-    inTime: releaseInTime,
-    avgRate: sumOfRates / releaseIssueMap.size,
+    capabilityMap,
+    avgCapability: sumOfCapabilities / releaseIssueMap.size - noOfEmptyReleases,
+  };
+}
+
+function calculateCapability(
+  data: {
+    closed: Issue[];
+  },
+  allowedTime: number,
+): { capability: number; successes: Issue[]; failures: Issue[] } {
+  const successes: Issue[] = [];
+  const failures: Issue[] = [];
+  for (const currIssue of data.closed) {
+    const closedAt = new Date(currIssue.closed_at).valueOf();
+    const createdAt = new Date(currIssue.created_at).valueOf();
+
+    if (closedAt - createdAt <= allowedTime) {
+      successes.push(currIssue);
+    } else {
+      failures.push(currIssue);
+    }
+  }
+
+  let capability = 0;
+  if (data.closed.length) {
+    capability = successes.length / data.closed.length;
+  }
+
+  return {
+    capability,
+    successes,
+    failures,
   };
 }

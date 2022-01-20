@@ -4,7 +4,7 @@ import { Model } from 'mongoose';
 import { Issue, Release } from 'src/github-api/model/PullRequest';
 import { RepositoryNameDto } from 'src/github-api/model/Repository';
 import { RepositoryDocument } from '../schemas/repository.schema';
-import { calculateAvgClosedOpenRate, mapReleasesToIssues } from './issueUtil';
+import { calculateAvgCapability, calculateAvgRate, mapReleasesToIssues } from './issueUtil';
 import { getIssueQuery } from './lib/issueQuery';
 import { getReleaseQuery } from './lib/releaseQuery';
 import { transformMapToObject } from './lib/transformMapToObject';
@@ -46,7 +46,7 @@ export class FeatureCompletion {
     const issues = promiseResults[1] as Issue[];
 
     const releaseIssueMap = mapReleasesToIssues(releases, issues);
-    const { avgRate, rateMap } = calculateAvgClosedOpenRate(releaseIssueMap);
+    const { avgRate, rateMap } = calculateAvgRate(releaseIssueMap);
     return {
       avgRate: avgRate,
       rawData: transformMapToObject(rateMap),
@@ -76,7 +76,7 @@ export class FeatureCompletion {
   async featureCompletionCapability(
     repoIdent: RepositoryNameDto,
     labelNames?: string[],
-    timeToComplete: number = 14*24*60*60,
+    timeToComplete: number = 14*24*60*60*1000,
   ) {
     const queries = [
       getReleaseQuery(this.repoModel, repoIdent).exec(),
@@ -88,5 +88,12 @@ export class FeatureCompletion {
     const issues = promiseResults[1] as Issue[];
 
     const releaseIssueMap = mapReleasesToIssues(releases, issues);
+
+    const { capabilityMap, avgCapability } = calculateAvgCapability(
+      releaseIssueMap,
+      timeToComplete,
+    );
+
+    return { avgCapability, rawData: transformMapToObject(capabilityMap) };
   }
 }
