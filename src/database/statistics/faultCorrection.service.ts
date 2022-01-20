@@ -46,9 +46,56 @@ export class FaultCorrection {
 
     const releaseIssueMap = mapReleasesToIssues(releases, issues);
 
+    const { avgRate, rateMap } = calculateAvgRate(releaseIssueMap);
     return {
-      avgRate: calculateAvgRate(releaseIssueMap),
-      rawData: transformMapToObject(releaseIssueMap),
+      avgRate: avgRate,
+      rawData: transformMapToObject(rateMap),
     };
+  }
+
+  /**
+   * The Fault Correction Capability describes the development team's capability to respond to bug reports.
+   * In more detail, it assesses the rate of faults corrected within the time frame the organization aims to adhere to for fault correction.
+   * For this qualitative indicator we take all issues labeled `bug` (or some other equivalent label) into consideration that have been resolved since the previous release.
+   *
+   * (release, issues[label = "bug", state = "closed"], T_bug) => {
+   * bugs = [ bug for bug in issues
+   *          if bug.closed_at <= release.created_at and
+   *             bug.closed_at >= release.previous().created_at ]
+   *
+   * bugs_corrected_in_time = [ bug for bug in bugs
+   *                            if bug.closed_at - bug.created_at <= T_bug ]
+   *
+   * return |bugs_corrected_in_time| / | bugs |
+   *  }
+   *
+   * @param repoIdent
+   * @param userLimit
+   * @returns
+   */
+  async faultCorrectionCapability(
+    repoIdent: RepositoryNameDto,
+    timeToCorrect = 1209600000,
+    labelNames?: string[],
+  ) {
+    const queries = [
+      getReleaseQuery(this.repoModel, repoIdent).exec(),
+      getIssueQuery(this.repoModel, repoIdent, labelNames).exec(),
+    ];
+    const promiseResults = await Promise.all(queries);
+
+    const releases = promiseResults[0] as Release[];
+    const issues = promiseResults[1] as Issue[];
+
+    const releaseIssueMap = mapReleasesToIssues(releases, issues);
+    releaseIssueMap.forEach((value) => {
+      const closedInTime = value.closed.filter((closedIssue) => {
+        return (
+          new Date(closedIssue.closed_at).getMilliseconds() -
+            new Date(closedIssue.created_at).getMilliseconds() <=
+          timeToCorrect
+        );
+      });
+    });
   }
 }
