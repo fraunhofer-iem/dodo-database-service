@@ -1,14 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Mongoose, OnlyFieldsOfType } from 'mongoose';
+import { Model, OnlyFieldsOfType } from 'mongoose';
 import {
   Diff,
-  Releases,
+  Release,
   Issue,
   IssueEventTypes,
   Language,
-  typedLabel,
-  Labels,
+  Commit,
 } from 'src/github-api/model/PullRequest';
 import { RepositoryNameDto } from 'src/github-api/model/Repository';
 import { DiffDocument } from './schemas/diff.schema';
@@ -25,6 +24,7 @@ import { RepositoryDocument } from './schemas/repository.schema';
 import { RepositoryFileDocument } from './schemas/repositoryFile.schema';
 import { IssueWithEventsDocument } from './schemas/issueWithEvents.schema';
 import { LanguageDocument } from './schemas/language.schema';
+import { CommitDocument } from './schemas/commit.schema';
 
 @Injectable()
 export class DatabaseService {
@@ -59,7 +59,8 @@ export class DatabaseService {
     private readonly issueWithEventsModel: Model<IssueWithEventsDocument>,
     @InjectModel('Languages')
     private readonly languageModel: Model<LanguageDocument>,
-   
+    @InjectModel('Commit')
+    private readonly commitModel: Model<CommitDocument>,
   ) {}
   /**
    * Creates the specified repository if it doesn't exist.
@@ -103,29 +104,25 @@ export class DatabaseService {
 
   /**
    * function to save releases
-   * @param releases
+   * @param release
    * @param repoId
    * @returns
    */
-  async saveReleases(releases: Releases, repoId: string) {
+  async saveReleases(release: Release, repoId: string) {
     this.logger.debug('saving Releases to database');
     const releasesModel = new this.releasesModel();
 
-    this.logger.debug(releases);
-    releasesModel.url = releases.url;
-    releasesModel.id = releases.id;
-    releasesModel.node_id = releases.node_id;
-    releasesModel.name = releases.name;
-    releasesModel.created_at = releases.created_at;
-    releasesModel.published_at = releases.published_at;
+    this.logger.debug(release);
+    releasesModel.url = release.url;
+    releasesModel.id = release.id;
+    releasesModel.node_id = release.node_id;
+    releasesModel.name = release.name;
+    releasesModel.created_at = release.created_at;
+    releasesModel.published_at = release.published_at;
 
     const releasesModels = await releasesModel.save();
 
-    await this.repoModel
-      .findByIdAndUpdate(repoId, {
-        $push: { releases: [releasesModels] },
-      })
-      .exec();
+    await this.updateRepo(repoId, { releases: [releasesModels] });
 
     this.logger.debug('saving releases to database finished');
 
@@ -152,11 +149,9 @@ export class DatabaseService {
     createdDiff.repositoryFiles = repoFiles;
     createdDiff.pullRequest = pullRequest;
     const savedDiff = await createdDiff.save();
-    await this.repoModel
-      .findByIdAndUpdate(repoId, {
-        $push: { diffs: [savedDiff] },
-      })
-      .exec();
+
+    await this.updateRepo(repoId, { diffs: [savedDiff] });
+
     this.logger.debug('saving diff to database finished');
   }
 
@@ -171,13 +166,13 @@ export class DatabaseService {
 
     issueModel.state = issue.state;
     issueModel.node_id = issue.node_id;
-   // fill the labels array for the issue document
-   const issueLabels: Label[] = [];
-   for (const eachLabel of issue.labels) {
-     const labelM = await this.labelModel.create(eachLabel);
-     issueLabels.push(labelM);
-   }
-   issueModel.label = issueLabels;
+    // fill the labels array for the issue document
+    const issueLabels: Label[] = [];
+    for (const eachLabel of issue.labels) {
+      const labelM = await this.labelModel.create(eachLabel);
+      issueLabels.push(labelM);
+    }
+    issueModel.label = issueLabels;
 
     const assigneee = await this.assigneeModel.create(issue.assignee);
     issueModel.assignee = assigneee;
@@ -199,11 +194,7 @@ export class DatabaseService {
 
     issueWithEventsModel.issueEventTypes = [];
     const savedIssueWithEvents = await issueWithEventsModel.save();
-    await this.repoModel
-      .findByIdAndUpdate(repoId, {
-        $push: { issuesWithEvents: [savedIssueWithEvents] },
-      })
-      .exec();
+    await this.updateRepo(repoId, { issuesWithEvents: [savedIssueWithEvents] });
 
     this.logger.debug('saving issueWithEvents to database finished');
     return savedIssueWithEvents.id;
@@ -244,13 +235,13 @@ export class DatabaseService {
       this.logger.debug(
         `saving programming languages from ${repoIdent.owner}/${repoIdent.repo} to database...`,
       );
-      // const repoID = await this.getRepoByName(repoIdent.owner, repoIdent.repo)
+
       languageModel.repo_id = repoM._id;
       languageModel.languages = languages;
       const savedLanguages = await languageModel.save();
-      await this.repoModel
-        .findByIdAndUpdate(repoM._id, { languages: savedLanguages })
-        .exec();
+
+      await this.updateRepo(repoM._id, { languages: savedLanguages });
+
       this.logger.debug(
         `stored programming languages from ${repoIdent.owner}/${repoIdent.repo} successful`,
       );
@@ -259,5 +250,38 @@ export class DatabaseService {
       this.saveLanguages(repoIdent, languages);
     }
     return languages;
+  }
+
+  async saveCommit(repoId: string, commit: Commit) {
+    this.logger.debug('saving commit to database');
+    const commitModel = new this.commitModel();
+
+    this.logger.debug(commit);
+    commitModel.url = commit.url;
+    commitModel.login = commit.login;
+    commitModel.timestamp = commit.timestamp;
+
+    const savedCommit = await commitModel.save();
+
+    await this.updateRepo(repoId, { commits: savedCommit });
+
+    this.logger.debug('saving commit to database finished');
+
+    return savedCommit;
+  }
+
+  async repoExists(repoIdent: RepositoryNameDto): Promise<boolean> {
+    return this.repoModel.exists({
+      repo: repoIdent.repo,
+      owner: repoIdent.owner,
+    });
+  }
+
+  async updateRepo(repoId: string, push: OnlyFieldsOfType<RepositoryDocument>) {
+    await this.repoModel
+      .findByIdAndUpdate(repoId, {
+        $push: push,
+      })
+      .exec();
   }
 }
