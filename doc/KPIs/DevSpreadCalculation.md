@@ -28,7 +28,7 @@
 
   - The same computation holds for the over time intervals.
 
-- Then, **average organization spread** for every time interval is calculated by _summing up all project member's interval spread values in a category_ and set that into _relation to the amount of project members_.
+- Then, **average organization spread** for every time interval is calculated by _summing up all project member's interval spread values in a category_ and set that in relation to _a weight propotional to the contribution amount for a project member_.
 - Additionally, a repository related calculation shows the **average project spread**:
   - Therefore, the precomputed category spread values for all project members, who contributed to the specified repository, are being collected.
   - If there is an intersection of commit time intervals for different developers, they are added together.
