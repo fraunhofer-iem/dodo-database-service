@@ -90,7 +90,7 @@ export class DeveloperFocus {
       {},
     );
 
-    console.log(developers);
+    this.logger.log(developers);
     return developers;
   }
 
@@ -156,18 +156,18 @@ export class DeveloperFocus {
       spreadsPerDevs[dev] = getSpreadsForDev(timeToRepoObj);
     });
 
-    console.log(spreadsPerDevs);
+    this.logger.log(spreadsPerDevs);
 
     // just to print all repository arrays for every spread category after calculation
     for (const dev in spreadsPerDevs) {
-      console.log(dev);
+      this.logger.log(dev);
       for (const spread in spreadsPerDevs[dev]) {
         if (spread == 'daySpreadSum') {
           break;
         }
-        console.log(spread);
+        this.logger.log(spread);
         for (const timestamp in spreadsPerDevs[dev][spread]) {
-          console.log(spreadsPerDevs[dev][spread][timestamp]);
+          this.logger.log(spreadsPerDevs[dev][spread][timestamp]);
         }
       }
     }
@@ -286,7 +286,7 @@ export class DeveloperFocus {
       totalSpread.months += devObj.months;
     }
 
-    console.log(devSpread);
+    this.logger.log(devSpread);
 
     // compute the weighted avg for each category for all devs
     // sum of all values per category for each dev multiplied by it's weight
@@ -305,7 +305,7 @@ export class DeveloperFocus {
       totalSpread.monthSpread += devObj.monthSpread * getWeight(dev, 'months');
     }
 
-    console.log(totalSpread);
+    this.logger.log(totalSpread);
     return totalSpread;
 
     function getWeight(dev: string, interval: string) {
@@ -348,7 +348,7 @@ export class DeveloperFocus {
       loginFilter,
       userLimit,
     );
-    console.log('commits: ', commits);
+    this.logger.log('commits: ', commits);
     // store the repoId as a string
     const repoID = repoM._id.toString();
     // store the repo developers in an array
@@ -363,7 +363,7 @@ export class DeveloperFocus {
     // TODO: refactor utility method
     const dates: RepoSpread = getSpreadDates(repoID, repoDevs, spreadsPerDevs);
 
-    console.log(dates);
+    this.logger.log(dates);
 
     // Now, we need a little fix; consider dev A, which has contributed in week X,
     // which starts at '2021-09-06' and then in week Y which starts at '2021-09-13' again,
@@ -378,7 +378,7 @@ export class DeveloperFocus {
     dates.sprintSpread = rearangeTimeslots(dates.sprintSpread, 14);
     dates.monthSpread = rearangeTimeslots(dates.monthSpread, 30);
 
-    console.log(dates);
+    this.logger.log(dates);
 
     // this is the presicely repository spread with timestamp:spread pairs for each category
     // the spread is beeing calculated with the sum of the dev spreads which contributed in that timestamp
@@ -386,11 +386,11 @@ export class DeveloperFocus {
     const repoSpread: RepoSpreadTotal = getRepoSpreadTotal(dates);
 
     // TODO: this could also be returned as a good overview n the whole repo histroy, if desired.
-    console.log(repoSpread);
+    this.logger.log(repoSpread);
 
     // finally, build the average daySpread, weekSpread, ..., of all single daySpreads, weekSpreads, ...
     const avgRepoSpread: RepoSpreadAvg = getAvgRepoSpread(repoSpread);
-    console.log(avgRepoSpread);
+    this.logger.log(avgRepoSpread);
 
     return avgRepoSpread;
   }
