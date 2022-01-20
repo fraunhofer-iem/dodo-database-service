@@ -4,7 +4,11 @@ import { Model } from 'mongoose';
 import { Issue, Release } from 'src/github-api/model/PullRequest';
 import { RepositoryNameDto } from 'src/github-api/model/Repository';
 import { RepositoryDocument } from '../schemas/repository.schema';
-import { calculateAvgRate, mapReleasesToIssues } from './issueUtil';
+import {
+  calculateAvgClosedInTimeRate,
+  calculateAvgClosedOpenRate,
+  mapReleasesToIssues,
+} from './issueUtil';
 import { getIssueQuery } from './lib/issueQuery';
 import { getReleaseQuery } from './lib/releaseQuery';
 import { transformMapToObject } from './lib/transformMapToObject';
@@ -46,7 +50,7 @@ export class FaultCorrection {
 
     const releaseIssueMap = mapReleasesToIssues(releases, issues);
 
-    const { avgRate, rateMap } = calculateAvgRate(releaseIssueMap);
+    const { avgRate, rateMap } = calculateAvgClosedOpenRate(releaseIssueMap);
     return {
       avgRate: avgRate,
       rawData: transformMapToObject(rateMap),
@@ -75,8 +79,8 @@ export class FaultCorrection {
    */
   async faultCorrectionCapability(
     repoIdent: RepositoryNameDto,
-    timeToCorrect = 1209600000,
     labelNames?: string[],
+    timeToCorrect = 1209600000,
   ) {
     const queries = [
       getReleaseQuery(this.repoModel, repoIdent).exec(),
@@ -88,14 +92,12 @@ export class FaultCorrection {
     const issues = promiseResults[1] as Issue[];
 
     const releaseIssueMap = mapReleasesToIssues(releases, issues);
-    releaseIssueMap.forEach((value) => {
-      const closedInTime = value.closed.filter((closedIssue) => {
-        return (
-          new Date(closedIssue.closed_at).getMilliseconds() -
-            new Date(closedIssue.created_at).getMilliseconds() <=
-          timeToCorrect
-        );
-      });
-    });
+
+    const { inTime, avgRate } = calculateAvgClosedInTimeRate(
+      releaseIssueMap,
+      timeToCorrect,
+    );
+
+    return { avgRate: avgRate, rawData: transformMapToObject(inTime) };
   }
 }
