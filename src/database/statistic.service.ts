@@ -594,6 +594,13 @@ export class StatisticService {
       as: 'expandedIssue',
     };
 
+    const getReleases = {
+      from: 'releases',
+      localField: 'releases',
+      foreignField: '_id',
+      as: 'expandedReleases',
+    };
+
     const getLabel = {
       from: 'labels',
       localField: 'expandedIssue.label',

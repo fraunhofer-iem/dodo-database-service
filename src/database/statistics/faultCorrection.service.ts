@@ -5,8 +5,8 @@ import { Issue, Release } from 'src/github-api/model/PullRequest';
 import { RepositoryNameDto } from 'src/github-api/model/Repository';
 import { RepositoryDocument } from '../schemas/repository.schema';
 import {
-  calculateAvgClosedInTimeRate,
-  calculateAvgClosedOpenRate,
+  calculateAvgCapability,
+  calculateAvgRate,
   mapReleasesToIssues,
 } from './issueUtil';
 import { getIssueQuery } from './lib/issueQuery';
@@ -50,7 +50,7 @@ export class FaultCorrection {
 
     const releaseIssueMap = mapReleasesToIssues(releases, issues);
 
-    const { avgRate, rateMap } = calculateAvgClosedOpenRate(releaseIssueMap);
+    const { avgRate, rateMap } = calculateAvgRate(releaseIssueMap);
     return {
       avgRate: avgRate,
       rawData: transformMapToObject(rateMap),
@@ -93,11 +93,11 @@ export class FaultCorrection {
 
     const releaseIssueMap = mapReleasesToIssues(releases, issues);
 
-    const { inTime, avgRate } = calculateAvgClosedInTimeRate(
+    const { capabilityMap, avgCapability } = calculateAvgCapability(
       releaseIssueMap,
       timeToCorrect,
     );
 
-    return { avgRate: avgRate, rawData: transformMapToObject(inTime) };
+    return { avgCapability, rawData: transformMapToObject(capabilityMap) };
   }
 }
