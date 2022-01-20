@@ -10,12 +10,11 @@ export interface IssueEventTypes {
   event?: string;
   commit_url?: string;
   created_at?: string;
-  // assignee?: Assignee;
 }
 
 export interface Issue {
   state: string;
-  labels: Labels[];
+  labels: Label[];
   assignee: Assignee;
   assignees?: Assignees[];
   milestone: Milestones;
@@ -28,7 +27,7 @@ export interface Issue {
   node_id: string;
   locked: boolean;
 }
-export interface Releases {
+export interface Release {
   url: string;
   id: number;
   node_id: string;
@@ -37,7 +36,7 @@ export interface Releases {
   published_at: string;
 }
 
-export interface Labels {
+export interface Label {
   id: number;
   node_id: string;
   url: string;
@@ -76,10 +75,6 @@ export interface Milestones {
   updated_at: string;
   closed_at: string;
   due_on: string;
-}
-
-export interface Pull_request {
-  url: string;
 }
 
 export interface Diff {
@@ -126,4 +121,10 @@ export interface RepositoryFile {
 
 export interface Language {
   [key: string]: number;
+}
+
+export interface Commit {
+  url: string;
+  login: string;
+  timestamp: string;
 }
