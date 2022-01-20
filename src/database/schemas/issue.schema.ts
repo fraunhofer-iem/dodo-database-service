@@ -8,7 +8,7 @@ import { Document, Schema as mSchema } from 'mongoose';
 @Schema()
 export class Issue {
   @Prop([{ type: mSchema.Types.ObjectId, ref: 'Labels' }])
-  label: Label[];
+  label: Label[]; // TODO: rename this. but then every dev database will stop working...
 
   @Prop({ type: mSchema.Types.ObjectId, ref: 'Assignee' })
   assignee: Assignee;
