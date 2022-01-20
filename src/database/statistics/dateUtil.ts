@@ -1,76 +1,47 @@
 import { DevSpreadDates } from 'src/github-api/model/DevFocus';
 
 /**
- * Helper function to eliminate duplicate weeks, sprints or months
- * because the calculated intervals per developer may differ
- * and would have been taken as separate intervals into account,
- * altough it was the same interval of commiting.
- * @param timeSpreadPairs An object with timestamps as keys, and an object with developer:sprad pairs as a value
- * @param days The days, the interval blongs to, i.e. 7 (weeks), 14 (sprint), 30(month)
- * @returns
+ * Computes all spread values for a developer,
+ * based on his @param timeRepoPairs. The timestamp
+ * is the commit date, the repo Ids identify the repos,
+ * in which was committed on that date.
+ * @param timeRepoPairs timestamp: [repoId] pairs object.
+ * @returns An object with computed spreads for time category,
+ * the sum of the spread for each time category
+ * and the total number of timestamps in a category (days, weeks, ...)
  */
-export function rearangeTimeslots(
-  timeSpreadPairs: { [key: string]: { [key: string]: number } },
-  days: number,
-): { [key: string]: { [key: string]: number } } {
-  // copy the old timeSpreadPairs to modify on that
-  const newTimeSpreadPairs: { [key: string]: { [key: string]: number } } = {
-    ...timeSpreadPairs,
-  };
-  const timestamps: string[] = Object.keys(timeSpreadPairs).sort();
-  // go through every sorted timestamp and look to successor
-  for (let i = 1; i <= timestamps.length; ) {
-    const currentDate: string = timestamps[i - 1];
-    const nextDate: string = timestamps[i];
-    // check, if the next interval date should actualy be in current interval
-    if (addDays(currentDate, days) > new Date(timestamps[i])) {
-      // append the values together, update the current interval object
-      const devSpreadObj1 = timeSpreadPairs[currentDate];
-      const devSpreadObj2 = timeSpreadPairs[nextDate];
-      const mergedObj = { ...devSpreadObj1, ...devSpreadObj2 };
-      newTimeSpreadPairs[currentDate] = mergedObj;
-      // delete the unnessacary date and skip the next date
-      delete newTimeSpreadPairs[nextDate];
-      i += 2;
-    } else {
-      i += 1;
-    }
-  }
-  return newTimeSpreadPairs;
-}
-
-/**
- * Helper function to add a number of days to an existing date.
- * @param date The date, which should be increased.
- * @param days The number of days, which should be added to the date.
- * @returns The new increased date in Date() format
- */
-export function addDays(date: string, days: number): Date {
-  const result = new Date(date);
-  result.setDate(result.getDate() + days);
-  return result;
-}
-
-/**
- * This function calculates all spread values for a given object with timestamps
- * as keys and arrays of repoIds as values. Therefor, in daySpread, weekSpread,
- * sprintSpread and monthSpread are stored all spreads precisely, i.e. their values
- * considered as an object in which every timestamp (or beginning timestamp of that interval)
- * is a key, with an array of the corresponding repoIds for that timestmamp as a value.
- * The Sum properties are the sums of the lenghts of all repoId arrays in a category.
- * The days, weeks, sprint, month properties are the amount of all keys (timestamps)
- * in a category (for later avg computation).
- * @param timeRepoPairs An Object of timestamps as keys, with repoId arrays as values (for a developer),
- * i.e. it's already the daySpread of a developer.
- * @returns An object with computed spreads for timeintervals, the sums of the single spreads
- * and the number of timestamps for a category.
- */
-export function spreadsGroupedByTimeslots(timeRepoPairs: {
+export function getSpreadsForDev(timeRepoPairs: {
   [key: string]: string[];
 }): DevSpreadDates {
-  // sort the timestamps to ensure correct interval computation
+  // sort because timestamp order is broken after mixing them together from different repos
   const timestamps: string[] = Object.keys(timeRepoPairs).sort();
-  // the return object dates
+
+  let dates: DevSpreadDates = calculateDayWeekMonthSpread(
+    timeRepoPairs,
+    timestamps,
+  );
+  dates = calculateSprintsByWeeks(dates);
+  return dates;
+}
+
+/**
+ * Actual computation of the day spread (in date), week spread (in calender weeks)
+ * and month spread (in month numbers) for a developer.
+ * Also, the sum of each spread in a time category,
+ * i.e. the sum of the repo Id amount for every
+ * item in one time category, and the total number of items
+ * in one category are being calculated.
+ * @param timeRepoPairs timestamp: [repoId] pairs object.
+ * @param timestamps sorted array of timestamps.
+ * @returns DevSpreadDates for a developer,
+ * without sprint related values being calculated.
+ */
+function calculateDayWeekMonthSpread(
+  timeRepoPairs: {
+    [key: string]: string[];
+  },
+  timestamps: string[],
+) {
   const dates: DevSpreadDates = {
     daySpread: {},
     weekSpread: {},
@@ -85,64 +56,221 @@ export function spreadsGroupedByTimeslots(timeRepoPairs: {
     sprints: 0,
     months: 0,
   };
-  // init first dayspread entry
-  dates.daySpread[timestamps[0]] = timeRepoPairs[timestamps[0]];
-  // init all category counters with the first timestamp
+
+  // values to compare with next timestamp in the loop
   let weekDate = timestamps[0];
-  let sprintDate = timestamps[0];
   let monthDate = timestamps[0];
-  // counter for category sums
-  let daySpreadSum = timeRepoPairs[timestamps[0]].length; // already init it with the length of the first entrys repoID array
+  let yearDate = timestamps[0];
+
+  // initialize all spread objects with the first timestamp and related repoID arr,
+  // as the first timestamp relates to first day, first week and first month at all.
+  dates.daySpread[timestamps[0]] = timeRepoPairs[timestamps[0]];
+  const week = getCalendarWeek(weekDate);
+  dates.weekSpread[getYear(yearDate) + '-' + week] =
+    timeRepoPairs[timestamps[0]];
+  const month = getMonthNumber(monthDate);
+  dates.monthSpread[getYear(yearDate) + '-' + month] =
+    timeRepoPairs[timestamps[0]];
+
+  // only apply on daySpreadSum, because week and month may not be complete yet
+  let daySpreadSum = timeRepoPairs[timestamps[0]].length;
   let weekSpreadSum = 0;
-  let sprintSpreadSum = 0;
   let monthSpreadSum = 0;
-  // counstruct sets for week, sprint and month categorys to get unique repoIds to calculate the spreads
-  const weekSpread: Set<string> = new Set();
-  const sprintSpread: Set<string> = new Set();
-  const monthSpread: Set<string> = new Set();
-  // always compare the next date; if the interval fits, increase the category counters
+
   for (let i = 1; i < timestamps.length; i++) {
-    // repo array for each timestamp
     const repoArr = timeRepoPairs[timestamps[i]];
-    dates.daySpread[timestamps[i]] = repoArr; // always add entry to the daySpread category
-    daySpreadSum += timeRepoPairs[timestamps[i]].length; // always add the length (spread) to the daySpreadSum
-    // for other intervals, add every repo of current entry to the set
-    // Then, if one timeslot is reached, increase counters with length of the set,
-    // clear the set and set the category date to the new date
-    repoArr.forEach((repo) => {
-      weekSpread.add(repo);
-      sprintSpread.add(repo);
-      monthSpread.add(repo);
-    });
-    if (addDays(weekDate, 7) <= new Date(timestamps[i])) {
-      dates.weekSpread[weekDate] = Array.from(weekSpread);
-      weekSpreadSum += weekSpread.size;
-      weekSpread.clear();
+    // days are always complete, so just apply every step
+    dates.daySpread[timestamps[i]] = repoArr;
+    daySpreadSum += timeRepoPairs[timestamps[i]].length;
+
+    const currentWeek = getCalendarWeek(weekDate);
+    const currentMonth = getMonthNumber(monthDate);
+    const currentYear = getYear(yearDate);
+    const nextWeek = getCalendarWeek(timestamps[i]);
+    const nextMonth = getMonthNumber(timestamps[i]);
+    const nextYear = getYear(timestamps[i]);
+
+    if (
+      !weeksAreEqual(currentWeek, nextWeek) &&
+      yearsAreEqual(currentYear, nextYear)
+    ) {
+      dates.weekSpread[currentYear + '-' + nextWeek] = repoArr;
       weekDate = timestamps[i];
+      weekSpreadSum += dates.weekSpread[currentYear + '-' + currentWeek].length;
+    } else if (
+      weeksAreEqual(currentWeek, nextWeek) &&
+      !yearsAreEqual(currentYear, nextYear)
+    ) {
+      dates.weekSpread[nextYear + '-' + nextWeek] = repoArr;
+      weekDate = timestamps[i];
+      weekSpreadSum += dates.weekSpread[currentYear + '-' + currentWeek].length;
+    } else if (
+      weeksAreEqual(currentWeek, nextWeek) &&
+      yearsAreEqual(currentYear, nextYear)
+    ) {
+      // add repo Ids to current week entry and make set for no duplicates
+      const currentRepos = dates.weekSpread[currentYear + '-' + currentWeek];
+      const mergedRepos = [].concat(currentRepos, repoArr);
+      dates.weekSpread[currentYear + '-' + currentWeek] = Array.from(
+        new Set(mergedRepos),
+      );
     }
-    if (addDays(sprintDate, 14) <= new Date(timestamps[i])) {
-      dates.sprintSpread[sprintDate] = Array.from(sprintSpread);
-      sprintSpreadSum += sprintSpread.size;
-      sprintSpread.clear();
-      sprintDate = timestamps[i];
-    }
-    if (addDays(monthDate, 30) <= new Date(timestamps[i])) {
-      dates.monthSpread[monthDate] = Array.from(monthSpread);
-      monthSpreadSum += monthSpread.size;
-      monthSpread.clear();
+
+    if (
+      !monthsAreEqual(currentMonth, nextMonth) &&
+      yearsAreEqual(currentYear, nextYear)
+    ) {
+      dates.monthSpread[currentYear + '-' + nextMonth] = repoArr;
       monthDate = timestamps[i];
+      monthSpreadSum +=
+        dates.monthSpread[currentYear + '-' + currentMonth].length;
+    } else if (
+      monthsAreEqual(currentMonth, nextMonth) &&
+      !yearsAreEqual(currentYear, nextYear)
+    ) {
+      dates.monthSpread[nextYear + '-' + nextMonth] = repoArr;
+      monthDate = timestamps[i];
+      monthSpreadSum +=
+        dates.monthSpread[currentYear + '-' + currentMonth].length;
+    } else if (
+      monthsAreEqual(currentMonth, nextMonth) &&
+      yearsAreEqual(currentYear, nextYear)
+    ) {
+      // add repo Ids to current month entry and make set for no duplicates
+      const currentRepos = dates.monthSpread[currentYear + '-' + currentMonth];
+      const mergedRepos = [].concat(currentRepos, repoArr);
+      dates.monthSpread[currentYear + '-' + currentMonth] = Array.from(
+        new Set(mergedRepos),
+      );
+    }
+
+    // set year counter
+    if (!yearsAreEqual(currentYear, nextYear)) {
+      yearDate = timestamps[i];
+    }
+
+    // add the current repo amounts for next week/month in last step
+    // as they are not considered otherwise
+    if (i == timestamps.length - 1) {
+      weekSpreadSum +=
+        dates.weekSpread[getYear(yearDate) + '-' + nextWeek].length;
+      monthSpreadSum +=
+        dates.monthSpread[getYear(yearDate) + '-' + nextMonth].length;
     }
   }
-  // after all, add the computed numbers to the dates object
+
   dates.daySpreadSum = daySpreadSum;
   dates.weekSpreadSum = weekSpreadSum;
-  dates.sprintSpreadSum = sprintSpreadSum;
   dates.monthSpreadSum = monthSpreadSum;
   dates.days = Object.keys(dates.daySpread).length;
   dates.weeks = Object.keys(dates.weekSpread).length;
-  dates.sprints = Object.keys(dates.sprintSpread).length;
   dates.months = Object.keys(dates.monthSpread).length;
   return dates;
+}
+
+/**
+ * Put in a date @param strDate and get the
+ * calender week number as @return.
+ * @source https://weeknumber.com/how-to/javascript
+ */
+function getCalendarWeek(strDate: string): number {
+  const date = new Date(strDate);
+  date.setHours(0, 0, 0, 0);
+  // Thursday in current week decides the year.
+  date.setDate(date.getDate() + 3 - ((date.getDay() + 6) % 7));
+  // January 4 is always in week 1.
+  var week1 = new Date(date.getFullYear(), 0, 4);
+  // Adjust to Thursday in week 1 and count number of weeks from date to week1.
+  return (
+    1 +
+    Math.round(
+      ((date.getTime() - week1.getTime()) / 86400000 -
+        3 +
+        ((week1.getDay() + 6) % 7)) /
+        7,
+    )
+  );
+}
+
+/**
+ * If two weeks @param week1 and @param week2 are equal,
+ * @return true, else false.
+ */
+function weeksAreEqual(week1: number, week2: number): boolean {
+  return week1 == week2;
+}
+
+/**
+ * If two months @param month1 and @param month2 are equal,
+ * @return true, else false.
+ */
+function monthsAreEqual(month1: number, month2: number): boolean {
+  return month1 == month2;
+}
+
+/**
+ * If two months @param year1 and @param year2 are equal,
+ * @return true, else false.
+ */
+function yearsAreEqual(year1: number, year2: number): boolean {
+  return year1 == year2;
+}
+
+/**
+ * Calculates sprintSpread, sprintSpreadSum and sprints for
+ * @param dates, based on the precalculated weeks in weekSpread.
+ * Therefor, if a week and its successor week are a sprint,
+ * the week spreads of the single weeks are being merged
+ * and the start week number builds the new entry in sprintSpread object.
+ * @returns DevSpreadDates for a developer,
+ * with all sprint related values being calculated.
+ */
+function calculateSprintsByWeeks(dates: DevSpreadDates): DevSpreadDates {
+  const weekSpread = dates.weekSpread;
+  const weeks = Object.keys(weekSpread);
+  let sprintSpreadSum = 0;
+  for (let i = 0; i < weeks.length; ) {
+    let currentWeek = Number(weeks[i]);
+    let nextWeek = Number(weeks[i + 1]);
+    if (datesAreSprint(currentWeek, nextWeek)) {
+      const currentRepos = weekSpread[currentWeek];
+      const nextRepos = weekSpread[nextWeek];
+      const mergedRepos = [].concat(currentRepos, nextRepos);
+      dates.sprintSpread[currentWeek] = Array.from(new Set(mergedRepos));
+      sprintSpreadSum += dates.sprintSpread[currentWeek].length;
+      i += 2;
+    } else {
+      i += 1;
+    }
+  }
+  dates.sprintSpreadSum = sprintSpreadSum;
+  dates.sprints = Object.keys(dates.sprintSpread).length;
+  return dates;
+}
+
+/**
+ * If two weeks @param week1 and @param week2 are sprints,
+ * i.e. if they are a sequence,
+ * @return true, else false.
+ */
+function datesAreSprint(week1: number, week2: number): boolean {
+  return Math.abs(week1 - week2) == 1;
+}
+
+/**
+ * For a given string @param date, @return the correct month index
+ * as a number
+ */
+function getMonthNumber(date: string): number {
+  return new Date(date).getMonth() + 1;
+}
+
+/**
+ * For a given string @param date, @return the full year
+ * as a number
+ */
+function getYear(date: string): number {
+  return new Date(date).getFullYear();
 }
 
 export function msToDateString(ms: number) {
