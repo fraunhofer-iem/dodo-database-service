@@ -4,6 +4,7 @@ import { Diff } from './diff.schema';
 import { Releases } from './releases.schema';
 import { IssueWithEvents } from './issueWithEvents.schema';
 import { Languages } from './language.schema';
+import { Commit } from './commit.schema';
 
 export type RepositoryDocument = Repository & Document;
 
@@ -20,6 +21,9 @@ export class Repository {
 
   @Prop({ type: mSchema.Types.ObjectId, ref: 'Languages' })
   languages: Languages;
+
+  @Prop([{ type: mSchema.Types.ObjectId, ref: 'Commits' }])
+  commits: Commit[];
 
   @Prop()
   owner: string;

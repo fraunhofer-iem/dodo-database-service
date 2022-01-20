@@ -16,6 +16,10 @@ import { RepositoryFileSchema } from './schemas/repositoryFile.schema';
 import { IssueWithEventsSchema } from './schemas/issueWithEvents.schema';
 import { StatisticService } from './statistic.service';
 import { LanguageSchema } from './schemas/language.schema';
+import { CommitSchema } from './schemas/commit.schema';
+import { DeveloperFocus } from './statistics/developerFocus.service';
+import { FaultCorrection } from './statistics/faultCorrection.service';
+import { FeatureCompletion } from './statistics/featureCompletion.service';
 
 @Module({
   imports: [
@@ -34,9 +38,16 @@ import { LanguageSchema } from './schemas/language.schema';
       { name: 'Milestone', schema: MilestoneSchema },
       { name: 'IssueWithEvents', schema: IssueWithEventsSchema },
       { name: 'Languages', schema: LanguageSchema },
+      { name: 'Commit', schema: CommitSchema },
     ]),
   ],
-  providers: [DatabaseService, StatisticService],
-  exports: [DatabaseService, StatisticService],
+  providers: [
+    DatabaseService,
+    StatisticService,
+    DeveloperFocus,
+    FaultCorrection,
+    FeatureCompletion,
+  ],
+  exports: [DatabaseService, StatisticService, DeveloperFocus, FaultCorrection, FeatureCompletion],
 })
 export class DatabaseModule {}
