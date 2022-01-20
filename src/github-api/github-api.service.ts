@@ -59,7 +59,9 @@ export class GithubApiService {
     // this.statisticService.numberOfOpenTickets(repoIdent);
     // this.statisticService.avgNumberOfAssigneeUntilTicketCloses(repoIdent);
     // this.statisticService.avgTimeTillTicketWasAssigned(repoIdent);
-    this.statisticService.workInProgress(repoIdent);
+    //this.statisticService.workInProgress(repoIdent);
+    this.statisticService.FeatureCompletionEfficiency(repoIdent);
+
   }
 
   public async storeIssues(repoIdent: RepositoryNameDto) {
@@ -94,7 +96,7 @@ export class GithubApiService {
     for (const issu of issues) {
       // first store issue
       const issuId = await this.dbService.saveIssue(
-        { ...issu, labels: [] }, // TODO: workaround because the current label handling seems to be very broken and we ignore it for now
+        issu, // TODO: workaround because the current label handling seems to be very broken and we ignore it for now
         repoId,
       );
       // then query the event types and store them

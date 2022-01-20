@@ -15,7 +15,7 @@ export interface IssueEventTypes {
 
 export interface Issue {
   state: string;
-  labels: Labels[];
+  labels: string | typedLabel[];
   assignee: Assignee;
   assignees?: Assignees[];
   milestone: Milestones;
@@ -38,14 +38,18 @@ export interface Releases {
 }
 
 export interface Labels {
-  id: number;
-  node_id: string;
-  url: string;
-  name: string;
-  color: string;
-  default: boolean;
-  description: string;
+  id?: number;
+  node_id?: string;
+  url?: string;
+  name?: string;
+  color?: string;
+  default?: boolean;
+  description?: string;
 }
+
+// type union, because type of REST api response from octokit
+// for labels is this
+export type typedLabel = string | Labels;
 
 export interface Assignee {
   login: string;
