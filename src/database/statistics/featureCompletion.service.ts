@@ -4,7 +4,7 @@ import { Model } from 'mongoose';
 import { Issue, Release } from 'src/github-api/model/PullRequest';
 import { RepositoryNameDto } from 'src/github-api/model/Repository';
 import { RepositoryDocument } from '../schemas/repository.schema';
-import { calculateAvgRate, mapReleasesToIssues } from './issueUtil';
+import { calculateAvgClosedOpenRate, mapReleasesToIssues } from './issueUtil';
 import { getIssueQuery } from './lib/issueQuery';
 import { getReleaseQuery } from './lib/releaseQuery';
 import { transformMapToObject } from './lib/transformMapToObject';
@@ -46,10 +46,10 @@ export class FeatureCompletion {
     const issues = promiseResults[1] as Issue[];
 
     const releaseIssueMap = mapReleasesToIssues(releases, issues);
-
+    const { avgRate, rateMap } = calculateAvgClosedOpenRate(releaseIssueMap);
     return {
-      avgRate: calculateAvgRate(releaseIssueMap),
-      rawData: transformMapToObject(releaseIssueMap),
+      avgRate: avgRate,
+      rawData: transformMapToObject(rateMap),
     };
   }
 }

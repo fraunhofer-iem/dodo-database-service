@@ -193,13 +193,13 @@ export class StatisticService {
         return acc + curr;
       }, 0) / numberOfElements;
 
-    const variance = numberOfFiles.reduce((acc, curr) => {
+    const constiance = numberOfFiles.reduce((acc, curr) => {
       return acc + Math.pow(curr - avg, 2) / numberOfElements;
     }, 0);
 
-    const standardDeviation = Math.sqrt(variance);
+    const standardDeviation = Math.sqrt(constiance);
     this.logger.log(
-      `variance ${variance} standard deviation ${standardDeviation}`,
+      `constiance ${constiance} standard deviation ${standardDeviation}`,
     );
     this.logger.log(
       `In average ${avg} files are changed with each pull request`,
@@ -208,7 +208,7 @@ export class StatisticService {
     return {
       numberOfFiles,
       avg,
-      variance,
+      constiance,
       standardDeviation,
     };
   }
@@ -658,7 +658,7 @@ export class StatisticService {
     timeFrame?: number,
   ) {
     const limit = userLimit ? userLimit : 100;
-    // This variable defines the fixed time set for the bugs to be resolved.
+    // This constiable defines the fixed time set for the bugs to be resolved.
     // Since such an information cannot be derived from git (milestones can be looked at,
     // however they are hardly properly utilized by most projects).
     // Although information like this can be derived from Jira, but for now, it is manually defined.
