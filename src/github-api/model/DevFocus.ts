@@ -65,3 +65,9 @@ export interface RepoSpreadTotal {
   sprintSpread: { [key: string]: number };
   monthSpread: { [key: string]: number };
 }
+
+export interface SprintData {
+  begin: string;
+  end: string;
+  developers: string[];
+}
