@@ -332,6 +332,7 @@ export class DeveloperFocus {
     repoIdent: RepositoryNameDto,
     loginFilter?: string[],
     userLimit?: number,
+    sprintData?: SprintData[],
   ): Promise<{
     daySpread: number;
     weekSpread: number;
@@ -350,6 +351,7 @@ export class DeveloperFocus {
       repoIdent.owner,
       loginFilter,
       userLimit,
+      sprintData,
     );
 
     const spreads: RepoSpread = getSpreadDataPerTimeIntervals(
