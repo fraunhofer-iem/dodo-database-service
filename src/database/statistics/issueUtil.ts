@@ -111,7 +111,7 @@ export function calculateAvgCapability(
     if (!currData.closed.length) {
       noOfEmptyReleases += 1;
     } else {
-      sumOfCapabilities += capability.capability
+      sumOfCapabilities += capability.capability;
     }
     capabilityMap.set(currData.release.id, {
       ...capability,
@@ -121,7 +121,7 @@ export function calculateAvgCapability(
 
   return {
     capabilityMap,
-    avgCapability: sumOfCapabilities / releaseIssueMap.size - noOfEmptyReleases,
+    avgCapability: sumOfCapabilities / (releaseIssueMap.size - noOfEmptyReleases),
   };
 }
 
@@ -153,5 +153,73 @@ function calculateCapability(
     capability,
     successes,
     failures,
+  };
+}
+
+export function calculateAvgEfficiency(
+  releaseIssueMap: Map<
+    number,
+    { closed: Issue[]; open: Issue[]; release: Release }
+  >,
+  allowedTime: number,
+) {
+  const efficiencyMap = new Map<
+    number,
+    {
+      issues: (Issue & { efficiency: number })[];
+      efficiency: number;
+      release: Release;
+    }
+  >();
+
+  let sumOfEfficiencies = 0;
+  let noOfEmptyReleases = 0;
+
+  releaseIssueMap.forEach((currData) => {
+    const efficiency = calculateEfficiency(currData, allowedTime);
+    if (!currData.closed.length) {
+      noOfEmptyReleases += 1;
+    } else {
+      sumOfEfficiencies += efficiency.efficiency;
+    }
+    efficiencyMap.set(currData.release.id, {
+      ...efficiency,
+      release: currData.release,
+    });
+  });
+
+  return {
+    efficiencyMap,
+    avgEfficiency: sumOfEfficiencies / (releaseIssueMap.size - noOfEmptyReleases),
+  };
+}
+
+function calculateEfficiency(
+  data: {
+    closed: Issue[];
+  },
+  allowedTime: number,
+): { efficiency: number; issues: (Issue & { efficiency: number })[] } {
+  const issues: (Issue & { efficiency: number })[] = [];
+
+  let sumOfEfficiencies = 0;
+  for (const currIssue of data.closed) {
+    const closedAt = new Date(currIssue.closed_at).valueOf();
+    const createdAt = new Date(currIssue.created_at).valueOf();
+    const implementationTime = closedAt - createdAt;
+
+    const efficiency = implementationTime / allowedTime;
+    sumOfEfficiencies += efficiency;
+    issues.push({ ...currIssue, efficiency });
+  }
+
+  let efficiency = 0;
+  if (issues.length) {
+    efficiency = sumOfEfficiencies / issues.length;
+  }
+
+  return {
+    efficiency,
+    issues,
   };
 }
