@@ -1,4 +1,4 @@
-import { DevSpreadDates } from 'src/github-api/model/DevFocus';
+import { DevSpreadDates, SprintData } from 'src/github-api/model/DevFocus';
 
 /**
  * Computes all spread values for a developer,
@@ -10,9 +10,13 @@ import { DevSpreadDates } from 'src/github-api/model/DevFocus';
  * the sum of the spread for each time category
  * and the total number of timestamps in a category (days, weeks, ...)
  */
-export function getSpreadsForDev(timeRepoPairs: {
-  [key: string]: string[];
-}): DevSpreadDates {
+export function getSpreadsForDev(
+  timeRepoPairs: {
+    [key: string]: string[];
+  },
+  dev: string,
+  sprintData?: SprintData[],
+): DevSpreadDates {
   // sort because timestamp order is broken after mixing them together from different repos
   const timestamps: string[] = Object.keys(timeRepoPairs).sort();
 
@@ -20,7 +24,9 @@ export function getSpreadsForDev(timeRepoPairs: {
     timeRepoPairs,
     timestamps,
   );
-  dates = calculateSprintsByWeeks(dates);
+  if (sprintData != undefined) {
+    dates = calculateSprintsBySprintData(dates, dev, sprintData);
+  }
   return dates;
 }
 
@@ -218,34 +224,52 @@ function yearsAreEqual(year1: number, year2: number): boolean {
 
 /**
  * Calculates sprintSpread, sprintSpreadSum and sprints for
- * @param dates, based on the precalculated weeks in weekSpread.
- * Therefor, if a week and its successor week are a sprint,
- * the week spreads of the single weeks are being merged
- * and the start week number builds the new entry in sprintSpread object.
+ * @param dates, based on the precalculated commits in daySpread.
+ * The sprint time slots and participants are provided by @param sprintData
+ * and it compares to the current @param dev.
  * @returns DevSpreadDates for a developer,
  * with all sprint related values being calculated.
  */
-function calculateSprintsByWeeks(dates: DevSpreadDates): DevSpreadDates {
-  const weekSpread = dates.weekSpread;
-  const weeks = Object.keys(weekSpread);
-  let sprintSpreadSum = 0;
-  for (let i = 0; i < weeks.length; ) {
-    let currentWeek = Number(weeks[i]);
-    let nextWeek = Number(weeks[i + 1]);
-    if (datesAreSprint(currentWeek, nextWeek)) {
-      const currentRepos = weekSpread[currentWeek];
-      const nextRepos = weekSpread[nextWeek];
-      const mergedRepos = [].concat(currentRepos, nextRepos);
-      dates.sprintSpread[currentWeek] = Array.from(new Set(mergedRepos));
-      sprintSpreadSum += dates.sprintSpread[currentWeek].length;
-      i += 2;
-    } else {
-      i += 1;
+function calculateSprintsBySprintData(
+  dates: DevSpreadDates,
+  dev: string,
+  sprintData: SprintData[],
+): DevSpreadDates {
+  // TODO: sort sprintData Objects by begin timestamp. I would do this with lodash sortBy then.
+  for (const sprint of sprintData) {
+    if (sprint.developers.includes(dev)) {
+      const duration: string = sprint.begin + '-' + sprint.end;
+      for (const [date, repos] of Object.entries(dates.daySpread)) {
+        if (isContributionInSprint(date, sprint)) {
+          if (!Object.keys(dates.sprintSpread).includes(duration)) {
+            dates.sprintSpread[duration] = [];
+          }
+          for (const repo of repos) {
+            if (!dates.sprintSpread[duration].includes(repo)) {
+              dates.sprintSpread[duration].push(repo);
+              dates.sprintSpreadSum += 1;
+            }
+          }
+        }
+      }
     }
   }
-  dates.sprintSpreadSum = sprintSpreadSum;
   dates.sprints = Object.keys(dates.sprintSpread).length;
   return dates;
+}
+
+/**
+ * @returns true, if @param commit date is between the interval starting
+ * from @param begin date and ending at @param end date.
+ */
+function isContributionInSprint(
+  date: string,
+  sprint: { begin: string; end: string },
+) {
+  const contributedAt = new Date(date);
+  const sprintBegin = new Date(sprint.begin);
+  const sprintEnd = new Date(sprint.end);
+  return contributedAt >= sprintBegin && contributedAt <= sprintEnd;
 }
 
 /**

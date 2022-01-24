@@ -9,6 +9,8 @@ import {
   RepoSpread,
   RepoSpreadAvg,
   RepoSpreadPerInterval,
+  RepoSpreadTotal,
+  SprintData,
 } from 'src/github-api/model/DevFocus';
 import { RepositoryDocument } from '../schemas/repository.schema';
 import { getSpreadsForDev } from './dateUtil';
@@ -111,6 +113,7 @@ export class DeveloperFocus {
     owner: string,
     loginFilter?: string[],
     userLimit?: number,
+    sprintData?: SprintData[],
   ): Promise<DevSpread> {
     const repoIds: { _id: string }[] = await this.repoModel
       .aggregate()
@@ -152,7 +155,7 @@ export class DeveloperFocus {
 
     devToTimestampToRepo.forEach((timeToRepo, dev) => {
       const timeToRepoObj = Object.fromEntries(timeToRepo);
-      spreadsPerDevs[dev] = getSpreadsForDev(timeToRepoObj);
+      spreadsPerDevs[dev] = getSpreadsForDev(timeToRepoObj, dev, sprintData);
     });
 
     this.logger.log(spreadsPerDevs);
@@ -224,11 +227,13 @@ export class DeveloperFocus {
     owner: string,
     loginFilter?: string[],
     userLimit?: number,
+    sprintData?: SprintData[],
   ): Promise<DevSpreadTotal> {
     const spreadsPerDevs: DevSpread = await this.devSpread(
       owner,
       loginFilter,
       userLimit,
+      sprintData,
     );
 
     const allDevelopers: string[] = Object.keys(spreadsPerDevs);
@@ -295,11 +300,8 @@ export class DeveloperFocus {
 
       totalSpread.daySpread += devObj.daySpread * getWeight(dev, 'days');
       totalSpread.weekSpread += devObj.weekSpread * getWeight(dev, 'weeks');
-      // if dev has no sprints, exlude him from the calculation
-      if (!(devObj.sprints == 0)) {
-        totalSpread.sprintSpread +=
-          devObj.sprintSpread * getWeight(dev, 'sprints');
-      }
+      totalSpread.sprintSpread +=
+        devObj.sprintSpread * getWeight(dev, 'sprints');
       totalSpread.monthSpread += devObj.monthSpread * getWeight(dev, 'months');
     }
 

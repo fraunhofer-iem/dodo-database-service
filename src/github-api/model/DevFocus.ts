@@ -61,3 +61,16 @@ export interface RepoSpreadAvg {
   sprintSpread: number;
   monthSpread: number;
 }
+
+export interface RepoSpreadTotal {
+  daySpread: { [key: string]: number };
+  weekSpread: { [key: string]: number };
+  sprintSpread: { [key: string]: number };
+  monthSpread: { [key: string]: number };
+}
+
+export interface SprintData {
+  begin: string;
+  end: string;
+  developers: string[];
+}
