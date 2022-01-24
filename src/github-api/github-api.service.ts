@@ -393,37 +393,38 @@ export class GithubApiService {
   public async storeCommits(repoIdent: RepositoryNameDto) {
     if (!(await this.dbService.repoExists(repoIdent))) {
       this.logger.debug(
-        `No such repo ${repoIdent.owner}/${repoIdent.repo} exists`,
+        `Repo ${repoIdent.owner}/${repoIdent.repo} does not exist`,
       );
       return;
     }
-    this.logger.log(
-      `querying commits with developer and timestamp for ${repoIdent.owner}/${repoIdent.repo}`,
-    );
-    const repoId = await this.dbService.getRepoByName(
-      repoIdent.owner,
-      repoIdent.repo,
-    );
-    // gather all commits for the repo
+    const repoId = await this.dbService.createRepo(repoIdent);
+    this.processCommits(repoIdent.owner, repoIdent.repo, repoId, 1);
+  }
+
+  private async processCommits(
+    owner: string,
+    repo: string,
+    repoId: string,
+    pageNumber: number,
+  ) {
     const { data: commits } = await this.octokit.rest.repos.listCommits({
-      owner: repoIdent.owner,
-      repo: repoIdent.repo,
+      owner: owner,
+      repo: repo,
+      per_page: 100,
+      page: pageNumber,
+
     });
-
-    this.logger.debug(
-      `saving commits from ${repoIdent.owner}/${repoIdent.repo} to database...`,
-    );
-
     for (const commit of commits) {
-      const commit_obj: Commit = {
+      const commitDocument: Commit = {
         url: commit.commit.url,
-        login: commit.committer.login,
+        login: commit.commit.committer.email,
         timestamp: commit.commit.committer.date,
       };
-      await this.dbService.saveCommit(repoId, commit_obj);
+      await this.dbService.saveCommit(repoId, commitDocument);
     }
-    this.logger.debug(
-      `saved all commits from ${repoIdent.owner}/${repoIdent.repo} to database succesful`,
-    );
+
+    if (commits.length == 100) {
+      this.processCommits(owner, repo, repoId, pageNumber + 1);
+    }
   }
 }
