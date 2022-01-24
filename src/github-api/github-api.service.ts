@@ -83,10 +83,10 @@ export class GithubApiService {
     // ]);
     //this.statisticService.faultCorrectionEfficiency(repoIdent);
     // this.statisticService.workInProgress(repoIdent);
-    this.devFocus.devSpreadTotal(
-      repoIdent.owner,
-      //   await this.orgaMembers(repoIdent.owner),
-    );
+    // this.devFocus.devSpreadTotal(
+    //   repoIdent.owner,
+    //   await this.orgaMembers(repoIdent.owner),
+    // );
     this.devFocus.devSpreadRepo(
       repoIdent,
       // await this.orgaMembers(repoIdent.owner),

@@ -8,12 +8,12 @@ import {
   DevSpreadTotal,
   RepoSpread,
   RepoSpreadAvg,
-  RepoSpreadTotal,
+  RepoSpreadPerInterval,
 } from 'src/github-api/model/DevFocus';
 import { RepositoryDocument } from '../schemas/repository.schema';
 import { getSpreadsForDev } from './dateUtil';
 import {
-  getAvgSpreadPerTimeInterval,
+  getSpreadSizePerTimeInterval,
   getAvgRepoSpread,
   getSpreadDataPerTimeIntervals,
 } from './spreadUtil';
@@ -357,7 +357,8 @@ export class DeveloperFocus {
     this.logger.log(spreads);
 
     // sum of spread values for devs at a timestamp / amount of devs who contributed
-    const repoSpread: RepoSpreadTotal = getAvgSpreadPerTimeInterval(spreads);
+    const repoSpread: RepoSpreadPerInterval =
+      getSpreadSizePerTimeInterval(spreads);
 
     this.logger.log(repoSpread);
 

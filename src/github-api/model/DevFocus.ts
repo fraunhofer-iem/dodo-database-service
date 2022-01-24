@@ -42,14 +42,17 @@ export interface DevSpreadTotal {
 }
 
 export interface RepoSpread {
-  daySpread: { [key: string]: { [key: string]: number } };
-  weekSpread: { [key: string]: { [key: string]: number } };
-  sprintSpread: { [key: string]: { [key: string]: number } };
-  monthSpread: { [key: string]: { [key: string]: number } };
-  days: number;
-  weeks: number;
-  sprints: number;
-  months: number;
+  daySpread: { [key: string]: Set<string> };
+  weekSpread: { [key: string]: Set<string> };
+  sprintSpread: { [key: string]: Set<string> };
+  monthSpread: { [key: string]: Set<string> };
+}
+
+export interface RepoSpreadPerInterval {
+  daySpread: { [key: string]: number };
+  weekSpread: { [key: string]: number };
+  sprintSpread: { [key: string]: number };
+  monthSpread: { [key: string]: number };
 }
 
 export interface RepoSpreadAvg {
@@ -57,11 +60,4 @@ export interface RepoSpreadAvg {
   weekSpread: number;
   sprintSpread: number;
   monthSpread: number;
-}
-
-export interface RepoSpreadTotal {
-  daySpread: { [key: string]: number };
-  weekSpread: { [key: string]: number };
-  sprintSpread: { [key: string]: number };
-  monthSpread: { [key: string]: number };
 }

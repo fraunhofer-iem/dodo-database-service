@@ -1,17 +1,16 @@
 import {
-  RepoSpreadTotal,
+  RepoSpreadPerInterval,
   RepoSpread,
   DevSpread,
   RepoSpreadAvg,
 } from 'src/github-api/model/DevFocus';
 
 /**
- * Computes the total average spread for a time category
- * in relation to item amount of a category.
+ * Computes the average spread for a time category.
  * Sum of a time category of @param total / item size of the category.
  * @returns
  */
-export function getAvgRepoSpread(total: RepoSpreadTotal): RepoSpreadAvg {
+export function getAvgRepoSpread(total: RepoSpreadPerInterval): RepoSpreadAvg {
   const avgRepoSpread: RepoSpreadAvg = {
     daySpread:
       Object.values(total.daySpread).reduce((a, b) => a + b) /
@@ -34,39 +33,31 @@ export function getAvgRepoSpread(total: RepoSpreadTotal): RepoSpreadAvg {
 }
 
 /**
- * Computes the average spread to developer amount ratio
- * for each timestamp in each category of @param spreads.
+ * Computes the size of every time interval
+ * spread set in @param spreads.
  * @returns repoSpread
  */
-export function getAvgSpreadPerTimeInterval(spreads: RepoSpread) {
-  const repoSpread: RepoSpreadTotal = {
+export function getSpreadSizePerTimeInterval(spreads: RepoSpread) {
+  const repoSpread: RepoSpreadPerInterval = {
     daySpread: {},
     weekSpread: {},
     sprintSpread: {},
     monthSpread: {},
   };
   for (const day in spreads.daySpread) {
-    const daySpread =
-      Object.values(spreads.daySpread[day]).reduce((a, b) => a + b) /
-      Object.values(spreads.daySpread[day]).length;
+    const daySpread = spreads.daySpread[day].size;
     repoSpread.daySpread[day] = daySpread;
   }
   for (const week in spreads.weekSpread) {
-    const weekSpread =
-      Object.values(spreads.weekSpread[week]).reduce((a, b) => a + b) /
-      Object.values(spreads.weekSpread[week]).length;
+    const weekSpread = spreads.weekSpread[week].size;
     repoSpread.weekSpread[week] = weekSpread;
   }
   for (const sprint in spreads.sprintSpread) {
-    const sprintSpread =
-      Object.values(spreads.sprintSpread[sprint]).reduce((a, b) => a + b) /
-      Object.values(spreads.sprintSpread[sprint]).length;
+    const sprintSpread = spreads.sprintSpread[sprint].size;
     repoSpread.sprintSpread[sprint] = sprintSpread;
   }
   for (const month in spreads.monthSpread) {
-    const monthSpread =
-      Object.values(spreads.monthSpread[month]).reduce((a, b) => a + b) /
-      Object.values(spreads.monthSpread[month]).length;
+    const monthSpread = spreads.monthSpread[month].size;
     repoSpread.monthSpread[month] = monthSpread;
   }
   return repoSpread;
@@ -75,10 +66,10 @@ export function getAvgSpreadPerTimeInterval(spreads: RepoSpread) {
 /**
  * Filters all developers from @param spreadsPerDevs,
  * which have contributed in specified @param repoId.
- * It merges all developers, which has committed for
- * that @param repoId at the same time interval
- * (days, weeks, sprints, months) and @returns an object
- * with all repository spread data and total time amounts.
+ * It merges the spreads of all developers,
+ * who have committed for that @param repoId
+ * at the same time interval (days, weeks, sprints, months)
+ * and @returns an object with all repository spread sets.
  */
 export function getSpreadDataPerTimeIntervals(
   repoId: string,
@@ -89,15 +80,11 @@ export function getSpreadDataPerTimeIntervals(
     weekSpread: {},
     sprintSpread: {},
     monthSpread: {},
-    days: 0,
-    weeks: 0,
-    sprints: 0,
-    months: 0,
   };
   for (const dev in spreadsPerDevs) {
     for (const day in spreadsPerDevs[dev].daySpread) {
       const repoArr = spreadsPerDevs[dev].daySpread[day]; // array of repoIds
-      spreads.daySpread = isRepoIDinDevSpreadArr(
+      spreads.daySpread = createSetAndAddRepoIds(
         repoArr,
         spreads.daySpread,
         repoId,
@@ -107,7 +94,7 @@ export function getSpreadDataPerTimeIntervals(
     }
     for (const week in spreadsPerDevs[dev].weekSpread) {
       const repoArr = spreadsPerDevs[dev].weekSpread[week];
-      spreads.weekSpread = isRepoIDinDevSpreadArr(
+      spreads.weekSpread = createSetAndAddRepoIds(
         repoArr,
         spreads.weekSpread,
         repoId,
@@ -117,7 +104,7 @@ export function getSpreadDataPerTimeIntervals(
     }
     for (const sprint in spreadsPerDevs[dev].sprintSpread) {
       const repoArr = spreadsPerDevs[dev].sprintSpread[sprint];
-      spreads.sprintSpread = isRepoIDinDevSpreadArr(
+      spreads.sprintSpread = createSetAndAddRepoIds(
         repoArr,
         spreads.sprintSpread,
         repoId,
@@ -127,7 +114,7 @@ export function getSpreadDataPerTimeIntervals(
     }
     for (const month in spreadsPerDevs[dev].monthSpread) {
       const repoArr = spreadsPerDevs[dev].monthSpread[month];
-      spreads.monthSpread = isRepoIDinDevSpreadArr(
+      spreads.monthSpread = createSetAndAddRepoIds(
         repoArr,
         spreads.monthSpread,
         repoId,
@@ -136,23 +123,17 @@ export function getSpreadDataPerTimeIntervals(
       );
     }
   }
-  // sum of all time category items which are
-  // taken into account for that repo
-  spreads.days = Object.keys(spreads.daySpread).length;
-  spreads.weeks = Object.keys(spreads.weekSpread).length;
-  spreads.sprints = Object.keys(spreads.sprintSpread).length;
-  spreads.months = Object.keys(spreads.monthSpread).length;
   return spreads;
 }
 
 /**
  * Check, if the @param repoId is in the @param repoArr of
  * the current @param dev. If there is no entry for that
- * @param date yet, add it to the @param spreadObj.
- * Then, append the dev spread to that object.
+ * @param date yet, create a new set for that date.
+ * Then, add the dev spread repo ids to that set.
  * @returns spreadObj
  */
-function isRepoIDinDevSpreadArr(
+function createSetAndAddRepoIds(
   repoArr: string[],
   spreadObj: {},
   repoId: string,
@@ -161,9 +142,11 @@ function isRepoIDinDevSpreadArr(
 ) {
   if (repoArr.includes(repoId)) {
     if (!spreadObj.hasOwnProperty(date)) {
-      spreadObj[date] = {};
+      spreadObj[date] = new Set();
     }
-    spreadObj[date][dev] = repoArr.length;
+    repoArr.forEach((repoid) => {
+      spreadObj[date].add(repoid);
+    });
   }
   return spreadObj;
 }
