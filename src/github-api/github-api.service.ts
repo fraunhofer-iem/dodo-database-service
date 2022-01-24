@@ -4,6 +4,9 @@ import { DatabaseService } from 'src/database/database.service';
 import { StatisticService } from 'src/database/statistic.service';
 import { DeveloperFocus } from 'src/database/statistics/developerFocus.service';
 import { IssueLabels } from 'src/database/statistics/issueLabels.service';
+import { FaultCorrection } from 'src/database/statistics/faultCorrection.service';
+import { FeatureCompletion } from 'src/database/statistics/featureCompletion.service';
+import { SprintData } from './model/DevFocus';
 import { PullRequest, RepositoryFile, Commit } from './model/PullRequest';
 import { CreateRepositoryDto, RepositoryNameDto } from './model/Repository';
 
@@ -45,6 +48,8 @@ export class GithubApiService {
     private dbService: DatabaseService,
     private devFocus: DeveloperFocus,
     private issueLabels: IssueLabels,
+    private faultCorrection: FaultCorrection,
+    private featureCompletion: FeatureCompletion,
   ) {
     // init octokit
     this.octokit = this.getOctokitClient();
@@ -56,13 +61,36 @@ export class GithubApiService {
   }
 
   public async getStatistics(repoIdent: RepositoryNameDto) {
+    const testSprints: SprintData[] = [
+      { begin: '08.02.21', end: '08.15.21', developers: ['gr2m', 'web-flow'] },
+      { begin: '08.16.21', end: '08.29.21', developers: ['gr2m', 'web-flow'] },
+      { begin: '07.05.21', end: '07.11.21', developers: ['gr2m'] },
+      { begin: '09.20.21', end: '10.10.21', developers: ['web-flow'] },
+    ];
     // this.statisticService.getMostChangedFiles(repoIdent);
     // this.statisticService.getFilesChangedTogether(repoIdent);
     // this.statisticService.sizeOfPullRequest(repoIdent);
     // this.statisticService.numberOfAssignee(repoIdent);
     // this.statisticService.numberOfOpenTickets(repoIdent);
     // this.statisticService.avgNumberOfAssigneeUntilTicketCloses(repoIdent);
+    //this.statisticService.avgTimeTillTicketWasAssigned(repoIdent);
+    //this.statisticService.workInProgress(repoIdent);
+    // this.statisticService.timeToResolution(repoIdent);
+
     // this.statisticService.avgTimeTillTicketWasAssigned(repoIdent);
+    //this.statisticService.workInProgress(repoIdent);
+    // return await this.featureCompletion.featureCompletionCapability(repoIdent, [
+    //   'feature',
+    // ]);
+
+    // return await this.faultCorrection.faultCorrectionRate(repoIdent, [
+    //   'support',
+    //   'awaiting response',
+    // ]);
+    // return await this.featureCompletion.featureCompletionRate(repoIdent, [
+    //   'feature',
+    // ]);
+    //this.statisticService.faultCorrectionEfficiency(repoIdent);
     // this.statisticService.workInProgress(repoIdent);
     // this.devFocus.devSpreadTotal(
     //   repoIdent.owner,
@@ -117,19 +145,19 @@ export class GithubApiService {
     ).filter((issue) => {
       return !('pull_request' in issue);
     });
-    for (const issu of issues) {
+    for (const issue of issues) {
       // first store issue
-      const issuId = await this.dbService.saveIssue(
-        issu, // TODO: workaround because the current label handling seems to be very broken and we ignore it for now
+      const issueId = await this.dbService.saveIssue(
+        issue, // TODO: workaround because the current label handling seems to be very broken and we ignore it for now
         repoId,
       );
       // then query the event types and store them
       await this.getAndStoreIssueEventTypes(
         owner,
         repo,
-        issu.number,
+        issue.number,
         pageNumber,
-        issuId,
+        issueId,
       );
     }
 

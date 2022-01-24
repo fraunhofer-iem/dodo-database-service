@@ -1,6 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Schema as mSchema } from 'mongoose';
-import { Repository } from './repository.schema';
+import { Document } from 'mongoose';
 import { Language } from 'src/github-api/model/PullRequest';
 
 @Schema()

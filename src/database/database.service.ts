@@ -1,15 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Mongoose, OnlyFieldsOfType } from 'mongoose';
+import { Model, OnlyFieldsOfType } from 'mongoose';
 import {
   Diff,
-  Releases,
+  Release,
   Issue,
   IssueEventTypes,
   Language,
   Commit,
-  typedLabel,
-  Labels,
 } from 'src/github-api/model/PullRequest';
 import { RepositoryNameDto } from 'src/github-api/model/Repository';
 import { DiffDocument } from './schemas/diff.schema';
@@ -64,7 +62,6 @@ export class DatabaseService {
     @InjectModel('Commit')
     private readonly commitModel: Model<CommitDocument>,
   ) {}
-
   /**
    * Creates the specified repository if it doesn't exist.
    * If it exists it returns the id of the existing one.
@@ -107,21 +104,21 @@ export class DatabaseService {
 
   /**
    * function to save releases
-   * @param releases
+   * @param release
    * @param repoId
    * @returns
    */
-  async saveReleases(releases: Releases, repoId: string) {
+  async saveReleases(release: Release, repoId: string) {
     this.logger.debug('saving Releases to database');
     const releasesModel = new this.releasesModel();
 
-    this.logger.debug(releases);
-    releasesModel.url = releases.url;
-    releasesModel.id = releases.id;
-    releasesModel.node_id = releases.node_id;
-    releasesModel.name = releases.name;
-    releasesModel.created_at = releases.created_at;
-    releasesModel.published_at = releases.published_at;
+    this.logger.debug(release);
+    releasesModel.url = release.url;
+    releasesModel.id = release.id;
+    releasesModel.node_id = release.node_id;
+    releasesModel.name = release.name;
+    releasesModel.created_at = release.created_at;
+    releasesModel.published_at = release.published_at;
 
     const releasesModels = await releasesModel.save();
 
@@ -169,7 +166,6 @@ export class DatabaseService {
 
     issueModel.state = issue.state;
     issueModel.node_id = issue.node_id;
-
     // fill the labels array for the issue document
     const issueLabels: Label[] = [];
     for (const eachLabel of issue.labels) {
@@ -239,7 +235,7 @@ export class DatabaseService {
       this.logger.debug(
         `saving programming languages from ${repoIdent.owner}/${repoIdent.repo} to database...`,
       );
-      // const repoID = await this.getRepoByName(repoIdent.owner, repoIdent.repo)
+
       languageModel.repo_id = repoM._id;
       languageModel.languages = languages;
       const savedLanguages = await languageModel.save();
@@ -275,11 +271,10 @@ export class DatabaseService {
   }
 
   async repoExists(repoIdent: RepositoryNameDto): Promise<boolean> {
-    const exists = await this.repoModel.exists({
+    return this.repoModel.exists({
       repo: repoIdent.repo,
       owner: repoIdent.owner,
     });
-    return exists;
   }
 
   async updateRepo(repoId: string, push: OnlyFieldsOfType<RepositoryDocument>) {
