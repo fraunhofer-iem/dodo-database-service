@@ -8,15 +8,16 @@ import {
   DevSpreadTotal,
   RepoSpread,
   RepoSpreadAvg,
+  RepoSpreadPerInterval,
   RepoSpreadTotal,
+  SprintData,
 } from 'src/github-api/model/DevFocus';
 import { RepositoryDocument } from '../schemas/repository.schema';
 import { getSpreadsForDev } from './dateUtil';
 import {
-  rearangeTimeslots,
-  getRepoSpreadTotal,
+  getSpreadSizePerTimeInterval,
   getAvgRepoSpread,
-  getSpreadDates,
+  getSpreadDataPerTimeIntervals,
 } from './spreadUtil';
 
 @Injectable()
@@ -112,6 +113,7 @@ export class DeveloperFocus {
     owner: string,
     loginFilter?: string[],
     userLimit?: number,
+    sprintData?: SprintData[],
   ): Promise<DevSpread> {
     const repoIds: { _id: string }[] = await this.repoModel
       .aggregate()
@@ -153,7 +155,7 @@ export class DeveloperFocus {
 
     devToTimestampToRepo.forEach((timeToRepo, dev) => {
       const timeToRepoObj = Object.fromEntries(timeToRepo);
-      spreadsPerDevs[dev] = getSpreadsForDev(timeToRepoObj);
+      spreadsPerDevs[dev] = getSpreadsForDev(timeToRepoObj, dev, sprintData);
     });
 
     this.logger.log(spreadsPerDevs);
@@ -176,7 +178,6 @@ export class DeveloperFocus {
   }
 
   /**
-   *
    * Adds the given @param repoId to the timestamp map.
    * If map doesn't contain the @param timestamps the entry is added.
    */
@@ -226,11 +227,13 @@ export class DeveloperFocus {
     owner: string,
     loginFilter?: string[],
     userLimit?: number,
+    sprintData?: SprintData[],
   ): Promise<DevSpreadTotal> {
     const spreadsPerDevs: DevSpread = await this.devSpread(
       owner,
       loginFilter,
       userLimit,
+      sprintData,
     );
 
     const allDevelopers: string[] = Object.keys(spreadsPerDevs);
@@ -297,11 +300,8 @@ export class DeveloperFocus {
 
       totalSpread.daySpread += devObj.daySpread * getWeight(dev, 'days');
       totalSpread.weekSpread += devObj.weekSpread * getWeight(dev, 'weeks');
-      // if dev has no sprints, exlude him from the calculation
-      if (!(devObj.sprints == 0)) {
-        totalSpread.sprintSpread +=
-          devObj.sprintSpread * getWeight(dev, 'sprints');
-      }
+      totalSpread.sprintSpread +=
+        devObj.sprintSpread * getWeight(dev, 'sprints');
       totalSpread.monthSpread += devObj.monthSpread * getWeight(dev, 'months');
     }
 
@@ -321,16 +321,18 @@ export class DeveloperFocus {
   }
 
   /**
-   * This method calculates the developer Spread for a specified repository only.
-   * Therefor, it calls getRepoCommits() to get all developers of the repo in the first place.
-   * Then, it calls devSpread() to get all spreads for each developer of that orga, the repo is corresponding to.
-   * Then, only those devs are taken into account, whose contributed to the desired repo in a specific timeslot.
-   * @param repoIdent The repo identification including repo id and orga
+   * Calculates the developer spread in certain repository @param repoIdent.
+   * Spread data comes from precomputed DevSpread data.
+   * It calculates the avg spread at a time category per developer.
+   * Then, it @returns the avg spread per time category.
+   * @param loginFilter developer logins which should be considered.
+   * @param userLimit limits the amount of commits.
    */
   async devSpreadRepo(
     repoIdent: RepositoryNameDto,
     loginFilter?: string[],
     userLimit?: number,
+    sprintData?: SprintData[],
   ): Promise<{
     daySpread: number;
     weekSpread: number;
@@ -342,56 +344,32 @@ export class DeveloperFocus {
       .findOne({ repo: repoIdent.repo, owner: repoIdent.owner })
       .exec();
 
-    // get the commits for specified repo to get the developers of that repo
-    const commits = await this.getRepoCommits(
-      repoM._id,
+    const repoID = repoM._id.toString();
+
+    // get the precomputed spreads for every organisation developer
+    const spreadsPerDevs = await this.devSpread(
+      repoIdent.owner,
       loginFilter,
       userLimit,
+      sprintData,
     );
-    this.logger.log('commits: ', commits);
-    // store the repoId as a string
-    const repoID = repoM._id.toString();
-    // store the repo developers in an array
-    const repoDevs = Object.keys(commits);
-    // get the precomputed spreads for every organisation developer
-    const spreadsPerDevs = await this.devSpread(repoIdent.owner);
 
-    // store all corresponding commits for every time category,
-    // in which a developer contributed to the specified repo,
-    // with the timestamp and the developer spread in that specific
-    // timeslot directly.
-    // TODO: refactor utility method
-    const dates: RepoSpread = getSpreadDates(repoID, repoDevs, spreadsPerDevs);
+    const spreads: RepoSpread = getSpreadDataPerTimeIntervals(
+      repoID,
+      spreadsPerDevs,
+    );
+    this.logger.log(spreads);
 
-    this.logger.log(dates);
+    // sum of spread values for devs at a timestamp / amount of devs who contributed
+    const repoSpread: RepoSpreadPerInterval =
+      getSpreadSizePerTimeInterval(spreads);
 
-    // Now, we need a little fix; consider dev A, which has contributed in week X,
-    // which starts at '2021-09-06' and then in week Y which starts at '2021-09-13' again,
-    // because his timeslots were calculated with his daily commit timestamps like this.
-    // Now, dev B has his own time interval computation based on his daily commit timestamps,
-    // consider he has contributed in wee week Z which starts at '2021-09-09'.
-    // So, we don't want to count the weeks as 3 weeks, as the week Z actually belongs in week X,
-    // we want to have 2 weeks of them and add dev B to the week X and delete week Z.
-    // This happens in rearangeTimeSlots() for weeks, sprints and months, as days
-    // are already precisely.
-    dates.weekSpread = rearangeTimeslots(dates.weekSpread, 7);
-    dates.sprintSpread = rearangeTimeslots(dates.sprintSpread, 14);
-    dates.monthSpread = rearangeTimeslots(dates.monthSpread, 30);
-
-    this.logger.log(dates);
-
-    // this is the presicely repository spread with timestamp:spread pairs for each category
-    // the spread is beeing calculated with the sum of the dev spreads which contributed in that timestamp
-    // devided trough the amount of devs
-    const repoSpread: RepoSpreadTotal = getRepoSpreadTotal(dates);
-
-    // TODO: this could also be returned as a good overview n the whole repo histroy, if desired.
     this.logger.log(repoSpread);
 
-    // finally, build the average daySpread, weekSpread, ..., of all single daySpreads, weekSpreads, ...
+    // sum of avg spread values in a time category / amount of time category items
     const avgRepoSpread: RepoSpreadAvg = getAvgRepoSpread(repoSpread);
-    this.logger.log(avgRepoSpread);
 
+    this.logger.log(avgRepoSpread);
     return avgRepoSpread;
   }
 }
