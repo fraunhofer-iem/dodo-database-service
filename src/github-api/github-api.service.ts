@@ -5,6 +5,7 @@ import { StatisticService } from 'src/database/statistic.service';
 import { DeveloperFocus } from 'src/database/statistics/developerFocus.service';
 import { FaultCorrection } from 'src/database/statistics/faultCorrection.service';
 import { FeatureCompletion } from 'src/database/statistics/featureCompletion.service';
+import { SprintData } from './model/DevFocus';
 import { PullRequest, RepositoryFile, Commit } from './model/PullRequest';
 import { CreateRepositoryDto, RepositoryNameDto } from './model/Repository';
 
@@ -58,6 +59,12 @@ export class GithubApiService {
   }
 
   public async getStatistics(repoIdent: RepositoryNameDto) {
+    const testSprints: SprintData[] = [
+      { begin: '08.02.21', end: '08.15.21', developers: ['gr2m', 'web-flow'] },
+      { begin: '08.16.21', end: '08.29.21', developers: ['gr2m', 'web-flow'] },
+      { begin: '07.05.21', end: '07.11.21', developers: ['gr2m'] },
+      { begin: '09.20.21', end: '10.10.21', developers: ['web-flow'] },
+    ];
     // this.statisticService.getMostChangedFiles(repoIdent);
     // this.statisticService.getFilesChangedTogether(repoIdent);
     // this.statisticService.sizeOfPullRequest(repoIdent);
@@ -70,9 +77,9 @@ export class GithubApiService {
 
     // this.statisticService.avgTimeTillTicketWasAssigned(repoIdent);
     //this.statisticService.workInProgress(repoIdent);
-    return await this.featureCompletion.featureCompletionCapability(repoIdent, [
-      'feature',
-    ]);
+    // return await this.featureCompletion.featureCompletionCapability(repoIdent, [
+    //   'feature',
+    // ]);
 
     // return await this.faultCorrection.faultCorrectionRate(repoIdent, [
     //   'support',
@@ -83,10 +90,13 @@ export class GithubApiService {
     // ]);
     //this.statisticService.faultCorrectionEfficiency(repoIdent);
     // this.statisticService.workInProgress(repoIdent);
-    // this.devFocus.devSpreadTotal(
-    //  repoIdent.owner,
-    //   await this.orgaMembers(repoIdent.owner),
-    //);
+    this.devFocus.devSpreadTotal(
+      repoIdent.owner,
+      undefined,
+      undefined,
+      testSprints,
+      //   await this.orgaMembers(repoIdent.owner),
+    );
     // this.devFocus.devSpreadRepo(
     //   repoIdent,
     // await this.orgaMembers(repoIdent.owner),
