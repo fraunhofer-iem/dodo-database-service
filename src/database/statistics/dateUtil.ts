@@ -236,29 +236,25 @@ function calculateSprintsBySprintData(
   sprintData: SprintData[],
 ): DevSpreadDates {
   // TODO: sort sprintData Objects by begin timestamp. I would do this with lodash sortBy then.
-  let sprintSpreadSum = 0;
   for (const sprint of sprintData) {
     if (sprint.developers.includes(dev)) {
       const duration: string = sprint.begin + '-' + sprint.end;
-      dates.sprintSpread[duration] = [];
-      for (const commit in dates.daySpread) {
-        const repoArr = dates.daySpread[commit];
-        const sprintArr = dates.sprintSpread[duration];
-        if (isCommitinSprint(commit, sprint.begin, sprint.end)) {
-          const mergedRepos = [].concat(repoArr, sprintArr);
-          dates.sprintSpread[duration] = Array.from(new Set(mergedRepos));
+      for (const [date, repos] of Object.entries(dates.daySpread)) {
+        if (isContributionInSprint(date, sprint)) {
+          if (!Object.keys(dates.sprintSpread).includes(duration)) {
+            dates.sprintSpread[duration] = [];
+          }
+          for (const repo of repos) {
+            if (!dates.sprintSpread[duration].includes(repo)) {
+              dates.sprintSpread[duration].push(repo);
+              dates.sprintSpreadSum += 1;
+            }
+          }
         }
-      }
-      sprintSpreadSum += dates.sprintSpread[duration].length;
-      // just keep sprints, if there is at least one contribution during the sprint
-      if (dates.sprintSpread[duration].length == 0) {
-        delete dates.sprintSpread[duration];
       }
     }
   }
-  dates.sprintSpreadSum = sprintSpreadSum;
   dates.sprints = Object.keys(dates.sprintSpread).length;
-  dates.sprintSpread = dates.sprintSpread;
   return dates;
 }
 
@@ -266,10 +262,14 @@ function calculateSprintsBySprintData(
  * @returns true, if @param commit date is between the interval starting
  * from @param begin date and ending at @param end date.
  */
-function isCommitinSprint(commit: string, begin: string, end: string) {
-  return (
-    new Date(begin) <= new Date(commit) && new Date(commit) <= new Date(end)
-  );
+function isContributionInSprint(
+  date: string,
+  sprint: { begin: string; end: string },
+) {
+  const contributedAt = new Date(date);
+  const sprintBegin = new Date(sprint.begin);
+  const sprintEnd = new Date(sprint.end);
+  return contributedAt >= sprintBegin && contributedAt <= sprintEnd;
 }
 
 /**
