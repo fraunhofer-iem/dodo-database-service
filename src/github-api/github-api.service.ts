@@ -397,8 +397,9 @@ export class GithubApiService {
       );
       return;
     }
-    const repoId = await this.dbService.createRepo(repoIdent);
-    this.processCommits(repoIdent.owner, repoIdent.repo, repoId, 1);
+    this.logger.log(`Retrieving commits of repo ${repoIdent.owner}/${repoIdent.repo}`)
+    const repoId = await this.dbService.getRepoByName(repoIdent.owner, repoIdent.repo);
+    await this.processCommits(repoIdent.owner, repoIdent.repo, repoId, 1);
   }
 
   private async processCommits(
@@ -412,15 +413,14 @@ export class GithubApiService {
       repo: repo,
       per_page: 100,
       page: pageNumber,
-
     });
     for (const commit of commits) {
-      const commitDocument: Commit = {
-        url: commit.commit.url,
-        login: commit.commit.committer.email,
-        timestamp: commit.commit.committer.date,
-      };
-      await this.dbService.saveCommit(repoId, commitDocument);
+        const commitDocument: Commit = {
+          url: commit.commit.url,
+          login: commit.commit.author.email,
+          timestamp: commit.commit.author.date,
+        };
+        await this.dbService.saveCommit(repoId, commitDocument);
     }
 
     if (commits.length == 100) {
