@@ -404,8 +404,13 @@ export class GithubApiService {
       );
       return;
     }
-    this.logger.log(`Retrieving commits of repo ${repoIdent.owner}/${repoIdent.repo}`)
-    const repoId = await this.dbService.getRepoByName(repoIdent.owner, repoIdent.repo);
+    this.logger.log(
+      `Retrieving commits of repo ${repoIdent.owner}/${repoIdent.repo}`,
+    );
+    const repoId = await this.dbService.getRepoByName(
+      repoIdent.owner,
+      repoIdent.repo,
+    );
     await this.processCommits(repoIdent.owner, repoIdent.repo, repoId, 1);
   }
 
@@ -422,12 +427,12 @@ export class GithubApiService {
       page: pageNumber,
     });
     for (const commit of commits) {
-        const commitDocument: Commit = {
-          url: commit.commit.url,
-          login: commit.commit.author.email,
-          timestamp: commit.commit.author.date,
-        };
-        await this.dbService.saveCommit(repoId, commitDocument);
+      const commitDocument: Commit = {
+        url: commit.commit.url,
+        login: commit.commit.author.email,
+        timestamp: commit.commit.author.date,
+      };
+      await this.dbService.saveCommit(repoId, commitDocument);
     }
 
     if (commits.length == 100) {

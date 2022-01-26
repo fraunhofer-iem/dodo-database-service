@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { GithubApiModule } from './github-api/github-api.module';
 import { DatabaseModule } from './database/database.module';
+import { ApiModule } from './api/api.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { DatabaseModule } from './database/database.module';
     }),
     DatabaseModule,
     GithubApiModule,
+    ApiModule,
   ],
   controllers: [],
   providers: [],
