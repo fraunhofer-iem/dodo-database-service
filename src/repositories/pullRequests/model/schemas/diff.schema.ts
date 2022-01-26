@@ -1,17 +1,15 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as mSchema } from 'mongoose';
-import {
-  PullRequestFile,
-  RepositoryFile,
-} from 'src/github-api/model/PullRequest';
 import { PullRequest } from './pullRequest.schema';
+import { PullRequestFile } from './pullRequestFile.schema';
+import { RepositoryFile } from './repositoryFile.schema';
 
 @Schema()
 export class Diff {
-  @Prop([{ type: mSchema.Types.ObjectId, ref: 'PullRequestFiles' }])
+  @Prop([{ type: mSchema.Types.ObjectId, ref: 'PullRequestFile' }])
   pullRequestFiles: PullRequestFile[];
 
-  @Prop([{ type: mSchema.Types.ObjectId, ref: 'RepositoryFiles' }])
+  @Prop([{ type: mSchema.Types.ObjectId, ref: 'RepositoryFile' }])
   repositoryFiles: RepositoryFile[];
 
   @Prop({ type: mSchema.Types.ObjectId, ref: 'PullRequest' })

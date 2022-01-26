@@ -58,60 +58,7 @@ export class DatabaseService {
     return repoM._id;
   }
 
-  async saveIssue(issue: Issue, repoId: string) {
-    this.logger.debug('saving Issues along with its events to database');
-    //instantiating for issue
 
-    const issueModel = new this.issueModel();
-    this.logger.debug(issue);
-    issueModel.id = issue.id;
-    issueModel.number = issue.number;
-
-    issueModel.state = issue.state;
-    issueModel.node_id = issue.node_id;
-    // fill the labels array for the issue document
-    const issueLabels: Label[] = [];
-    for (const eachLabel of issue.labels) {
-      const labelM = await this.labelModel.create(eachLabel);
-      issueLabels.push(labelM);
-    }
-    issueModel.label = issueLabels;
-
-    const assigneee = await this.assigneeModel.create(issue.assignee);
-    issueModel.assignee = assigneee;
-
-    const assigneees = await this.assigneesModel.create(issue.assignees);
-    issueModel.assignees = assigneees;
-
-    const milestonee = await this.milestoneModel.create(issue.milestone);
-    issueModel.milestone = milestonee;
-
-    issueModel.created_at = issue.created_at;
-    issueModel.updated_at = issue.updated_at;
-    issueModel.closed_at = issue.closed_at;
-    issueModel.title = issue.title;
-    const issueModels = await issueModel.save();
-
-    const issueWithEventsModel = new this.issueWithEventsModel();
-    issueWithEventsModel.issue = issueModels;
-
-    issueWithEventsModel.issueEventTypes = [];
-    const savedIssueWithEvents = await issueWithEventsModel.save();
-    await this.updateRepo(repoId, { issuesWithEvents: [savedIssueWithEvents] });
-
-    this.logger.debug('saving issueWithEvents to database finished');
-    return savedIssueWithEvents.id;
-  }
-
-  async saveIssueEvent(events: IssueEventTypes[], issueId: string) {
-    const issueEvents = await this.issueEventTypesModel.create(events);
-
-    await this.issueWithEventsModel
-      .findByIdAndUpdate(issueId, {
-        $push: { issueEventTypes: issueEvents },
-      })
-      .exec();
-  }
 
   async saveLanguages(
     repoIdent: RepositoryNameDto,

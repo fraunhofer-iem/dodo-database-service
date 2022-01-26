@@ -1,4 +1,4 @@
-import { Octokit } from 'octokit';
+import { OCTOKIT } from 'src/lib/OctokitHelper';
 import { RepositoryIdentifier } from 'src/repositories/model/RepositoryDtos';
 import { PullRequest, PullRequestFile, RepositoryFile } from '../model';
 
@@ -8,12 +8,11 @@ enum FileType {
 }
 
 export async function getPullRequests(
-  octokit: Octokit,
   repoIdent: RepositoryIdentifier,
   pageNumber: number,
 ): Promise<PullRequest[]> {
   const { owner, repo } = repoIdent;
-  return octokit.rest.pulls
+  return OCTOKIT.rest.pulls
     .list({
       owner: owner,
       repo: repo,
@@ -27,7 +26,6 @@ export async function getPullRequests(
 }
 
 export async function getMergeTargetAndFeatureFiles(
-  octokit: Octokit,
   repoIdent: RepositoryIdentifier,
   pullRequestNumber: number,
   mergeTargetSha: string,
@@ -35,27 +33,18 @@ export async function getMergeTargetAndFeatureFiles(
   featFiles: PullRequestFile[];
   mergeTargetFiles: RepositoryFile[];
 }> {
-  const featFiles = await getFeatureFiles(
-    octokit,
-    repoIdent,
-    pullRequestNumber,
-  );
+  const featFiles = await getFeatureFiles(repoIdent, pullRequestNumber);
 
-  const mergeTargetFiles = await getAllFilesFromTree(
-    octokit,
-    repoIdent,
-    mergeTargetSha,
-  );
+  const mergeTargetFiles = await getAllFilesFromTree(repoIdent, mergeTargetSha);
   return { featFiles, mergeTargetFiles };
 }
 
 async function getFeatureFiles(
-  octokit: Octokit,
   repoIdent: RepositoryIdentifier,
   requestNumber: number,
 ): Promise<PullRequestFile[]> {
   const { owner, repo } = repoIdent;
-  return octokit.rest.pulls
+  return OCTOKIT.rest.pulls
     .listFiles({
       owner: owner,
       repo: repo,
@@ -65,13 +54,12 @@ async function getFeatureFiles(
 }
 
 async function getAllFilesFromTree(
-  octokit: Octokit,
   repoIdent: RepositoryIdentifier,
   treeSha: string,
 ): Promise<RepositoryFile[]> {
   const { owner, repo } = repoIdent;
 
-  const baseTree = await octokit.rest.git.getTree({
+  const baseTree = await OCTOKIT.rest.git.getTree({
     tree_sha: treeSha,
     owner: owner,
     repo: repo,

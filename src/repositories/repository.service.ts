@@ -1,26 +1,22 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Octokit } from 'octokit';
-import { OCTOKIT } from 'src/lib/OctokitHelper';
+
 import { repoExists } from './lib';
-import { RepositoryDocument } from './model/schemas/repository.schema';
-import { CreateRepositoryDto } from './model/RepositoryDtos';
+import { RepositoryDocument } from './model/schemas';
+import { CreateRepositoryDto } from './model';
 
 @Injectable()
 export class RepositoryService {
   private readonly logger = new Logger(RepositoryService.name);
-  private readonly octokit: Octokit;
 
   constructor(
     @InjectModel('Repository')
     private readonly repoModel: Model<RepositoryDocument>,
-  ) {
-    this.octokit = OCTOKIT;
-  }
+  ) {}
 
   public async createRepository(createRepoDto: CreateRepositoryDto) {
-    if (repoExists(this.octokit, createRepoDto)) {
+    if (repoExists(createRepoDto)) {
       return this.createRepo(createRepoDto);
     } // TODO: add propper return type if repo doesn't exist
   }

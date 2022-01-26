@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Logger, Param, Post } from '@nestjs/common';
-import { CreateRepositoryDto } from './model/RepositoryDtos';
+import { CreateRepositoryDto } from './model';
 import { RepositoryService } from './repository.service';
 
 @Controller('api/repositories')

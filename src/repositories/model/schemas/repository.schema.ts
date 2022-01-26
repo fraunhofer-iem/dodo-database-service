@@ -1,29 +1,27 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as mSchema } from 'mongoose';
-import { Commit } from 'src/database/schemas/commit.schema';
-import { Diff } from 'src/database/schemas/diff.schema';
-import { IssueWithEvents } from 'src/database/schemas/issueWithEvents.schema';
-import { Languages } from 'src/database/schemas/language.schema';
-import { Releases } from 'src/database/schemas/releases.schema';
+import { Issue } from 'src/repositories/issues/model/schemas';
+import { Diff } from 'src/repositories/pullRequests/model/schemas';
+import { Release } from 'src/repositories/releases/model/schema';
 
 export type RepositoryDocument = Repository & Document;
 
 @Schema()
 export class Repository {
-  @Prop([{ type: mSchema.Types.ObjectId, ref: 'Diffs' }])
+  @Prop([{ type: mSchema.Types.ObjectId, ref: 'Diff' }])
   diffs: Diff[];
 
-  @Prop([{ type: mSchema.Types.ObjectId, ref: 'IssueWithEvents' }])
-  issuesWithEvents: IssueWithEvents[];
+  @Prop([{ type: mSchema.Types.ObjectId, ref: 'Issue' }])
+  issues: Issue[];
 
-  @Prop([{ type: mSchema.Types.ObjectId, ref: 'Releases' }])
-  releases: Releases[];
+  @Prop([{ type: mSchema.Types.ObjectId, ref: 'Release' }])
+  releases: Release[];
 
-  @Prop({ type: mSchema.Types.ObjectId, ref: 'Languages' })
-  languages: Languages;
+  // @Prop({ type: mSchema.Types.ObjectId, ref: 'Language' })
+  // languages: Language[];
 
-  @Prop([{ type: mSchema.Types.ObjectId, ref: 'Commits' }])
-  commits: Commit[];
+  // @Prop([{ type: mSchema.Types.ObjectId, ref: 'Commit' }])
+  // commits: Commit[];
 
   @Prop()
   owner: string;

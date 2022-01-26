@@ -1,8 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Octokit } from 'octokit';
-import { OCTOKIT } from 'src/lib/OctokitHelper';
 import { RepositoryIdentifier } from '../model/RepositoryDtos';
 import { RepositoryDocument } from '../model/schemas';
 import {
@@ -30,7 +28,6 @@ export interface Tree {
 @Injectable()
 export class PullRequestService {
   private readonly logger = new Logger(PullRequestService.name);
-  private readonly octokit: Octokit;
 
   constructor(
     @InjectModel('Repository')
@@ -43,10 +40,7 @@ export class PullRequestService {
     private readonly pullRequestModel: Model<PullRequestDocument>,
     @InjectModel('Diff')
     private readonly diffModel: Model<DiffDocument>,
-  ) {
-    // init octokit
-    this.octokit = OCTOKIT;
-  }
+  ) {}
 
   /**
    *
@@ -74,11 +68,7 @@ export class PullRequestService {
     repoId: string,
     pageNumber: number,
   ) {
-    const pullRequests = await getPullRequests(
-      this.octokit,
-      repoIdent,
-      pageNumber,
-    );
+    const pullRequests = await getPullRequests(repoIdent, pageNumber);
     this.logger.log(
       pullRequests.length + ' pull requests received at number ' + pageNumber,
     );
@@ -105,7 +95,6 @@ export class PullRequestService {
       'Querying all files of pull request number ' + pullRequest.number,
     );
     const { featFiles, mergeTargetFiles } = await getMergeTargetAndFeatureFiles(
-      this.octokit,
       repoIdent,
       pullRequest.number,
       mergeTargetSha,

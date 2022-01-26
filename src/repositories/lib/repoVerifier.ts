@@ -1,5 +1,5 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
-import { Octokit } from 'octokit';
+import { OCTOKIT } from 'src/lib/OctokitHelper';
 import { RepositoryIdentifier } from '../model/RepositoryDtos';
 
 /**
@@ -8,11 +8,8 @@ import { RepositoryIdentifier } from '../model/RepositoryDtos';
  * @returns true if the repository exists
  * @throws HTTP Exception with the status code provided from the GitHub api
  */
-export async function repoExists(
-  octokit: Octokit,
-  repoIdent: RepositoryIdentifier,
-) {
-  const repoStatus = await getRepoStatus(octokit, repoIdent);
+export async function repoExists(repoIdent: RepositoryIdentifier) {
+  const repoStatus = await getRepoStatus(repoIdent);
   switch (repoStatus) {
     case 200:
       return true;
@@ -48,11 +45,8 @@ export async function repoExists(
  * Status: 403 Forbidden
  * Status: 404 Not Found
  */
-async function getRepoStatus(
-  octokit: Octokit,
-  repoIdent: RepositoryIdentifier,
-): Promise<number> {
-  return octokit.rest.repos
+async function getRepoStatus(repoIdent: RepositoryIdentifier): Promise<number> {
+  return OCTOKIT.rest.repos
     .get({
       owner: repoIdent.owner,
       repo: repoIdent.repo,
