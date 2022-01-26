@@ -1,17 +1,17 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-
-import { OCTOKIT } from 'src/lib/OctokitHelper';
+import { UserDocument } from 'src/model/schemas';
 import { RepositoryIdentifier } from '../model';
 import { RepositoryDocument } from '../model/schemas';
+
+import { getIssues, saveIssue } from './lib';
 import {
-  RepositoryFileDocument,
-  PullRequestFileDocument,
-  PullRequestDocument,
-  DiffDocument,
-} from '../pullRequests/model/schemas';
-import { getIssues } from './lib';
+  IssueDocument,
+  IssueEventDocument,
+  LabelDocument,
+  MilestoneDocument,
+} from './model/schemas';
 
 @Injectable()
 export class IssueService {
@@ -20,14 +20,16 @@ export class IssueService {
   constructor(
     @InjectModel('Repository')
     private readonly repoModel: Model<RepositoryDocument>,
-    @InjectModel('RepositoryFiles')
-    private readonly repoFileModel: Model<RepositoryFileDocument>,
-    @InjectModel('PullRequestFiles')
-    private readonly pullFileModel: Model<PullRequestFileDocument>,
-    @InjectModel('PullRequest')
-    private readonly pullRequestModel: Model<PullRequestDocument>,
-    @InjectModel('Diff')
-    private readonly diffModel: Model<DiffDocument>,
+    @InjectModel('Issue')
+    private readonly issueModel: Model<IssueDocument>,
+    @InjectModel('User')
+    private readonly assigneeModel: Model<UserDocument>,
+    @InjectModel('Label')
+    private readonly labelModel: Model<LabelDocument>,
+    @InjectModel('Milestone')
+    private readonly milestoneModel: Model<MilestoneDocument>,
+    @InjectModel('IssueEvent')
+    private readonly issueEventModel: Model<IssueEventDocument>,
   ) {}
 
   public async storeIssues(repoIdent: RepositoryIdentifier, repoId: string) {
@@ -41,17 +43,18 @@ export class IssueService {
   ) {
     const issues = await getIssues(repoIdent, pageNumber);
     for (const issue of issues) {
-      // first store issue
-      const issueId = await saveIssue(
-        issue as any, // TODO: workaround because the current label handling seems to be very broken and we ignore it for now
-        repoId,
-      );
-      // then query the event types and store them
-      await this.getAndStoreIssueEventTypes(
+      await saveIssue(
         repoIdent,
-        issue.number,
-        pageNumber,
-        issueId,
+        {
+          RepoModel: this.repoModel,
+          IssueModel: this.issueModel,
+          LabelModel: this.labelModel,
+          AssigneeModel: this.assigneeModel,
+          MilestoneModel: this.milestoneModel,
+          IssueEventModel: this.issueEventModel,
+        },
+        issue,
+        repoId,
       );
     }
 
@@ -59,5 +62,4 @@ export class IssueService {
       this.processIssues(repoIdent, repoId, pageNumber + 1);
     }
   }
-
 }

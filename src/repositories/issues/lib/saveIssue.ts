@@ -25,7 +25,7 @@ interface IssueModels {
 export async function saveIssue(
   repoIdent: RepositoryIdentifier,
   issueModels: IssueModels,
-  issue: Issue,
+  issue: Partial<Issue>,
   repoId: string,
 ) {
   const {
