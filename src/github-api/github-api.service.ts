@@ -1,10 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Octokit } from 'octokit';
-import { DatabaseService } from 'src/database/database.service';
-import { StatisticService } from 'src/database/statistic.service';
-import { DeveloperFocus } from 'src/database/statistics/developerFocus.service';
-import { FaultCorrection } from 'src/database/statistics/faultCorrection.service';
-import { FeatureCompletion } from 'src/database/statistics/featureCompletion.service';
+import { DatabaseService } from '../database/database.service';
+import { StatisticService } from '../database/statistic.service';
+import { DeveloperFocus } from '../database/statistics/developerFocus.service';
+import { FaultCorrection } from '../database/statistics/faultCorrection.service';
+import { FeatureCompletion } from '../database/statistics/featureCompletion.service';
 import { PullRequest, RepositoryFile, Commit } from './model/PullRequest';
 import { CreateRepositoryDto, RepositoryNameDto } from './model/Repository';
 
