@@ -1,27 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Octokit } from 'octokit';
 import { DatabaseService } from 'src/database/database.service';
-import { StatisticService } from 'src/database/statistic.service';
 import { DeveloperFocus } from 'src/database/statistics/developerFocus.service';
-import { FaultCorrection } from 'src/database/statistics/faultCorrection.service';
-import { FeatureCompletion } from 'src/database/statistics/featureCompletion.service';
-import { SprintData } from './model/DevFocus';
-import { PullRequest, RepositoryFile, Commit } from './model/PullRequest';
+
+import { Commit } from './model/PullRequest';
 import { RepositoryNameDto } from './model/Repository';
-
-export interface Tree {
-  path?: string;
-  mode?: string;
-  type?: string;
-  sha?: string;
-  size?: number;
-  url?: string;
-}
-
-enum FileType {
-  file = 'blob',
-  folder = 'tree',
-}
 
 @Injectable()
 export class GithubApiService {
@@ -43,11 +26,8 @@ export class GithubApiService {
   }
 
   constructor(
-    private statisticService: StatisticService,
     private dbService: DatabaseService,
     private devFocus: DeveloperFocus,
-    private faultCorrection: FaultCorrection,
-    private featureCompletion: FeatureCompletion,
   ) {
     // init octokit
     this.octokit = this.getOctokitClient();
@@ -59,51 +39,7 @@ export class GithubApiService {
   }
 
   public async getStatistics(repoIdent: RepositoryNameDto) {
-    const testSprints: SprintData[] = [
-      { begin: '08.02.21', end: '08.15.21', developers: ['gr2m', 'web-flow'] },
-      { begin: '08.16.21', end: '08.29.21', developers: ['gr2m', 'web-flow'] },
-      { begin: '07.05.21', end: '07.11.21', developers: ['gr2m'] },
-      { begin: '09.20.21', end: '10.10.21', developers: ['web-flow'] },
-    ];
-    // this.statisticService.getMostChangedFiles(repoIdent);
-    // this.statisticService.getFilesChangedTogether(repoIdent);
-    // this.statisticService.sizeOfPullRequest(repoIdent);
-    // this.statisticService.numberOfAssignee(repoIdent);
-    // this.statisticService.numberOfOpenTickets(repoIdent);
-    // this.statisticService.avgNumberOfAssigneeUntilTicketCloses(repoIdent);
-    //this.statisticService.avgTimeTillTicketWasAssigned(repoIdent);
-    //this.statisticService.workInProgress(repoIdent);
-    // this.statisticService.timeToResolution(repoIdent);
-
-    // this.statisticService.avgTimeTillTicketWasAssigned(repoIdent);
-    //this.statisticService.workInProgress(repoIdent);
-    // return await this.featureCompletion.featureCompletionCapability(repoIdent, [
-    //   'feature',
-    // ]);
-    // return await this.featureCompletion.featureCompletionEfficiency(repoIdent, [
-    //   'feature',
-    // ]);
-    // return await this.faultCorrection.faultCorrectionRate(repoIdent, [
-    //   'support',
-    //   'awaiting response',
-    // ]);
-    // return await this.faultCorrection.faultCorrectionEfficiency(repoIdent, [
-    //  'support',
-    //  'awaiting response',
-    // ]);
-    // return await this.featureCompletion.featureCompletionRate(repoIdent, [
-    //   'feature',
-    // ]);
-    //this.statisticService.faultCorrectionEfficiency(repoIdent);
-    // this.statisticService.workInProgress(repoIdent);
-    // this.devFocus.devSpreadTotal(
-    //   repoIdent.owner,
-    //   await this.orgaMembers(repoIdent.owner),
-    // );
-    this.devFocus.devSpreadRepo(
-      repoIdent,
-      // await this.orgaMembers(repoIdent.owner),
-    );
+    this.devFocus.devSpreadRepo(repoIdent);
   }
 
   public async orgaMembers(owner: string) {
@@ -238,29 +174,6 @@ export class GithubApiService {
 
   /**
    *
-   * Queries all pull requests for the repository. For each pull request the changed files are queried.
-   * Additionally, the content of the main branch is queried and stored alongside the changes.
-   *
-   * @returns the id of the repository
-   *
-   */
-  public async storePullRequestDiffsForRepo(
-    repoIdent: RepositoryNameDto,
-    repoId: string,
-  ) {
-    // TODO: we expect the repo to exist const repoId = await this.dbService.createRepo(repoIdent);
-
-    this.logger.log(
-      `querying pull requests for ${repoIdent.owner}/${repoIdent.repo}`,
-    );
-
-    this.processPullRequests(repoIdent.owner, repoIdent.repo, repoId, 1);
-
-    return repoId;
-  }
-
-  /**
-   *
    * @param repoIdent
    * @returns
    * Status: 200 exists
@@ -285,101 +198,6 @@ export class GithubApiService {
           return 500;
         }
       });
-  }
-
-  private async processPullRequests(
-    owner: string,
-    repo: string,
-    repoId: string,
-    pageNumber: number,
-  ) {
-    const pullRequests = await this.octokit.rest.pulls
-      .list({
-        owner: owner,
-        repo: repo,
-        state: 'all',
-        sort: 'created',
-        direction: 'asc',
-        per_page: 100,
-        page: pageNumber,
-      })
-      .then((res) => res.data);
-    this.logger.log(
-      pullRequests.length + ' pull requests received at number ' + pageNumber,
-    );
-
-    for (const pullRequest of pullRequests) {
-      this.logger.log('First request diff started');
-      await this.storePullRequestDiff(owner, repo, pullRequest, repoId);
-      this.logger.log('First request diff finished');
-    }
-
-    if (pullRequests.length == 100) {
-      this.processPullRequests(owner, repo, repoId, pageNumber + 1);
-    }
-  }
-
-  private async storePullRequestDiff(
-    owner: string,
-    repo: string,
-    pullRequest: PullRequest,
-    repoId: string,
-  ) {
-    const mergeTarget = pullRequest.base;
-
-    this.logger.log(
-      'Querying all files of pull request number ' + pullRequest.number,
-    );
-
-    const featFiles = await this.octokit.rest.pulls
-      .listFiles({
-        owner: owner,
-        repo: repo,
-        pull_number: pullRequest.number,
-      })
-      .then((res) => res.data);
-
-    const mergeTargetFiles = await this.getAllFilesFromTree(
-      owner,
-      repo,
-      mergeTarget.sha,
-    );
-
-    this.logger.log(
-      ` ${featFiles.length} Files were changed in pull request number 
-        ${pullRequest.number}`,
-    );
-
-    await this.dbService.savePullRequestDiff(repoId, {
-      pullRequest: pullRequest,
-      changedFiles: featFiles,
-      repoFiles: mergeTargetFiles,
-    });
-
-    this.logger.log(`Diff for pull request ${pullRequest.number} was stored`);
-  }
-
-  private async getAllFilesFromTree(
-    owner: string,
-    repo: string,
-    treeSha: string,
-  ): Promise<RepositoryFile[]> {
-    this.logger.log('Querying the tree for sha ' + treeSha);
-    const baseTree = await this.octokit.rest.git.getTree({
-      tree_sha: treeSha,
-      owner: owner,
-      repo: repo,
-      recursive: 'true',
-    });
-
-    const files = baseTree.data.tree.filter((v) => v.type == FileType.file);
-    this.logger.log(
-      `The tree contains 
-        ${baseTree.data.tree.length} 
-        from which ${files.length}
-        are files.`,
-    );
-    return files;
   }
 
   public async storeLanguages(repoIdent: RepositoryNameDto) {
