@@ -25,6 +25,8 @@
     "@nestjs/mongoose": "^9.0.2",
     "@nestjs/platform-express": "^8.2.6",
     "@nestjs/swagger": "^5.2.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.13.2",
     "mongoose": "^6.0.13",
     "octokit": "^1.7.0",
     "reflect-metadata": "^0.1.13",
