@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { RepositorySchema } from '../model/schemas';
 import {
   DiffSchema,
   PullRequestSchema,
@@ -16,6 +17,7 @@ import { PullRequestService } from './pullRequest.service';
       { name: 'PullRequest', schema: PullRequestSchema },
       { name: 'PullRequestFiles', schema: PullRequestFileSchema },
       { name: 'RepositoryFiles', schema: RepositoryFileSchema },
+      { name: 'Repository', schema: RepositorySchema },
     ]),
   ],
   providers: [PullRequestService],

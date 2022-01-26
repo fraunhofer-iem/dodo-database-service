@@ -2,25 +2,23 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, AnyKeys } from 'mongoose';
 import {
-  Release,
   Issue,
   IssueEventTypes,
   Language,
   Commit,
 } from 'src/github-api/model/PullRequest';
 import { RepositoryNameDto } from 'src/github-api/model/Repository';
-import { DiffDocument } from './schemas/diff.schema';
+
 import { IssueDocument } from './schemas/issue.schema';
 import { IssueEventTypesDocument } from './schemas/issueEventTypes.schema';
-import { ReleasesDocument } from './schemas/releases.schema';
+
 import { Label, LabelDocument } from './schemas/labels.schema';
 import { AssigneeDocument } from './schemas/assignee.schema';
 import { AssigneesDocument } from './schemas/assignees.schema';
 import { MilestoneDocument } from './schemas/milestone.schema';
-import { PullRequestDocument } from './schemas/pullRequest.schema';
-import { PullRequestFileDocument } from './schemas/pullRequestFile.schema';
+
 import { RepositoryDocument } from './schemas/repository.schema';
-import { RepositoryFileDocument } from './schemas/repositoryFile.schema';
+
 import { IssueWithEventsDocument } from './schemas/issueWithEvents.schema';
 import { LanguageDocument } from './schemas/language.schema';
 import { CommitDocument } from './schemas/commit.schema';
@@ -32,18 +30,10 @@ export class DatabaseService {
   constructor(
     @InjectModel('Repository')
     private readonly repoModel: Model<RepositoryDocument>,
-    @InjectModel('RepositoryFiles')
-    private readonly repoFileModel: Model<RepositoryFileDocument>,
-    @InjectModel('PullRequestFiles')
-    private readonly pullFileModel: Model<PullRequestFileDocument>,
-    @InjectModel('PullRequest')
-    private readonly pullRequestModel: Model<PullRequestDocument>,
-    @InjectModel('Diff')
-    private readonly diffModel: Model<DiffDocument>,
+
     @InjectModel('Issue')
     private readonly issueModel: Model<IssueDocument>,
-    @InjectModel('Releases')
-    private readonly releasesModel: Model<ReleasesDocument>,
+
     @InjectModel('IssueEventTypes')
     private readonly issueEventTypesModel: Model<IssueEventTypesDocument>,
     @InjectModel('Label')
@@ -66,33 +56,6 @@ export class DatabaseService {
     const repoM = await this.repoModel.findOne({ repo: repo, owner }).exec();
 
     return repoM._id;
-  }
-
-  /**
-   * function to save releases
-   * @param release
-   * @param repoId
-   * @returns
-   */
-  async saveReleases(release: Release, repoId: string) {
-    this.logger.debug('saving Releases to database');
-    const releasesModel = new this.releasesModel();
-
-    this.logger.debug(release);
-    releasesModel.url = release.url;
-    releasesModel.id = release.id;
-    releasesModel.node_id = release.node_id;
-    releasesModel.name = release.name;
-    releasesModel.created_at = release.created_at;
-    releasesModel.published_at = release.published_at;
-
-    const releasesModels = await releasesModel.save();
-
-    await this.updateRepo(repoId, { releases: [releasesModels] });
-
-    this.logger.debug('saving releases to database finished');
-
-    return releasesModel.save();
   }
 
   async saveIssue(issue: Issue, repoId: string) {

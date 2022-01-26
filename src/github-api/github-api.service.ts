@@ -137,69 +137,6 @@ export class GithubApiService {
     return true;
   }
 
-  public async storeReleases(repoIdent: RepositoryNameDto) {
-    this.logger.log(
-      `querying releases for ${repoIdent.owner}/${repoIdent.repo}`,
-    );
-    this.processReleases(
-      repoIdent.owner,
-      repoIdent.repo,
-      await this.dbService.getRepoByName(repoIdent.owner, repoIdent.repo),
-      1,
-    );
-  }
-
-  private async processReleases(
-    owner: string,
-    repo: string,
-    repoId: string,
-    pageNumber: number,
-  ) {
-    const releases = await this.octokit.rest.repos
-      .listReleases({
-        owner: owner,
-        repo: repo,
-        per_page: 100,
-        page: pageNumber,
-      })
-      .then((res) => res.data);
-
-    for (const release of releases) {
-      await this.dbService.saveReleases(release, repoId);
-    }
-    if (releases.length == 100) {
-      this.processReleases(owner, repo, repoId, pageNumber + 1);
-    }
-  }
-
-  /**
-   *
-   * @param repoIdent
-   * @returns
-   * Status: 200 exists
-   * Status: 301 Moved Permanently
-   * Status: 403 Forbidden
-   * Status: 404 Not Found
-   */
-  public async getStatus(repoIdent: RepositoryNameDto): Promise<number> {
-    return this.octokit.rest.repos
-      .get({
-        owner: repoIdent.owner,
-        repo: repoIdent.repo,
-      })
-      .then((r) => {
-        return r.status;
-      })
-      .catch((r) => {
-        this.logger.log(r);
-        if ('status' in r) {
-          return r.status;
-        } else {
-          return 500;
-        }
-      });
-  }
-
   public async storeLanguages(repoIdent: RepositoryNameDto) {
     this.logger.log(
       `querying languages for ${repoIdent.owner}/${repoIdent.repo}`,

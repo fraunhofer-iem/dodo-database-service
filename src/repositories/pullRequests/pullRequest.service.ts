@@ -4,11 +4,12 @@ import { Model } from 'mongoose';
 import { Octokit } from 'octokit';
 import { OCTOKIT } from 'src/lib/OctokitHelper';
 import { RepositoryIdentifier } from '../model/RepositoryDtos';
+import { RepositoryDocument } from '../model/schemas';
 import {
   getMergeTargetAndFeatureFiles,
   getPullRequests,
-} from './lib/pullRequestQuery';
-import { savePullRequestDiff } from './lib/updateRepo';
+  savePullRequestDiff,
+} from './lib';
 import { PullRequest } from './model';
 import {
   RepositoryFileDocument,
@@ -32,6 +33,8 @@ export class PullRequestService {
   private readonly octokit: Octokit;
 
   constructor(
+    @InjectModel('Repository')
+    private readonly repoModel: Model<RepositoryDocument>,
     @InjectModel('RepositoryFiles')
     private readonly repoFileModel: Model<RepositoryFileDocument>,
     @InjectModel('PullRequestFiles')
@@ -120,6 +123,7 @@ export class PullRequestService {
         repoFiles: mergeTargetFiles,
       },
       {
+        Repo: this.repoModel,
         RepoFile: this.repoFileModel,
         PullFile: this.pullFileModel,
         PullRequest: this.pullRequestModel,

@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Octokit } from 'octokit';
 import { OCTOKIT } from 'src/lib/OctokitHelper';
-import { repoExists } from './lib/repoVerifier';
+import { repoExists } from './lib';
 import { RepositoryDocument } from './model/schemas/repository.schema';
 import { CreateRepositoryDto } from './model/RepositoryDtos';
 

@@ -1,5 +1,5 @@
 import { Body, Controller, Logger, Post } from '@nestjs/common';
-import { ApiOkResponse } from '@nestjs/swagger';
+
 import { GithubApiService } from './github-api.service';
 import { RepositoryNameDto } from './model/Repository';
 
@@ -7,16 +7,6 @@ import { RepositoryNameDto } from './model/Repository';
 export class GithubApiController {
   private readonly logger = new Logger(GithubApiController.name);
   constructor(private ghApiService: GithubApiService) {}
-
-  @Post('diffs')
-  @ApiOkResponse({
-    description: 'The id of the repository in which the data is stored.',
-  })
-  async gatherPullRequestDiffs(@Body() repoIdent: RepositoryNameDto) {
-    //TODO:  return a request id and enable to query updates for the running request
-    // in order to not have polling we can just introduce a websocket here
-    // return this.ghApiService.storePullRequestDiffsForRepo(repoIdent);
-  }
 
   @Post('releases')
   async gatherReleases(@Body() repoIdent: RepositoryNameDto) {

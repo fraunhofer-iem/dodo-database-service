@@ -1,5 +1,6 @@
-import { AnyKeys, Model } from 'mongoose';
-import { RepositoryDocument } from 'src/repositories/model/schemas/repository.schema';
+import { Model } from 'mongoose';
+import { updateRepo } from 'src/repositories/lib/updateRepo';
+import { RepositoryDocument } from 'src/repositories/model/schemas';
 import { Diff } from '../model';
 import {
   RepositoryFileDocument,
@@ -9,6 +10,7 @@ import {
 } from '../model/schemas';
 
 interface DiffModels {
+  Repo: Model<RepositoryDocument>;
   RepoFile: Model<RepositoryFileDocument>;
   PullFile: Model<PullRequestFileDocument>;
   PullRequest: Model<PullRequestDocument>;
@@ -20,7 +22,7 @@ export async function savePullRequestDiff(
   pullRequestDiff: Diff,
   diffModels: DiffModels,
 ) {
-  const { DiffModel, PullRequest, PullFile, RepoFile } = diffModels;
+  const { DiffModel, PullRequest, PullFile, RepoFile, Repo } = diffModels;
 
   const createdDiff = new DiffModel();
 
@@ -35,13 +37,5 @@ export async function savePullRequestDiff(
   createdDiff.pullRequest = pullRequest;
   const savedDiff = await createdDiff.save();
 
-  await updateRepo(repoId, { diffs: [savedDiff] });
-}
-
-async function updateRepo(repoId: string, push: AnyKeys<RepositoryDocument>) {
-  await this.repoModel
-    .findByIdAndUpdate(repoId, {
-      $push: push,
-    })
-    .exec();
+  await updateRepo(Repo, repoId, { diffs: [savedDiff] });
 }
