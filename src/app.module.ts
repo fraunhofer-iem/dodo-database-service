@@ -3,7 +3,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { GithubApiModule } from './github-api/github-api.module';
 import { DatabaseModule } from './database/database.module';
-import { ApiModule } from './api/api.module';
+import { RepositoryModule } from './repositories/repository.module';
+import { KpiModule } from './kpi/kpi.module';
+import { OrganizationModule } from './organization/organization.module';
 
 @Module({
   imports: [
@@ -25,7 +27,9 @@ import { ApiModule } from './api/api.module';
     }),
     DatabaseModule,
     GithubApiModule,
-    ApiModule,
+    RepositoryModule,
+    KpiModule,
+    OrganizationModule,
   ],
   controllers: [],
   providers: [],
