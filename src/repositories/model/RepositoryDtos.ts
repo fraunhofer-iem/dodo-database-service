@@ -8,5 +8,7 @@ export class CreateRepositoryDto {
 
   @ApiProperty()
   @IsNotEmpty()
-  repository: string;
+  repo: string;
 }
+
+export type RepositoryIdentifier = CreateRepositoryDto;

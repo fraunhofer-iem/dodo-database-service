@@ -48,6 +48,12 @@ import { FeatureCompletion } from './statistics/featureCompletion.service';
     FaultCorrection,
     FeatureCompletion,
   ],
-  exports: [DatabaseService, StatisticService, DeveloperFocus, FaultCorrection, FeatureCompletion],
+  exports: [
+    DatabaseService,
+    StatisticService,
+    DeveloperFocus,
+    FaultCorrection,
+    FeatureCompletion,
+  ],
 })
 export class DatabaseModule {}
