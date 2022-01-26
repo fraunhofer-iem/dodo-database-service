@@ -5,7 +5,6 @@ import { StatisticService } from 'src/database/statistic.service';
 import { DeveloperFocus } from 'src/database/statistics/developerFocus.service';
 import { FaultCorrection } from 'src/database/statistics/faultCorrection.service';
 import { FeatureCompletion } from 'src/database/statistics/featureCompletion.service';
-import { SprintData } from './model/DevFocus';
 import { PullRequest, RepositoryFile, Commit } from './model/PullRequest';
 import { CreateRepositoryDto, RepositoryNameDto } from './model/Repository';
 
@@ -59,12 +58,12 @@ export class GithubApiService {
   }
 
   public async getStatistics(repoIdent: RepositoryNameDto) {
-    const testSprints: SprintData[] = [
-      { begin: '08.02.21', end: '08.15.21', developers: ['gr2m', 'web-flow'] },
-      { begin: '08.16.21', end: '08.29.21', developers: ['gr2m', 'web-flow'] },
-      { begin: '07.05.21', end: '07.11.21', developers: ['gr2m'] },
-      { begin: '09.20.21', end: '10.10.21', developers: ['web-flow'] },
-    ];
+    // const testSprints: SprintData[] = [
+    //   { begin: '08.02.21', end: '08.15.21', developers: ['gr2m', 'web-flow'] },
+    //   { begin: '08.16.21', end: '08.29.21', developers: ['gr2m', 'web-flow'] },
+    //   { begin: '07.05.21', end: '07.11.21', developers: ['gr2m'] },
+    //   { begin: '09.20.21', end: '10.10.21', developers: ['web-flow'] },
+    // ];
     // this.statisticService.getMostChangedFiles(repoIdent);
     // this.statisticService.getFilesChangedTogether(repoIdent);
     // this.statisticService.sizeOfPullRequest(repoIdent);
@@ -404,8 +403,13 @@ export class GithubApiService {
       );
       return;
     }
-    this.logger.log(`Retrieving commits of repo ${repoIdent.owner}/${repoIdent.repo}`)
-    const repoId = await this.dbService.getRepoByName(repoIdent.owner, repoIdent.repo);
+    this.logger.log(
+      `Retrieving commits of repo ${repoIdent.owner}/${repoIdent.repo}`,
+    );
+    const repoId = await this.dbService.getRepoByName(
+      repoIdent.owner,
+      repoIdent.repo,
+    );
     await this.processCommits(repoIdent.owner, repoIdent.repo, repoId, 1);
   }
 
@@ -422,12 +426,12 @@ export class GithubApiService {
       page: pageNumber,
     });
     for (const commit of commits) {
-        const commitDocument: Commit = {
-          url: commit.commit.url,
-          login: commit.commit.author.email,
-          timestamp: commit.commit.author.date,
-        };
-        await this.dbService.saveCommit(repoId, commitDocument);
+      const commitDocument: Commit = {
+        url: commit.commit.url,
+        login: commit.commit.author.email,
+        timestamp: commit.commit.author.date,
+      };
+      await this.dbService.saveCommit(repoId, commitDocument);
     }
 
     if (commits.length == 100) {

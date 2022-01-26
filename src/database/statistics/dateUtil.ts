@@ -185,7 +185,7 @@ function getCalendarWeek(strDate: string): number {
   // Thursday in current week decides the year.
   date.setDate(date.getDate() + 3 - ((date.getDay() + 6) % 7));
   // January 4 is always in week 1.
-  var week1 = new Date(date.getFullYear(), 0, 4);
+  const week1 = new Date(date.getFullYear(), 0, 4);
   // Adjust to Thursday in week 1 and count number of weeks from date to week1.
   return (
     1 +
@@ -270,15 +270,6 @@ function isContributionInSprint(
   const sprintBegin = new Date(sprint.begin);
   const sprintEnd = new Date(sprint.end);
   return contributedAt >= sprintBegin && contributedAt <= sprintEnd;
-}
-
-/**
- * If two weeks @param week1 and @param week2 are sprints,
- * i.e. if they are a sequence,
- * @return true, else false.
- */
-function datesAreSprint(week1: number, week2: number): boolean {
-  return Math.abs(week1 - week2) == 1;
 }
 
 /**

@@ -1,22 +1,16 @@
 import {
   RepositoryDto,
   CreateRepositoryDto,
-  RepositoryNameDto,
 } from '../../src/github-api/model/Repository';
 import {
   Diff,
   PullRequest,
   RepositoryFile,
   PullRequestFile,
-  Releases,
   Issue,
   IssueEventTypes,
-  IssueWithEvents,
-  Labels,
-  Assignee,
-  Assignees,
-  Milestones,
 } from 'src/github-api/model/PullRequest';
+import { Releases } from 'src/database/schemas/releases.schema';
 
 /**
  * Class to get all relevant test data for the statistic tests

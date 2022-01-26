@@ -135,9 +135,8 @@ export class StatisticService {
   /**
    * Calculate the change in the pullrequests
    * @param repoIdent
-   * @param userLimit
    */
-  async sizeOfPullRequest(repoIdent: RepositoryNameDto, userLimit?: number) {
+  async sizeOfPullRequest(repoIdent: RepositoryNameDto) {
     const filter = {
       repo: repoIdent.repo,
       owner: repoIdent.owner,
