@@ -7,7 +7,7 @@ import { FaultCorrection } from 'src/database/statistics/faultCorrection.service
 import { FeatureCompletion } from 'src/database/statistics/featureCompletion.service';
 import { SprintData } from './model/DevFocus';
 import { PullRequest, RepositoryFile, Commit } from './model/PullRequest';
-import { CreateRepositoryDto, RepositoryNameDto } from './model/Repository';
+import { RepositoryNameDto } from './model/Repository';
 
 export interface Tree {
   path?: string;
@@ -236,10 +236,6 @@ export class GithubApiService {
     }
   }
 
-  public async createRepo(repo: CreateRepositoryDto) {
-    return this.dbService.createRepo(repo);
-  }
-
   /**
    *
    * Queries all pull requests for the repository. For each pull request the changed files are queried.
@@ -248,8 +244,11 @@ export class GithubApiService {
    * @returns the id of the repository
    *
    */
-  public async storePullRequestDiffsForRepo(repoIdent: RepositoryNameDto) {
-    const repoId = await this.dbService.createRepo(repoIdent);
+  public async storePullRequestDiffsForRepo(
+    repoIdent: RepositoryNameDto,
+    repoId: string,
+  ) {
+    // TODO: we expect the repo to exist const repoId = await this.dbService.createRepo(repoIdent);
 
     this.logger.log(
       `querying pull requests for ${repoIdent.owner}/${repoIdent.repo}`,

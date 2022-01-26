@@ -9,7 +9,7 @@ function getOctokitClient() {
       auth: token,
     });
   } else {
-    this.logger.warn(
+    console.warn(
       'If no access token is provided the request limit is set to 60 requests per hour, which is not sufficient for most use cases.',
     );
     return new Octokit();

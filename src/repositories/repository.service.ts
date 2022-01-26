@@ -4,7 +4,7 @@ import { Model } from 'mongoose';
 import { Octokit } from 'octokit';
 import { OCTOKIT } from 'src/lib/OctokitHelper';
 import { repoExists } from './lib/repoVerifier';
-import { RepositoryDocument } from './model/repository.schema';
+import { RepositoryDocument } from './model/schemas/repository.schema';
 import { CreateRepositoryDto } from './model/RepositoryDtos';
 
 @Injectable()

@@ -62,39 +62,6 @@ export class DatabaseService {
     @InjectModel('Commit')
     private readonly commitModel: Model<CommitDocument>,
   ) {}
-  /**
-   * Creates the specified repository if it doesn't exist.
-   * If it exists it returns the id of the existing one.
-   * @param repo
-   * @param owner
-   * @returns id
-   */
-  async createRepo(repoIdent: RepositoryNameDto): Promise<string> {
-    const exists = await this.repoModel.exists({
-      repo: repoIdent.repo,
-      owner: repoIdent.owner,
-    });
-
-    if (exists) {
-      const repoM = await this.repoModel
-        .findOne({ repo: repoIdent.repo, owner: repoIdent.owner })
-        .exec();
-
-      this.logger.debug('Model already exists ' + repoM);
-      return repoM._id;
-    } else {
-      this.logger.debug(
-        `Creating new model for ${repoIdent.repo} with owner ${repoIdent.owner}`,
-      );
-      const repoInstance = await new this.repoModel({
-        owner: repoIdent.owner,
-        repo: repoIdent.repo,
-      }).save();
-
-      this.logger.debug('Instance created ' + repoInstance);
-      return repoInstance._id;
-    }
-  }
 
   async getRepoByName(owner: string, repo: string): Promise<string> {
     const repoM = await this.repoModel.findOne({ repo: repo, owner }).exec();
@@ -246,7 +213,7 @@ export class DatabaseService {
         `stored programming languages from ${repoIdent.owner}/${repoIdent.repo} successful`,
       );
     } else {
-      await this.createRepo(repoIdent);
+      //TODO: functionality moved to new module await this.createRepo(repoIdent);
       this.saveLanguages(repoIdent, languages);
     }
     return languages;

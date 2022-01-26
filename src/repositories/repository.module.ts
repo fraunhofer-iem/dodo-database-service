@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { RepositorySchema } from './model/repository.schema';
+import { RepositorySchema } from './model/schemas/repository.schema';
 import { RepositoryController } from './repository.controller';
 import { RepositoryService } from './repository.service';
 
