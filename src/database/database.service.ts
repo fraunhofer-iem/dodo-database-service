@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, OnlyFieldsOfType } from 'mongoose';
+import { Model, AnyKeys } from 'mongoose';
 import {
   Diff,
   Release,
@@ -277,7 +277,7 @@ export class DatabaseService {
     });
   }
 
-  async updateRepo(repoId: string, push: OnlyFieldsOfType<RepositoryDocument>) {
+  async updateRepo(repoId: string, push: AnyKeys<RepositoryDocument>) {
     await this.repoModel
       .findByIdAndUpdate(repoId, {
         $push: push,
