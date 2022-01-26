@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, AnyKeys } from 'mongoose';
 import {
-  Diff,
   Release,
   Issue,
   IssueEventTypes,
@@ -94,32 +93,6 @@ export class DatabaseService {
     this.logger.debug('saving releases to database finished');
 
     return releasesModel.save();
-  }
-
-  async savePullRequestDiff(repoId: string, pullRequestDiff: Diff) {
-    this.logger.debug('saving diff to database');
-    const createdDiff = new this.diffModel();
-
-    const pullRequest = await new this.pullRequestModel(
-      pullRequestDiff.pullRequest,
-    ).save();
-
-    const changedFiles = await this.pullFileModel.create(
-      pullRequestDiff.changedFiles,
-    );
-
-    const repoFiles = await this.repoFileModel.create(
-      pullRequestDiff.repoFiles,
-    );
-    createdDiff.pullRequestFiles = changedFiles;
-
-    createdDiff.repositoryFiles = repoFiles;
-    createdDiff.pullRequest = pullRequest;
-    const savedDiff = await createdDiff.save();
-
-    await this.updateRepo(repoId, { diffs: [savedDiff] });
-
-    this.logger.debug('saving diff to database finished');
   }
 
   async saveIssue(issue: Issue, repoId: string) {
@@ -235,13 +208,6 @@ export class DatabaseService {
     this.logger.debug('saving commit to database finished');
 
     return savedCommit;
-  }
-
-  async repoExists(repoIdent: RepositoryNameDto): Promise<boolean> {
-    return this.repoModel.exists({
-      repo: repoIdent.repo,
-      owner: repoIdent.owner,
-    });
   }
 
   async updateRepo(repoId: string, push: AnyKeys<RepositoryDocument>) {

@@ -2,20 +2,20 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Octokit } from 'octokit';
-import { DatabaseService } from 'src/database/database.service';
 import { OCTOKIT } from 'src/lib/OctokitHelper';
 import { RepositoryIdentifier } from '../model/RepositoryDtos';
-import { RepositoryDocument } from '../model/schemas/repository.schema';
 import {
   getMergeTargetAndFeatureFiles,
   getPullRequests,
 } from './lib/pullRequestQuery';
 import { savePullRequestDiff } from './lib/updateRepo';
-import { PullRequest } from './model/PullRequest';
-import { DiffDocument } from './model/schemas/diff.schema';
-import { PullRequestDocument } from './model/schemas/pullRequest.schema';
-import { PullRequestFileDocument } from './model/schemas/pullRequestFile.schema';
-import { RepositoryFileDocument } from './model/schemas/repositoryFile.schema';
+import { PullRequest } from './model';
+import {
+  RepositoryFileDocument,
+  PullRequestFileDocument,
+  PullRequestDocument,
+  DiffDocument,
+} from './model/schemas';
 
 export interface Tree {
   path?: string;
@@ -32,8 +32,6 @@ export class PullRequestService {
   private readonly octokit: Octokit;
 
   constructor(
-    @InjectModel('Repository')
-    private readonly repoModel: Model<RepositoryDocument>,
     @InjectModel('RepositoryFiles')
     private readonly repoFileModel: Model<RepositoryFileDocument>,
     @InjectModel('PullRequestFiles')

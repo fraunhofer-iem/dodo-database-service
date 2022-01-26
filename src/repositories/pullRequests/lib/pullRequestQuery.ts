@@ -1,8 +1,6 @@
 import { Octokit } from 'octokit';
 import { RepositoryIdentifier } from 'src/repositories/model/RepositoryDtos';
-import { PullRequest } from '../model/PullRequest';
-import { PullRequestFile } from '../model/PullRequestFile';
-import { RepositoryFile } from '../model/RepositoryFile';
+import { PullRequest, PullRequestFile, RepositoryFile } from '../model';
 
 enum FileType {
   file = 'blob',

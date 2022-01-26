@@ -1,10 +1,12 @@
 import { AnyKeys, Model } from 'mongoose';
 import { RepositoryDocument } from 'src/repositories/model/schemas/repository.schema';
-import { Diff } from '../model/Diff';
-import { DiffDocument } from '../model/schemas/diff.schema';
-import { PullRequestDocument } from '../model/schemas/pullRequest.schema';
-import { PullRequestFileDocument } from '../model/schemas/pullRequestFile.schema';
-import { RepositoryFileDocument } from '../model/schemas/repositoryFile.schema';
+import { Diff } from '../model';
+import {
+  RepositoryFileDocument,
+  PullRequestFileDocument,
+  PullRequestDocument,
+  DiffDocument,
+} from '../model/schemas';
 
 interface DiffModels {
   RepoFile: Model<RepositoryFileDocument>;
