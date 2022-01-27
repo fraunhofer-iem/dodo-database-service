@@ -2,7 +2,9 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 import { Document, Schema as mSchema } from 'mongoose';
 import { User } from '../../../../model';
-
+/**
+ * For further information, see: https://docs.github.com/en/rest/reference/issues#events
+ */
 @Schema()
 export class IssueEvent {
   @Prop()

@@ -2,6 +2,9 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as mSchema } from 'mongoose';
 import { User } from '../../../../model/schemas';
 
+/**
+ * For further information, see: https://docs.github.com/en/rest/reference/commits#list-commits
+ */
 @Schema()
 export class Commit {
   @Prop()

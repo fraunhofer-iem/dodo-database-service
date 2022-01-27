@@ -1,10 +1,13 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Label } from './label.schema';
 import { Milestone } from './milestone.schema';
-
 import { Document, Schema as mSchema } from 'mongoose';
 import { User } from '../../../../model/schemas';
 import { IssueEvent } from './issueEvent.schema';
+
+/**
+ * For further information, see: https://docs.github.com/en/rest/reference/issues#list-repository-issues
+ */
 @Schema()
 export class Issue {
   @Prop([{ type: mSchema.Types.ObjectId, ref: 'Label' }])
