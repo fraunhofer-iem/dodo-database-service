@@ -8,7 +8,7 @@ import { PullRequest } from './';
 @Schema()
 export class PullRequestFile {
   @Prop({ type: mSchema.Types.ObjectId, ref: 'User' })
-  pullRequest: PullRequest
+  pullRequest: PullRequest;
   @Prop()
   sha: string;
   @Prop()
