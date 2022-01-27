@@ -5,8 +5,6 @@ import { Issue } from '../../issues/model/schemas';
 import { Diff } from '../../pullRequests/model/schemas';
 import { Release } from '../../releases/model/schemas';
 
-export type RepositoryDocument = Repository & Document;
-
 /**
  * For further information, see: 
  * https://docs.github.com/en/rest/reference/repos
@@ -31,5 +29,7 @@ export class Repository {
   @Prop()
   repo: string;
 }
+
+export type RepositoryDocument = Repository & Document;
 
 export const RepositorySchema = SchemaFactory.createForClass(Repository);
