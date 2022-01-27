@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 import { Document, Schema as mSchema } from 'mongoose';
-import { User } from 'src/model';
+import { User } from '../../../../model';
 
 @Schema()
 export class IssueEvent {

@@ -1,4 +1,4 @@
-import { User } from 'src/model';
+import { User } from '../../../model';
 
 export interface IssueEvent {
   id: number;

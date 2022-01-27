@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as mSchema } from 'mongoose';
-import { User } from 'src/model/schemas';
+import { User } from '../../../../model/schemas';
 
 @Schema()
 export class Milestone {
@@ -32,5 +32,7 @@ export class Milestone {
   @Prop({ type: mSchema.Types.ObjectId, ref: 'User' })
   creator: User;
 }
+
 export type MilestoneDocument = Milestone & Document;
+
 export const MilestoneSchema = SchemaFactory.createForClass(Milestone);

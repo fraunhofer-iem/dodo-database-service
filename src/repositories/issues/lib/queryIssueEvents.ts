@@ -1,5 +1,5 @@
-import { OCTOKIT } from 'src/lib/OctokitHelper';
-import { RepositoryIdentifier } from 'src/repositories/model';
+import { OCTOKIT } from '../../../lib';
+import { RepositoryIdentifier } from '../../model';
 import { IssueEvent } from '../model';
 
 export async function queryIssueEvents(

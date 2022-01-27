@@ -1,8 +1,8 @@
 import { Model } from 'mongoose';
-import { UserDocument } from 'src/model/schemas';
-import { updateRepo } from 'src/repositories/lib';
-import { RepositoryIdentifier } from 'src/repositories/model';
-import { RepositoryDocument } from 'src/repositories/model/schemas';
+import { UserDocument } from '../../../model/schemas';
+import { updateRepo } from '../../lib';
+import { RepositoryIdentifier } from '../../model';
+import { RepositoryDocument } from '../../model/schemas';
 import { Issue } from '../model';
 import {
   IssueDocument,

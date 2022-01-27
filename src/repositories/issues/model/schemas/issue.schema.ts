@@ -3,7 +3,7 @@ import { Label } from './label.schema';
 import { Milestone } from './milestone.schema';
 
 import { Document, Schema as mSchema } from 'mongoose';
-import { User } from 'src/model/schemas';
+import { User } from '../../../../model/schemas';
 import { IssueEvent } from './issueEvent.schema';
 @Schema()
 export class Issue {
