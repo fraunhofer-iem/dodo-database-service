@@ -18,9 +18,6 @@ export class Repository {
   @Prop([{ type: mSchema.Types.ObjectId, ref: 'Release' }])
   releases: Release[];
 
-  // @Prop({ type: mSchema.Types.ObjectId, ref: 'Language' })
-  // languages: Language[];
-
   @Prop([{ type: mSchema.Types.ObjectId, ref: 'Commit' }])
   commits: Commit[];
 

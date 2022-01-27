@@ -19,7 +19,7 @@ export class Milestone {
   @Prop()
   open_issues: number;
   @Prop()
-  closed_issues: string;
+  closed_issues: number;
   @Prop()
   created_at: string;
   @Prop()
