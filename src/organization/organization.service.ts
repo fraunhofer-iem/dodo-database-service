@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { OCTOKIT } from 'src/lib/OctokitHelper';
-import { User } from 'src/model';
+import { OCTOKIT } from '../lib';
+import { User } from '../model';
 
 @Injectable()
 export class OrganizationService {
