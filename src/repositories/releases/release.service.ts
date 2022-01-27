@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { OCTOKIT } from 'src/lib/OctokitHelper';
-import { updateRepo } from '../lib/updateRepo';
-import { RepositoryIdentifier } from '../model/RepositoryDtos';
+import { OCTOKIT } from '../../lib';
+import { updateRepo } from '../lib';
+import { RepositoryIdentifier } from '../model';
 import { RepositoryDocument } from '../model/schemas';
 import { Release } from './model';
 import { ReleaseDocument } from './model/schemas';

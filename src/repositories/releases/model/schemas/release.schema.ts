@@ -1,6 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
+/**
+ * For further information, see: https://docs.github.com/en/rest/reference/releases
+ */
 @Schema()
 export class Release {
   @Prop()
