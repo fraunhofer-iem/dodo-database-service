@@ -1,8 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
-import { GithubApiModule } from './github-api/github-api.module';
-import { DatabaseModule } from './database/database.module';
 import { RepositoryModule } from './repositories/repository.module';
 import { KpiModule } from './kpi/kpi.module';
 import { OrganizationModule } from './organization/organization.module';
@@ -25,8 +23,6 @@ import { OrganizationModule } from './organization/organization.module';
       }),
       inject: [ConfigService],
     }),
-    DatabaseModule,
-    GithubApiModule,
     RepositoryModule,
     KpiModule,
     OrganizationModule,

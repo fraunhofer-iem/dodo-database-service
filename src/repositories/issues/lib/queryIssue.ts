@@ -1,7 +1,6 @@
-import { Label } from 'src/database/schemas/labels.schema';
 import { OCTOKIT } from 'src/lib/OctokitHelper';
 import { RepositoryIdentifier } from 'src/repositories/model';
-import { Issue } from '../model';
+import { Issue, Label } from '../model';
 
 export async function getIssues(
   repoIdent: RepositoryIdentifier,
