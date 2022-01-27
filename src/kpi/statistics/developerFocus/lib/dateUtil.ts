@@ -1,4 +1,4 @@
-import { DevSpreadDates, SprintData } from 'src/github-api/model/DevFocus';
+import { DevSpreadDates, SprintData } from '../model';
 
 /**
  * Computes all spread values for a developer,

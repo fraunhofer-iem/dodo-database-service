@@ -1,9 +1,9 @@
 import {
   RepoSpreadPerInterval,
+  RepoSpreadAvg,
   RepoSpread,
   DevSpread,
-  RepoSpreadAvg,
-} from 'src/github-api/model/DevFocus';
+} from '../model';
 
 /**
  * Computes the average spread for a time category.

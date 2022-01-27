@@ -1,7 +1,7 @@
 import { Model, Aggregate } from 'mongoose';
-import { RepositoryDocument } from 'src/database/schemas/repository.schema';
-import { Release } from 'src/github-api/model/PullRequest';
-import { RepositoryNameDto } from 'src/github-api/model/Repository';
+import { RepositoryIdentifier } from 'src/repositories/model';
+import { RepositoryDocument } from 'src/repositories/model/schemas';
+import { Release } from 'src/repositories/releases/model';
 import { getRepoFilter } from './repoQuery';
 
 const releaseLookup = {
@@ -13,7 +13,7 @@ const releaseLookup = {
 
 export function getReleaseQuery(
   repoModel: Model<RepositoryDocument>,
-  repo: RepositoryNameDto,
+  repo: RepositoryIdentifier,
 ): Aggregate<Release[]> {
   return repoModel
     .aggregate()

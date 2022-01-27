@@ -1,4 +1,5 @@
-import { Issue, Release } from 'src/github-api/model/PullRequest';
+import { Issue } from 'src/repositories/issues/model';
+import { Release } from 'src/repositories/releases/model';
 
 export function mapReleasesToIssues(releases: Release[], issues: Issue[]) {
   const issuesInTimespan = new Map<

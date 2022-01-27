@@ -1,18 +1,19 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Issue, Release } from 'src/github-api/model/PullRequest';
-import { RepositoryNameDto } from 'src/github-api/model/Repository';
-import { RepositoryDocument } from '../schemas/repository.schema';
+import { Issue } from 'src/repositories/issues/model';
+import { RepositoryIdentifier } from 'src/repositories/model';
+import { RepositoryDocument } from 'src/repositories/model/schemas';
+import { Release } from 'src/repositories/releases/model';
 import {
+  getReleaseQuery,
+  getIssueQuery,
+  mapReleasesToIssues,
+  calculateAvgRate,
+  transformMapToObject,
   calculateAvgCapability,
   calculateAvgEfficiency,
-  calculateAvgRate,
-  mapReleasesToIssues,
-} from './issueUtil';
-import { getIssueQuery } from './lib/issueQuery';
-import { getReleaseQuery } from './lib/releaseQuery';
-import { transformMapToObject } from './lib/transformMapToObject';
+} from '../lib';
 
 @Injectable()
 export class FaultCorrection {
@@ -37,7 +38,7 @@ export class FaultCorrection {
    * @param userLimit
    */
   async faultCorrectionRate(
-    repoIdent: RepositoryNameDto,
+    repoIdent: RepositoryIdentifier,
     labelNames?: string[],
   ) {
     const queries = [
@@ -79,7 +80,7 @@ export class FaultCorrection {
    * @returns
    */
   async faultCorrectionCapability(
-    repoIdent: RepositoryNameDto,
+    repoIdent: RepositoryIdentifier,
     labelNames?: string[],
     timeToCorrect = 1209600000,
   ) {
@@ -103,7 +104,7 @@ export class FaultCorrection {
   }
 
   async faultCorrectionEfficiency(
-    repoIdent: RepositoryNameDto,
+    repoIdent: RepositoryIdentifier,
     labelNames?: string[],
     timeToCorrect: number = 14 * 24 * 60 * 60 * 1000,
   ) {

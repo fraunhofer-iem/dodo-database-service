@@ -1,7 +1,7 @@
 import { Aggregate, Model } from 'mongoose';
-import { RepositoryDocument } from 'src/database/schemas/repository.schema';
-import { Issue } from 'src/github-api/model/PullRequest';
-import { RepositoryNameDto } from 'src/github-api/model/Repository';
+import { Issue } from 'src/repositories/issues/model';
+import { RepositoryIdentifier } from 'src/repositories/model';
+import { RepositoryDocument } from 'src/repositories/model/schemas';
 import { getRepoFilter } from './repoQuery';
 
 const lookupIssueWithEvents = {
@@ -27,7 +27,7 @@ const lookupLabels = {
 
 export function getIssueQuery(
   repoModel: Model<RepositoryDocument>,
-  repo: RepositoryNameDto,
+  repo: RepositoryIdentifier,
   labelNames?: string[],
 ): Aggregate<Issue[]> {
   const query = repoModel

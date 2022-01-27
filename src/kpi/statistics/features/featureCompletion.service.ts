@@ -1,18 +1,19 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Issue, Release } from 'src/github-api/model/PullRequest';
-import { RepositoryNameDto } from 'src/github-api/model/Repository';
-import { RepositoryDocument } from '../schemas/repository.schema';
+import { Issue } from 'src/repositories/issues/model';
+import { RepositoryIdentifier } from 'src/repositories/model';
+import { RepositoryDocument } from 'src/repositories/model/schemas';
+import { Release } from 'src/repositories/releases/model';
 import {
   calculateAvgCapability,
   calculateAvgEfficiency,
   calculateAvgRate,
+  getIssueQuery,
+  getReleaseQuery,
   mapReleasesToIssues,
-} from './issueUtil';
-import { getIssueQuery } from './lib/issueQuery';
-import { getReleaseQuery } from './lib/releaseQuery';
-import { transformMapToObject } from './lib/transformMapToObject';
+  transformMapToObject,
+} from '../lib';
 
 @Injectable()
 export class FeatureCompletion {
@@ -38,7 +39,7 @@ export class FeatureCompletion {
    * @param userLimit
    */
   async featureCompletionRate(
-    repoIdent: RepositoryNameDto,
+    repoIdent: RepositoryIdentifier,
     labelNames?: string[],
   ) {
     const queries = [
@@ -78,7 +79,7 @@ export class FeatureCompletion {
    * @returns
    */
   async featureCompletionCapability(
-    repoIdent: RepositoryNameDto,
+    repoIdent: RepositoryIdentifier,
     labelNames?: string[],
     timeToComplete: number = 14 * 24 * 60 * 60 * 1000,
   ) {
@@ -102,7 +103,7 @@ export class FeatureCompletion {
   }
 
   async featureCompletionEfficiency(
-    repoIdent: RepositoryNameDto,
+    repoIdent: RepositoryIdentifier,
     labelNames?: string[],
     timeToComplete: number = 14 * 24 * 60 * 60 * 1000,
   ) {

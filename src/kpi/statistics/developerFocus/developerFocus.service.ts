@@ -1,23 +1,23 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { RepositoryNameDto } from 'src/github-api/model/Repository';
+import { RepositoryIdentifier } from 'src/repositories/model';
+import { RepositoryDocument } from 'src/repositories/model/schemas';
 import {
-  DevSpread,
-  DevSpreadAvg,
-  DevSpreadTotal,
-  RepoSpread,
-  RepoSpreadAvg,
-  RepoSpreadPerInterval,
   SprintData,
-} from 'src/github-api/model/DevFocus';
-import { RepositoryDocument } from '../schemas/repository.schema';
-import { getSpreadsForDev } from './dateUtil';
+  DevSpread,
+  DevSpreadTotal,
+  DevSpreadAvg,
+  RepoSpread,
+  RepoSpreadPerInterval,
+  RepoSpreadAvg,
+} from './model';
 import {
   getSpreadSizePerTimeInterval,
   getAvgRepoSpread,
   getSpreadDataPerTimeIntervals,
-} from './spreadUtil';
+  getSpreadsForDev,
+} from './lib';
 
 @Injectable()
 export class DeveloperFocus {
@@ -328,7 +328,7 @@ export class DeveloperFocus {
    * @param userLimit limits the amount of commits.
    */
   async devSpreadRepo(
-    repoIdent: RepositoryNameDto,
+    repoIdent: RepositoryIdentifier,
     loginFilter?: string[],
     userLimit?: number,
     sprintData?: SprintData[],
