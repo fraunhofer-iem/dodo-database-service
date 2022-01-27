@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { CommitModule } from './commits/commit.module';
+import { IssueModule } from './issues/issue.module';
 import { RepositorySchema } from './model/schemas';
 import { PullRequestModule } from './pullRequests/pullRequest.module';
 import { ReleaseModule } from './releases/release.module';
@@ -13,6 +15,8 @@ import { RepositoryService } from './repository.service';
     ]),
     PullRequestModule,
     ReleaseModule,
+    IssueModule,
+    CommitModule,
   ],
   providers: [RepositoryService],
   controllers: [RepositoryController],

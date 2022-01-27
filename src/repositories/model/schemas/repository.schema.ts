@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as mSchema } from 'mongoose';
+import { Commit } from 'src/repositories/commits/model/schema';
 import { Issue } from 'src/repositories/issues/model/schemas';
 import { Diff } from 'src/repositories/pullRequests/model/schemas';
 import { Release } from 'src/repositories/releases/model/schema';
@@ -20,8 +21,8 @@ export class Repository {
   // @Prop({ type: mSchema.Types.ObjectId, ref: 'Language' })
   // languages: Language[];
 
-  // @Prop([{ type: mSchema.Types.ObjectId, ref: 'Commit' }])
-  // commits: Commit[];
+  @Prop([{ type: mSchema.Types.ObjectId, ref: 'Commit' }])
+  commits: Commit[];
 
   @Prop()
   owner: string;
