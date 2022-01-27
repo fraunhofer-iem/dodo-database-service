@@ -1,5 +1,5 @@
 import { OCTOKIT } from 'src/lib/OctokitHelper';
-import { RepositoryIdentifier } from 'src/repositories/model/RepositoryDtos';
+import { RepositoryIdentifier } from '../../model';
 import { PullRequest, PullRequestFile, RepositoryFile } from '../model';
 
 enum FileType {

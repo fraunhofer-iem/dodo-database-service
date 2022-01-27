@@ -1,6 +1,6 @@
 import { Model } from 'mongoose';
-import { updateRepo } from 'src/repositories/lib/updateRepo';
-import { RepositoryDocument } from 'src/repositories/model/schemas';
+import { updateRepo } from '../../lib';
+import { RepositoryDocument } from '../../model/schemas';
 import { Diff } from '../model';
 import {
   RepositoryFileDocument,
