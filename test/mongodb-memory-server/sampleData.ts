@@ -1,16 +1,16 @@
+import { Issue } from 'src/repositories/issues/model';
+import { IssueEvent } from 'src/repositories/issues/model/schemas';
 import {
-  RepositoryDto,
   CreateRepositoryDto,
-} from '../../src/github-api/model/Repository';
+  RepositoryIdentifier,
+} from 'src/repositories/model';
 import {
   Diff,
   PullRequest,
   RepositoryFile,
   PullRequestFile,
-  Issue,
-  IssueEventTypes,
-} from 'src/github-api/model/PullRequest';
-import { Releases } from 'src/database/schemas/releases.schema';
+} from 'src/repositories/pullRequests/model';
+import { Release } from 'src/repositories/releases/model';
 
 /**
  * Class to get all relevant test data for the statistic tests
@@ -33,19 +33,13 @@ export class TestData {
   }
 
   // test repo no. 1 repoDto
-  getRepoDto1(): RepositoryDto {
-    const repo = new RepositoryDto();
-    repo.owner = 'octkit';
-    repo.repo = 'rest.js';
-    return repo;
+  getRepoDto1(): RepositoryIdentifier {
+    return { owner: 'octokit', repo: 'rest.js' };
   }
 
   // test repo no. 2 repoDto
-  getRepoDto2(): RepositoryDto {
-    const repo = new RepositoryDto();
-    repo.owner = 'octkit';
-    repo.repo = 'action.js';
-    return repo;
+  getRepoDto2(): RepositoryIdentifier {
+    return { owner: 'octokit', repo: 'action.js' };
   }
 
   // diffs for 2 pull requests for test repo no. 1
@@ -499,8 +493,8 @@ export class TestData {
   }
 
   // 6 releases for test both test repos
-  getReleases(): Releases[] {
-    const release1: Releases = {
+  getReleases(): Release[] {
+    const release1: Release = {
       url: 'https://api.github.com/repos/octokit/rest.js/releases/50990667',
       id: 50990667,
       node_id: 'RE_kwDOFWkwyc4DCg5L',
@@ -508,7 +502,7 @@ export class TestData {
       created_at: '2021-10-07T19:44:32Z',
       published_at: '2021-10-07T19:45:36Z',
     };
-    const release2: Releases = {
+    const release2: Release = {
       url: 'https://api.github.com/repos/octokit/rest.js/releases/50584540',
       id: 50584540,
       node_id: 'RE_kwDOFWkwyc4DA9vc',
@@ -516,7 +510,7 @@ export class TestData {
       created_at: '2021-09-30T21:23:28Z',
       published_at: '2021-09-30T21:25:02Z',
     };
-    const release3: Releases = {
+    const release3: Release = {
       url: 'https://api.github.com/repos/octokit/rest.js/releases/50513820',
       id: 50513820,
       node_id: 'RE_kwDOFWkwyc4DAsec',
@@ -524,7 +518,7 @@ export class TestData {
       created_at: '2021-09-30T00:23:22Z',
       published_at: '2021-09-30T00:24:39Z',
     };
-    const release4: Releases = {
+    const release4: Release = {
       url: 'https://api.github.com/repos/octokit/rest.js/releases/50351498',
       id: 50351498,
       node_id: 'RE_kwDOFWkwyc4DAE2K',
@@ -532,7 +526,7 @@ export class TestData {
       created_at: '2021-09-27T20:55:56Z',
       published_at: '2021-09-27T20:57:29Z',
     };
-    const release5: Releases = {
+    const release5: Release = {
       url: 'https://api.github.com/repos/octokit/rest.js/releases/50232224',
       id: 50232224,
       node_id: 'RE_kwDOFWkwyc4C_nug',
@@ -540,7 +534,7 @@ export class TestData {
       created_at: '2021-09-24T20:20:51Z',
       published_at: '2021-09-24T20:22:29Z',
     };
-    const release6: Releases = {
+    const release6: Release = {
       url: 'https://api.github.com/repos/octokit/rest.js/releases/50081109',
       id: 50081109,
       node_id: 'RE_kwDOFWkwyc4C_C1V',
@@ -548,7 +542,7 @@ export class TestData {
       created_at: '2021-09-22T18:33:24Z',
       published_at: '2021-10-01T08:35:00Z',
     };
-    const releases: Releases[] = [
+    const releases: Release[] = [
       release1,
       release2,
       release3,
@@ -563,6 +557,7 @@ export class TestData {
   getIssues(): Issue[] {
     // closed and assigned
     const issue1: Issue = {
+      events: [],
       labels: [
         {
           id: 2925707840,
@@ -598,6 +593,13 @@ export class TestData {
         updated_at: '2014-03-03T18:58:10Z',
         closed_at: '2013-02-12T13:22:01Z',
         due_on: '2012-10-09T23:39:01Z',
+        creator: {
+          login: 'gr2m',
+          id: 39992,
+          node_id: 'MDQ6VXNlcjM5OTky',
+          type: 'User',
+          site_admin: false,
+        },
       },
       created_at: '2021-09-15T07:49:07Z',
       updated_at: '2021-10-01T16:26:19Z',
@@ -607,6 +609,7 @@ export class TestData {
     };
     // closed but not assigned
     const issue2: Issue = {
+      events: [],
       labels: [
         {
           id: 2925707840,
@@ -636,6 +639,13 @@ export class TestData {
         updated_at: '2014-03-03T18:58:10Z',
         closed_at: '2013-02-12T13:22:01Z',
         due_on: '2012-10-09T23:39:01Z',
+        creator: {
+          login: 'gr2m',
+          id: 39992,
+          node_id: 'MDQ6VXNlcjM5OTky',
+          type: 'User',
+          site_admin: false,
+        },
       },
       created_at: '2021-09-30T07:49:07Z',
       updated_at: '2021-10-01T16:26:19Z',
@@ -645,6 +655,7 @@ export class TestData {
     };
     // assigend but still open
     const issue3: Issue = {
+      events: [],
       labels: [
         {
           id: 2925707840,
@@ -680,6 +691,13 @@ export class TestData {
         updated_at: '2014-03-03T18:58:10Z',
         closed_at: '2013-02-12T13:22:01Z',
         due_on: '2012-10-09T23:39:01Z',
+        creator: {
+          login: 'gr2m',
+          id: 39992,
+          node_id: 'MDQ6VXNlcjM5OTky',
+          type: 'User',
+          site_admin: false,
+        },
       },
       created_at: '2021-09-30T07:49:07Z',
       updated_at: '2021-10-01T16:26:19Z',
@@ -689,6 +707,7 @@ export class TestData {
     };
     // closed and assigned
     const issue4: Issue = {
+      events: [],
       labels: [
         {
           id: 2925707840,
@@ -724,6 +743,13 @@ export class TestData {
         updated_at: '2014-03-03T18:58:10Z',
         closed_at: '2013-02-12T13:22:01Z',
         due_on: '2012-10-09T23:39:01Z',
+        creator: {
+          login: 'gr2m',
+          id: 39992,
+          node_id: 'MDQ6VXNlcjM5OTky',
+          type: 'User',
+          site_admin: false,
+        },
       },
       created_at: '2021-09-30T07:49:07Z',
       updated_at: '2021-10-01T16:26:19Z',
@@ -736,38 +762,67 @@ export class TestData {
   }
 
   // issue event types for test repo 2
-  getEventTypes(): IssueEventTypes[][] {
+  getEventTypes(): IssueEvent[][] {
     // assigning time - issue creation time: 07:10:53 h
-    const issueType1: IssueEventTypes[] = [
+    const issueType1: IssueEvent[] = [
       {
         event: 'assigned',
         created_at: '2021-09-15T15:00:00Z',
+        node_id: '123',
+        url: '/',
+        id: 1,
+        commit_url: '/',
+        actor: {
+          login: 'gr2m',
+          id: 39992,
+          node_id: 'MDQ6VXNlcjM5OTky',
+          type: 'User',
+          site_admin: false,
+        },
       },
     ];
-    const issueType2: IssueEventTypes[] = [
-      {
-        event: 'subscribed',
-      },
-    ];
+
     // assigning time - issue creation time: 08:10:53 h
-    const issueType3: IssueEventTypes[] = [
+    const issueType3: IssueEvent[] = [
       {
         event: 'assigned',
         created_at: '2021-09-30T16:00:00Z',
+        node_id: '123',
+        url: '/',
+        id: 1,
+        commit_url: '/',
+        actor: {
+          login: 'gr2m',
+          id: 39992,
+          node_id: 'MDQ6VXNlcjM5OTky',
+          type: 'User',
+          site_admin: false,
+        },
       },
     ];
     // assigning time - issue creation time: 09:10:53 h
-    const issueType4: IssueEventTypes[] = [
+    const issueType4: IssueEvent[] = [
       {
         event: 'assigned',
         created_at: '2021-09-30T17:00:00Z',
+        node_id: '123',
+        url: '/',
+        id: 1,
+        commit_url: '/',
+        actor: {
+          login: 'gr2m',
+          id: 39992,
+          node_id: 'MDQ6VXNlcjM5OTky',
+          type: 'User',
+          site_admin: false,
+        },
       },
     ];
     // avgTimeTillTicketWasAssigned
     // addition: 24:32:39 => 24*3600000+32*60000+39*1000 = 88359000
     // 88359000/3 * 1/1000 * 1/60 * 1/60 = 8.181388889 ~ 8.2h
     // 24.5/3 = 8.2h
-    const issueEventTypes = [issueType1, issueType2, issueType3, issueType4];
+    const issueEventTypes = [issueType1, issueType3, issueType4];
     return issueEventTypes;
   }
 }
