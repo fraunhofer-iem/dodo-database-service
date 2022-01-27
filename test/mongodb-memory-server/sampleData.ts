@@ -1,16 +1,16 @@
-import { Issue } from 'src/repositories/issues/model';
-import { IssueEvent } from 'src/repositories/issues/model/schemas';
+import { Issue } from '../../src/repositories/issues/model';
+import { IssueEvent } from '../../src/repositories/issues/model/schemas';
 import {
   CreateRepositoryDto,
   RepositoryIdentifier,
-} from 'src/repositories/model';
+} from '../../src/repositories/model';
 import {
   Diff,
   PullRequest,
   RepositoryFile,
   PullRequestFile,
-} from 'src/repositories/pullRequests/model';
-import { Release } from 'src/repositories/releases/model';
+} from '../../src/repositories/pullRequests/model';
+import { Release } from '../../src/repositories/releases/model';
 
 /**
  * Class to get all relevant test data for the statistic tests
