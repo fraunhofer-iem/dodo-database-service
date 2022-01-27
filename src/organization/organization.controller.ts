@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Logger, Param, Post } from '@nestjs/common';
-import { CreateOrgDto } from './OrgDtos';
+import { CreateOrgDto } from './model';
 
 @Controller('api/organizations')
 export class OrganizationController {
