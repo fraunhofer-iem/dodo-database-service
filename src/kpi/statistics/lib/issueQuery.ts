@@ -1,7 +1,7 @@
 import { Aggregate, Model } from 'mongoose';
-import { Issue } from 'src/repositories/issues/model';
-import { RepositoryIdentifier } from 'src/repositories/model';
-import { RepositoryDocument } from 'src/repositories/model/schemas';
+import { Issue } from '../../../repositories/issues/model';
+import { RepositoryIdentifier } from '../../../repositories/model';
+import { RepositoryDocument } from '../../../repositories/model/schemas';
 import { getRepoFilter } from './repoQuery';
 
 const lookupIssueWithEvents = {

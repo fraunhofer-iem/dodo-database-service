@@ -1,7 +1,7 @@
 import { Model, Aggregate } from 'mongoose';
-import { RepositoryIdentifier } from 'src/repositories/model';
-import { RepositoryDocument } from 'src/repositories/model/schemas';
-import { Release } from 'src/repositories/releases/model';
+import { RepositoryIdentifier } from '../../../repositories/model';
+import { RepositoryDocument } from '../../../repositories/model/schemas';
+import { Release } from '../../../repositories/releases/model';
 import { getRepoFilter } from './repoQuery';
 
 const releaseLookup = {

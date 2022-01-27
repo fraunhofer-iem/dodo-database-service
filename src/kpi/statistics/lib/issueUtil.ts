@@ -1,5 +1,5 @@
-import { Issue } from 'src/repositories/issues/model';
-import { Release } from 'src/repositories/releases/model';
+import { Issue } from '../../../repositories/issues/model';
+import { Release } from '../../../repositories/releases/model';
 
 export function mapReleasesToIssues(releases: Release[], issues: Issue[]) {
   const issuesInTimespan = new Map<

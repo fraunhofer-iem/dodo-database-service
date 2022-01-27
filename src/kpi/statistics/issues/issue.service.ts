@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { RepositoryIdentifier } from 'src/repositories/model';
-import { RepositoryDocument } from 'src/repositories/model/schemas';
+import { RepositoryIdentifier } from '../../../repositories/model';
+import { RepositoryDocument } from '../../../repositories/model/schemas';
 import { msToDateString } from '../developerFocus/lib';
 
 @Injectable()
