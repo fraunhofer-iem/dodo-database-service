@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as mSchema } from 'mongoose';
-import { User } from 'src/model/schemas';
+import { User } from '../../../../model/schemas';
 
 @Schema()
 export class Commit {
