@@ -1,12 +1,16 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as mSchema } from 'mongoose';
-import { Commit } from 'src/repositories/commits/model/schema';
-import { Issue } from 'src/repositories/issues/model/schemas';
-import { Diff } from 'src/repositories/pullRequests/model/schemas';
-import { Release } from 'src/repositories/releases/model/schema';
+import { Commit } from '../../commits/model/schema';
+import { Issue } from '../../issues/model/schemas';
+import { Diff } from '../../pullRequests/model/schemas';
+import { Release } from '../../releases/model/schema';
 
 export type RepositoryDocument = Repository & Document;
 
+/**
+ * For further information, see: 
+ * https://docs.github.com/en/rest/reference/repos
+ */
 @Schema()
 export class Repository {
   @Prop([{ type: mSchema.Types.ObjectId, ref: 'Diff' }])

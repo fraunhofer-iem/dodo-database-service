@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
-import { OCTOKIT } from 'src/lib/OctokitHelper';
-import { RepositoryIdentifier } from '../model/RepositoryDtos';
+import { OCTOKIT } from '../../lib';
+import { RepositoryIdentifier } from '../model';
 
 /**
  *
