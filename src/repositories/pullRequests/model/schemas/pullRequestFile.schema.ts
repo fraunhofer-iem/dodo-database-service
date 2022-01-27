@@ -3,7 +3,7 @@ import { Document, Schema as mSchema } from 'mongoose';
 import { PullRequest } from './';
 
 /**
- * For furhter information, see: https://docs.github.com/en/rest/reference/pulls#list-pull-requests-files
+ * For further information, see: https://docs.github.com/en/rest/reference/pulls#list-pull-requests-files
  */
 @Schema()
 export class PullRequestFile {
