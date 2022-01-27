@@ -1,1 +1,1 @@
-export * from "./OctokitHelper"
+export * from './OctokitHelper';

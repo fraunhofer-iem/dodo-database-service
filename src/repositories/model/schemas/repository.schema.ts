@@ -6,7 +6,7 @@ import { Diff } from '../../pullRequests/model/schemas';
 import { Release } from '../../releases/model/schemas';
 
 /**
- * For further information, see: 
+ * For further information, see:
  * https://docs.github.com/en/rest/reference/repos
  */
 @Schema()
