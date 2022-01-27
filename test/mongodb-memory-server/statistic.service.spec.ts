@@ -1,7 +1,7 @@
 import { MongooseModule } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserSchema } from 'src/model/schemas';
-import { CommitSchema } from 'src/repositories/commits/model/schema';
+import { CommitSchema } from 'src/repositories/commits/model/schemas';
 import {
   IssueEventSchema,
   IssueSchema,
@@ -15,7 +15,7 @@ import {
   PullRequestFileSchema,
   RepositoryFileSchema,
 } from 'src/repositories/pullRequests/model/schemas';
-import { ReleaseSchema } from 'src/repositories/releases/model/schema';
+import { ReleaseSchema } from 'src/repositories/releases/model/schemas';
 import { TestData } from './sampleData';
 import { TestDbHelper } from './testDbHelper';
 

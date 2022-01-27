@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { RepositorySchema } from '../model/schemas';
 import { CommitService } from './commit.service';
-import { CommitSchema } from './model/schema';
+import { CommitSchema } from './model/schemas';
 
 @Module({
   imports: [

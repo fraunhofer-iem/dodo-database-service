@@ -6,7 +6,7 @@ import { RepositoryIdentifier } from '../model';
 import { RepositoryDocument } from '../model/schemas';
 import { getCommits } from './lib';
 import { Commit } from './model';
-import { CommitDocument } from './model/schema';
+import { CommitDocument } from './model/schemas';
 
 @Injectable()
 export class CommitService {
