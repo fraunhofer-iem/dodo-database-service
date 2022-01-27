@@ -3,6 +3,9 @@ import { Document } from 'mongoose';
 
 export type RepositoryFileDocument = RepositoryFile & Document;
 
+/**
+ * For further information, see: https://docs.github.com/en/rest/reference/repos#get-repository-content
+ */
 @Schema()
 export class RepositoryFile {
   @Prop()

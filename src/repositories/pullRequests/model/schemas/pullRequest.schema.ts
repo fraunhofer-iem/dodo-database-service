@@ -1,8 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
-export type PullRequestDocument = PullRequest & Document;
-
+/**
+ * For further information, see: https://docs.github.com/en/rest/reference/pulls
+ */
 @Schema()
 export class PullRequest {
   @Prop()
@@ -14,5 +15,7 @@ export class PullRequest {
   @Prop()
   url: string;
 }
+
+export type PullRequestDocument = PullRequest & Document;
 
 export const PullRequestSchema = SchemaFactory.createForClass(PullRequest);
