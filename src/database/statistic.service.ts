@@ -135,9 +135,8 @@ export class StatisticService {
   /**
    * Calculate the change in the pullrequests
    * @param repoIdent
-   * @param userLimit
    */
-  async sizeOfPullRequest(repoIdent: RepositoryNameDto, userLimit?: number) {
+  async sizeOfPullRequest(repoIdent: RepositoryNameDto) {
     const filter = {
       repo: repoIdent.repo,
       owner: repoIdent.owner,
@@ -193,13 +192,13 @@ export class StatisticService {
         return acc + curr;
       }, 0) / numberOfElements;
 
-    const constiance = numberOfFiles.reduce((acc, curr) => {
+    const variance = numberOfFiles.reduce((acc, curr) => {
       return acc + Math.pow(curr - avg, 2) / numberOfElements;
     }, 0);
 
-    const standardDeviation = Math.sqrt(constiance);
+    const standardDeviation = Math.sqrt(variance);
     this.logger.log(
-      `constiance ${constiance} standard deviation ${standardDeviation}`,
+      `constiance ${variance} standard deviation ${standardDeviation}`,
     );
     this.logger.log(
       `In average ${avg} files are changed with each pull request`,
@@ -208,7 +207,7 @@ export class StatisticService {
     return {
       numberOfFiles,
       avg,
-      constiance,
+      variance,
       standardDeviation,
     };
   }

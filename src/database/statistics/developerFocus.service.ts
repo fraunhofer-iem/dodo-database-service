@@ -9,7 +9,6 @@ import {
   RepoSpread,
   RepoSpreadAvg,
   RepoSpreadPerInterval,
-  RepoSpreadTotal,
   SprintData,
 } from 'src/github-api/model/DevFocus';
 import { RepositoryDocument } from '../schemas/repository.schema';
@@ -41,7 +40,7 @@ export class DeveloperFocus {
   async getRepoCommits(
     repoId: string,
     loginFilter?: string[],
-    userLimit: number = 100,
+    userLimit = 100,
   ): Promise<{ [key: string]: string[] }> {
     const getCommits = {
       from: 'commits',

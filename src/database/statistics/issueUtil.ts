@@ -121,7 +121,8 @@ export function calculateAvgCapability(
 
   return {
     capabilityMap,
-    avgCapability: sumOfCapabilities / (releaseIssueMap.size - noOfEmptyReleases),
+    avgCapability:
+      sumOfCapabilities / (releaseIssueMap.size - noOfEmptyReleases),
   };
 }
 
@@ -190,7 +191,8 @@ export function calculateAvgEfficiency(
 
   return {
     efficiencyMap,
-    avgEfficiency: sumOfEfficiencies / (releaseIssueMap.size - noOfEmptyReleases),
+    avgEfficiency:
+      sumOfEfficiencies / (releaseIssueMap.size - noOfEmptyReleases),
   };
 }
 
