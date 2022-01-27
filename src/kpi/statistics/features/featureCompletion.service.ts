@@ -16,8 +16,8 @@ import {
 } from '../lib';
 
 @Injectable()
-export class FeatureCompletion {
-  private readonly logger = new Logger(FeatureCompletion.name);
+export class FeatureCompletionService {
+  private readonly logger = new Logger(FeatureCompletionService.name);
 
   constructor(
     @InjectModel('Repository')

@@ -20,8 +20,8 @@ import {
 } from './lib';
 
 @Injectable()
-export class DeveloperFocus {
-  private readonly logger = new Logger(DeveloperFocus.name);
+export class DeveloperFocusService {
+  private readonly logger = new Logger(DeveloperFocusService.name);
 
   constructor(
     @InjectModel('Repository')

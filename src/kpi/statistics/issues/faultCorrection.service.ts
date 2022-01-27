@@ -16,8 +16,8 @@ import {
 } from '../lib';
 
 @Injectable()
-export class FaultCorrection {
-  private readonly logger = new Logger(FaultCorrection.name);
+export class FaultCorrectionService {
+  private readonly logger = new Logger(FaultCorrectionService.name);
 
   constructor(
     @InjectModel('Repository')
