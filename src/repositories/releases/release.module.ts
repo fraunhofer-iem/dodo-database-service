@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { RepositorySchema } from '../model/schemas';
-import { ReleaseSchema } from './model/schema';
+import { ReleaseSchema } from './model/schemas';
 
 import { ReleaseService } from './release.service';
 

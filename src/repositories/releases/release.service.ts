@@ -6,7 +6,7 @@ import { updateRepo } from '../lib/updateRepo';
 import { RepositoryIdentifier } from '../model/RepositoryDtos';
 import { RepositoryDocument } from '../model/schemas';
 import { Release } from './model';
-import { ReleaseDocument } from './model/schema';
+import { ReleaseDocument } from './model/schemas';
 
 @Injectable()
 export class ReleaseService {

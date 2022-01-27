@@ -3,7 +3,7 @@ import { Document, Schema as mSchema } from 'mongoose';
 import { Commit } from '../../commits/model/schema';
 import { Issue } from '../../issues/model/schemas';
 import { Diff } from '../../pullRequests/model/schemas';
-import { Release } from '../../releases/model/schema';
+import { Release } from '../../releases/model/schemas';
 
 export type RepositoryDocument = Repository & Document;
 
