@@ -88,7 +88,6 @@ export function getSpreadDataPerTimeIntervals(
         repoArr,
         spreads.daySpread,
         repoId,
-        dev,
         day,
       );
     }
@@ -98,7 +97,6 @@ export function getSpreadDataPerTimeIntervals(
         repoArr,
         spreads.weekSpread,
         repoId,
-        dev,
         week,
       );
     }
@@ -108,7 +106,6 @@ export function getSpreadDataPerTimeIntervals(
         repoArr,
         spreads.sprintSpread,
         repoId,
-        dev,
         sprint,
       );
     }
@@ -118,7 +115,6 @@ export function getSpreadDataPerTimeIntervals(
         repoArr,
         spreads.monthSpread,
         repoId,
-        dev,
         month,
       );
     }
@@ -135,9 +131,8 @@ export function getSpreadDataPerTimeIntervals(
  */
 function createSetAndAddRepoIds(
   repoArr: string[],
-  spreadObj: {},
+  spreadObj: Record<string, Set<string>>,
   repoId: string,
-  dev: string,
   date: string,
 ) {
   if (repoArr.includes(repoId)) {
