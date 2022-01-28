@@ -7,7 +7,12 @@ import { IssueLabels } from 'src/database/statistics/issueLabels.service';
 import { FaultCorrection } from 'src/database/statistics/faultCorrection.service';
 import { FeatureCompletion } from 'src/database/statistics/featureCompletion.service';
 import { SprintData } from './model/DevFocus';
-import { PullRequest, RepositoryFile, Commit } from './model/PullRequest';
+import {
+  PullRequest,
+  RepositoryFile,
+  Commit,
+  Issue,
+} from './model/PullRequest';
 import { CreateRepositoryDto, RepositoryNameDto } from './model/Repository';
 
 export interface Tree {
@@ -100,7 +105,7 @@ export class GithubApiService {
     //   repoIdent,
     //   await this.orgaMembers(repoIdent.owner),
     // );
-    this.issueLabels.getRepoLabels(repoIdent.repo);
+    this.issueLabels.labelPrioritiesAvg(repoIdent.repo);
   }
 
   public async orgaMembers(owner: string) {
@@ -131,12 +136,12 @@ export class GithubApiService {
     repoId: string,
     pageNumber: number,
   ) {
-    const issues = (
+    const issues: Issue[] = (
       await this.octokit.rest.issues
         .listForRepo({
           owner: owner,
           repo: repo,
-          filter: 'assigned',
+          filter: 'assigned', //TODO: This filter has no usage
           state: 'all',
           per_page: 100,
           page: pageNumber,
@@ -147,10 +152,7 @@ export class GithubApiService {
     });
     for (const issue of issues) {
       // first store issue
-      const issueId = await this.dbService.saveIssue(
-        issue, // TODO: workaround because the current label handling seems to be very broken and we ignore it for now
-        repoId,
-      );
+      const issueId = await this.dbService.saveIssue(issue, repoId);
       // then query the event types and store them
       await this.getAndStoreIssueEventTypes(
         owner,
