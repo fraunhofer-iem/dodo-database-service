@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { OCTOKIT } from '../../lib';
-import { updateRepo } from '../lib';
+import { updateArray } from '../../lib';
 import { RepositoryIdentifier } from '../model';
 import { RepositoryDocument } from '../model/schemas';
 import { Release } from './model';
@@ -72,7 +72,7 @@ export class ReleaseService {
 
     const savedRelease = await releaseModel.save();
 
-    await updateRepo(this.repoModel, repoId, { releases: [savedRelease] });
+    await updateArray(this.repoModel, repoId, { releases: [savedRelease] });
 
     this.logger.debug('saving releases to database finished');
 

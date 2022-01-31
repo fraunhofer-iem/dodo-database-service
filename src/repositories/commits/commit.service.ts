@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { updateRepo } from '../lib';
+import { updateArray } from '../../lib';
 import { RepositoryIdentifier } from '../model';
 import { RepositoryDocument } from '../model/schemas';
 import { getCommits } from './lib';
@@ -38,7 +38,7 @@ export class CommitService {
     // have to do this manually?
     const commitsModel = await this.commitModel.create(commits);
 
-    await updateRepo(this.repoModel, repoId, { commits: commitsModel });
+    await updateArray(this.repoModel, repoId, { commits: commitsModel });
 
     if (commits.length == 100) {
       this.processCommits(repoIdent, repoId, pageNumber + 1);

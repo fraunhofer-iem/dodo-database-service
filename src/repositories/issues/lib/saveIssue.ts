@@ -1,6 +1,6 @@
 import { Model } from 'mongoose';
 import { UserDocument } from '../../../model/schemas';
-import { updateRepo } from '../../lib';
+import { updateArray } from '../../../lib';
 import { RepositoryIdentifier } from '../../model';
 import { RepositoryDocument } from '../../model/schemas';
 import { Issue } from '../model';
@@ -60,7 +60,7 @@ export async function saveIssue(
   issueModel.events = await IssueEventModel.create(issueEvents);
 
   const savedIssue = await issueModel.save();
-  await updateRepo(RepoModel, repoId, {
+  await updateArray(RepoModel, repoId, {
     issues: [savedIssue],
   });
 
