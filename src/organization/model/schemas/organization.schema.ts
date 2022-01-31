@@ -14,6 +14,9 @@ export class Organization {
 
   @Prop([{ type: mSchema.Types.ObjectId, ref: 'User' }])
   members: User[];
+
+  @Prop()
+  owner: string;
 }
 
 export type OrganizationDocument = Organization & Document;
