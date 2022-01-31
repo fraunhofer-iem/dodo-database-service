@@ -1,12 +1,12 @@
 import { AnyKeys, Document, Model } from 'mongoose';
 
 export async function updateArray<T extends Document>(
-  repoModel: Model<T>,
-  repoId: string,
+  model: Model<T>,
+  id: string,
   push: AnyKeys<T>,
 ) {
-  await repoModel
-    .findByIdAndUpdate(repoId, {
+  await model
+    .findByIdAndUpdate(id, {
       $push: push,
     })
     .exec();
