@@ -55,7 +55,7 @@ export async function saveIssue(
   issueModel.assignees = await AssigneeModel.create(issue.assignees);
   issueModel.milestone = await MilestoneModel.create(issue.milestone);
 
-  const issueEvents = await getIssueEvents(repoIdent, issue.number, 1);
+  const issueEvents = await getIssueEvents(repoIdent, issue.number);
 
   issueModel.events = await IssueEventModel.create(issueEvents);
 
@@ -70,7 +70,7 @@ export async function saveIssue(
 async function getIssueEvents(
   repoIdent: RepositoryIdentifier,
   issueNumber: number,
-  pageNumber: number,
+  pageNumber = 1,
 ): Promise<Partial<IssueEvent>[]> {
   const events = await queryIssueEvents(repoIdent, issueNumber, pageNumber);
 

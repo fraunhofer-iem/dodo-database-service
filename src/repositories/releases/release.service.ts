@@ -18,17 +18,10 @@ export class ReleaseService {
     private readonly repoModel: Model<RepositoryDocument>,
   ) {}
 
-  public async storeReleases(repoIdent: RepositoryIdentifier, repoId: string) {
-    this.logger.log(
-      `querying releases for ${repoIdent.owner}/${repoIdent.repo}`,
-    );
-    this.processReleases(repoIdent, repoId, 1);
-  }
-
-  private async processReleases(
+  public async storeReleases(
     repoIdent: RepositoryIdentifier,
     repoId: string,
-    pageNumber: number,
+    pageNumber = 1,
   ) {
     const releases = await this.getReleases(repoIdent, pageNumber);
 
@@ -36,11 +29,14 @@ export class ReleaseService {
       await this.saveReleases(release, repoId);
     }
     if (releases.length == 100) {
-      this.processReleases(repoIdent, repoId, pageNumber + 1);
+      this.storeReleases(repoIdent, repoId, pageNumber + 1);
     }
   }
 
-  private async getReleases(repoIdent: RepositoryIdentifier, pageNumber) {
+  private async getReleases(
+    repoIdent: RepositoryIdentifier,
+    pageNumber: number,
+  ) {
     const { owner, repo } = repoIdent;
     return OCTOKIT.rest.repos
       .listReleases({

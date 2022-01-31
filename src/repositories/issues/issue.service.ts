@@ -32,14 +32,10 @@ export class IssueService {
     private readonly issueEventModel: Model<IssueEventDocument>,
   ) {}
 
-  public async storeIssues(repoIdent: RepositoryIdentifier, repoId: string) {
-    this.processIssues(repoIdent, repoId, 1);
-  }
-
-  private async processIssues(
+  public async storeIssues(
     repoIdent: RepositoryIdentifier,
     repoId: string,
-    pageNumber: number,
+    pageNumber = 1,
   ) {
     const issues = await getIssues(repoIdent, pageNumber);
     for (const issue of issues) {
@@ -59,7 +55,7 @@ export class IssueService {
     }
 
     if (issues.length == 100) {
-      this.processIssues(repoIdent, repoId, pageNumber + 1);
+      this.storeIssues(repoIdent, repoId, pageNumber + 1);
     }
   }
 }

@@ -19,18 +19,10 @@ export class CommitService {
     private readonly commitModel: Model<CommitDocument>,
   ) {}
 
-  public async storeCommits(repoIdent: RepositoryIdentifier, repoId: string) {
-    this.logger.log(
-      `Retrieving commits of repo ${repoIdent.owner}/${repoIdent.repo}`,
-    );
-
-    await this.processCommits(repoIdent, repoId, 1);
-  }
-
-  private async processCommits(
+  public async storeCommits(
     repoIdent: RepositoryIdentifier,
     repoId: string,
-    pageNumber: number,
+    pageNumber = 1,
   ) {
     const commits: Commit[] = await getCommits(repoIdent, pageNumber);
 
@@ -41,7 +33,7 @@ export class CommitService {
     await updateArray(this.repoModel, repoId, { commits: commitsModel });
 
     if (commits.length == 100) {
-      this.processCommits(repoIdent, repoId, pageNumber + 1);
+      this.storeCommits(repoIdent, repoId, pageNumber + 1);
     }
   }
 }
