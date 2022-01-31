@@ -18,7 +18,8 @@ export class OrganizationService {
   ) {}
 
   public async initializeOrga(owner: string, repoNames?: string[]) {
-    const id = (await this.createOrg(owner))._id;
+    this.logger.log(`creating org for ${owner}`);
+    const id = (await this.getOrg(owner))._id;
     // TODO: this can be done in parallel and there should be no awaits
     // necessary. will keep them for now for better testability and
     // more stability in local runs.
@@ -26,20 +27,34 @@ export class OrganizationService {
     await this.addOrgaMembers(id, owner);
   }
 
-  private async createOrg(owner: string) {
-    return this.orgModel.create({
+  /**
+   * Creates org in database if it doesn't exist already.
+   * Else returns existing org.
+   */
+  private async getOrg(owner: string): Promise<OrganizationDocument> {
+    const exists = await this.orgModel.exists({
       owner: owner,
-      members: [],
-      repositories: [],
     });
+    if (exists) {
+      this.logger.log(`Database entry for ${owner} already exists`);
+      return this.orgModel.findOne({ owner: owner });
+    } else {
+      this.logger.log(`Entry for ${owner} will be created`);
+      return this.orgModel.create({
+        owner: owner,
+        members: [],
+        repositories: [],
+      });
+    }
   }
 
   private async addRepos(owner: string, repoNames?: string[], pageNumber = 1) {
     const repos = await queryRepos(owner, pageNumber, repoNames);
 
-    repos.forEach((repo) =>
-      this.repoService.initializeRepository({ owner: owner, repo: repo.name }),
-    );
+    repos.forEach((repo) => {
+      this.logger.log(`initializing repo ${repo.name}`);
+      this.repoService.initializeRepository({ owner: owner, repo: repo.name });
+    });
 
     if (repos.length == 100) {
       this.addRepos(owner, repoNames, pageNumber + 1);
@@ -48,7 +63,9 @@ export class OrganizationService {
 
   private async addOrgaMembers(id: string, owner: string, pageNumber = 1) {
     const orgMembers: User[] = await queryMembers(owner, pageNumber);
-
+    // TODO: I believe we should delete all existing members before updating the array.
+    // I don't think in place updates will be feasible so just querying everything new
+    // and replace whatever has been there before seems the best way.
     updateArray(this.orgModel, id, { members: orgMembers });
 
     if (orgMembers.length == 100) {

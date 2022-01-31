@@ -14,7 +14,7 @@ export class RepositoryService {
   ) {}
 
   public async initializeRepository(createRepoDto: CreateRepositoryDto) {
-    return this.createRepo(createRepoDto);
+    return this.getRepo(createRepoDto);
   }
 
   public async getRepositoryById(id: string) {
@@ -23,35 +23,31 @@ export class RepositoryService {
 
   /**
    * Creates the specified repository if it doesn't exist.
-   * If it exists it returns the id of the existing one.
-   * @param repo
-   * @param owner
-   * @returns id
+   * If it exists it returns the existing one.
    */
-  private async createRepo(repoIdent: CreateRepositoryDto): Promise<string> {
+  private async getRepo(
+    repoIdent: CreateRepositoryDto,
+  ): Promise<RepositoryDocument> {
     const exists = await this.repoModel.exists({
       repo: repoIdent.repo,
       owner: repoIdent.owner,
     });
 
     if (exists) {
-      const repoM = await this.repoModel
+      this.logger.log(
+        `Model for ${repoIdent.repo} with owner ${repoIdent.owner} already exists`,
+      );
+      return this.repoModel
         .findOne({ repo: repoIdent.repo, owner: repoIdent.owner })
         .exec();
-
-      this.logger.debug('Model already exists ' + repoM);
-      return repoM._id;
     } else {
-      this.logger.debug(
+      this.logger.log(
         `Creating new model for ${repoIdent.repo} with owner ${repoIdent.owner}`,
       );
-      const repoInstance = await new this.repoModel({
+      return new this.repoModel({
         owner: repoIdent.owner,
         repo: repoIdent.repo,
       }).save();
-
-      this.logger.debug('Instance created ' + repoInstance);
-      return repoInstance._id;
     }
   }
 }
