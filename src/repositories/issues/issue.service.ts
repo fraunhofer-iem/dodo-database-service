@@ -5,7 +5,7 @@ import { UserDocument } from '../../model/schemas';
 import { RepositoryIdentifier } from '../model';
 import { RepositoryDocument } from '../model/schemas';
 
-import { getIssues, saveIssue } from './lib';
+import { queryIssues, saveIssue } from './lib';
 import {
   IssueDocument,
   IssueEventDocument,
@@ -37,7 +37,7 @@ export class IssueService {
     repoId: string,
     pageNumber = 1,
   ) {
-    const issues = await getIssues(repoIdent, pageNumber);
+    const issues = await queryIssues(repoIdent, pageNumber);
     for (const issue of issues) {
       await saveIssue(
         repoIdent,

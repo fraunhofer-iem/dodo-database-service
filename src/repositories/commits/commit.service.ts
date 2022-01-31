@@ -4,7 +4,7 @@ import { Model } from 'mongoose';
 import { updateArray } from '../../lib';
 import { RepositoryIdentifier } from '../model';
 import { RepositoryDocument } from '../model/schemas';
-import { getCommits } from './lib';
+import { queryCommits } from './lib';
 import { Commit } from './model';
 import { CommitDocument } from './model/schemas';
 
@@ -24,7 +24,7 @@ export class CommitService {
     repoId: string,
     pageNumber = 1,
   ) {
-    const commits: Commit[] = await getCommits(repoIdent, pageNumber);
+    const commits: Commit[] = await queryCommits(repoIdent, pageNumber);
 
     //TODO: check what happens here. do we automatically create a user or do we
     // have to do this manually?

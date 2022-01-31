@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { RepositoryService } from '../repositories/repository.service';
-import { updateArray } from '../lib';
+import { updateArray, documentExists } from '../lib';
 import { User } from '../model';
 import { OrganizationDocument } from './model/schemas';
 import { queryMembers, queryRepos } from './lib';
@@ -19,7 +19,7 @@ export class OrganizationService {
 
   public async initializeOrga(owner: string, repoNames?: string[]) {
     this.logger.log(`creating org for ${owner}`);
-    const id = (await this.getOrg(owner))._id;
+    const { _id: id } = await this.getOrg(owner);
     // TODO: this can be done in parallel and there should be no awaits
     // necessary. will keep them for now for better testability and
     // more stability in local runs.
@@ -32,10 +32,7 @@ export class OrganizationService {
    * Else returns existing org.
    */
   private async getOrg(owner: string): Promise<OrganizationDocument> {
-    const exists = await this.orgModel.exists({
-      owner: owner,
-    });
-    if (exists) {
+    if (await documentExists(this.orgModel, { owner: owner })) {
       this.logger.log(`Database entry for ${owner} already exists`);
       return this.orgModel.findOne({ owner: owner });
     } else {

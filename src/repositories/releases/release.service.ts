@@ -23,7 +23,7 @@ export class ReleaseService {
     repoId: string,
     pageNumber = 1,
   ) {
-    const releases = await this.getReleases(repoIdent, pageNumber);
+    const releases = await this.queryReleases(repoIdent, pageNumber);
 
     for (const release of releases) {
       await this.saveReleases(release, repoId);
@@ -33,7 +33,7 @@ export class ReleaseService {
     }
   }
 
-  private async getReleases(
+  private async queryReleases(
     repoIdent: RepositoryIdentifier,
     pageNumber: number,
   ) {

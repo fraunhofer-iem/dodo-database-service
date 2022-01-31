@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { RepositoryDocument } from './model/schemas';
 import { CreateRepositoryDto } from './model';
+import { documentExists } from 'src/lib';
 
 @Injectable()
 export class RepositoryService {
@@ -28,12 +29,12 @@ export class RepositoryService {
   private async getRepo(
     repoIdent: CreateRepositoryDto,
   ): Promise<RepositoryDocument> {
-    const exists = await this.repoModel.exists({
-      repo: repoIdent.repo,
-      owner: repoIdent.owner,
-    });
-
-    if (exists) {
+    if (
+      await documentExists(this.repoModel, {
+        repo: repoIdent.repo,
+        owner: repoIdent.owner,
+      })
+    ) {
       this.logger.log(
         `Model for ${repoIdent.repo} with owner ${repoIdent.owner} already exists`,
       );

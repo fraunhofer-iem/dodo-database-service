@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { RepositoryIdentifier } from '../model/RepositoryDtos';
 import { RepositoryDocument } from '../model/schemas';
-import { getMergeTargetAndFeatureFiles, getPullRequests } from './lib';
+import { getMergeTargetAndFeatureFiles, queryPullRequests } from './lib';
 import { savePullRequestDiff } from './lib/updateRepo';
 import { PullRequest } from './model';
 import {
@@ -52,7 +52,7 @@ export class PullRequestService {
     repoId: string,
     pageNumber = 1,
   ) {
-    const pullRequests = await getPullRequests(repoIdent, pageNumber);
+    const pullRequests = await queryPullRequests(repoIdent, pageNumber);
     this.logger.log(
       pullRequests.length + ' pull requests received at number ' + pageNumber,
     );
