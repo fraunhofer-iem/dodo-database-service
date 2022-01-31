@@ -2,9 +2,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { RepositoryService } from '../repositories/repository.service';
-import { OCTOKIT, updateArray } from '../lib';
+import { updateArray } from '../lib';
 import { User } from '../model';
 import { OrganizationDocument } from './model/schemas';
+import { queryMembers, queryRepos } from './lib';
 
 @Injectable()
 export class OrganizationService {
@@ -18,6 +19,9 @@ export class OrganizationService {
 
   public async initializeOrga(owner: string, repoNames?: string[]) {
     const id = (await this.createOrg(owner))._id;
+    // TODO: this can be done in parallel and there should be no awaits
+    // necessary. will keep them for now for better testability and
+    // more stability in local runs.
     await this.addRepos(owner, repoNames);
     await this.addOrgaMembers(id, owner);
   }
@@ -31,15 +35,7 @@ export class OrganizationService {
   }
 
   private async addRepos(owner: string, repoNames?: string[], pageNumber = 1) {
-    const repos = await OCTOKIT.rest.repos
-      .listForOrg({ org: owner, page: pageNumber, per_page: 100 })
-      .then((res) => {
-        if (repoNames) {
-          return res.data.filter((repo) => repoNames.includes(repo.name));
-        } else {
-          return res.data;
-        }
-      });
+    const repos = await queryRepos(owner, pageNumber, repoNames);
 
     repos.forEach((repo) =>
       this.repoService.initializeRepository({ owner: owner, repo: repo.name }),
@@ -51,13 +47,7 @@ export class OrganizationService {
   }
 
   private async addOrgaMembers(id: string, owner: string, pageNumber = 1) {
-    const orgMembers: User[] = await OCTOKIT.rest.orgs
-      .listMembers({
-        org: owner,
-        page: pageNumber,
-        per_page: 100,
-      })
-      .then((res) => res.data);
+    const orgMembers: User[] = await queryMembers(owner, pageNumber);
 
     updateArray(this.orgModel, id, { members: orgMembers });
 
