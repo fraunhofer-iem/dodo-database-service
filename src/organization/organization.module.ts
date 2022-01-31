@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { RepositoryModule } from 'src/repositories/repository.module';
 import { OrganizationSchema } from './model/schemas';
 import { OrganizationController } from './organization.controller';
 import { OrganizationService } from './organization.service';
@@ -9,6 +10,7 @@ import { OrganizationService } from './organization.service';
     MongooseModule.forFeature([
       { name: 'Organization', schema: OrganizationSchema },
     ]),
+    RepositoryModule,
   ],
   providers: [OrganizationService],
   controllers: [OrganizationController],
