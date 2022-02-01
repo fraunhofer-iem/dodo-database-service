@@ -1,0 +1,62 @@
+name: Deploy
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
+
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag to be pushed to dodo-deployment
+        required: true
+        type: string
+
+jobs:
+  updateDeployment:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          repository: fraunhofer-iem/dodo-deployment
+          ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+          submodules: true
+
+      - name: Checkout desired tag (workflow_call)
+        if: ${{ github.event_name != 'workflow_dispatch' }}
+        run: |
+          git submodule update --init --recursive -- dodo-database-service
+          cd dodo-database-service
+          git fetch --all --tags
+          git checkout ${{ inputs.tag }}
+          cd ..
+
+      - name: Checkout desired tag (workflow_dispatch)
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          git submodule update --init --recursive -- dodo-database-service
+          cd dodo-database-service
+          git fetch --all --tags
+          git checkout ${{ github.event.inputs.tag }}
+          cd ..
+
+      - name: Stage changes
+        run: |
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions - Update submodules"
+          git add dodo-database-service/
+
+      - name: Push changes (workflow_call)
+        if: ${{ github.event_name != 'workflow_dispatch' }}
+        run: |
+          git commit -m "dodo-database-service@${{ inputs.tag }}" || echo "dodo-deployment/dodo-database-service already on ${{ inputs.tag }}"
+          git push
+
+      - name: Push changes (workflow_dispatch)
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          git commit -m "dodo-database-service@${{ github.event.inputs.tag }}" || echo "dodo-deployment/dodo-database-service already on ${{ github.event.inputs.tag }}"
+          git push

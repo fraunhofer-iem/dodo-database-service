@@ -1,10 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { GithubApiModule } from './github-api/github-api.module';
-import { DatabaseModule } from './database/database.module';
+import { RepositoryModule } from './repositories/repository.module';
+import { KpiModule } from './kpi/kpi.module';
+import { OrganizationModule } from './organization/organization.module';
 
 @Module({
   imports: [
@@ -17,18 +16,18 @@ import { DatabaseModule } from './database/database.module';
       useFactory: async (configService: ConfigService) => ({
         uri: configService.get<string>('DB_URI'),
         auth: {
-          user: configService.get<string>('DB_USER'),
+          username: configService.get<string>('DB_USER'),
           password: configService.get<string>('DB_USER_PASSWORD'),
         },
         useNewUrlParser: true,
-        useFindAndModify: false, //https://mongoosejs.com/docs/deprecations.html#findandmodify
       }),
       inject: [ConfigService],
     }),
-    DatabaseModule,
-    GithubApiModule,
+    RepositoryModule,
+    KpiModule,
+    OrganizationModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}

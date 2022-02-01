@@ -1,0 +1,34 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: >-
+  Doing Optimal DevOps - Evidence-based Guidance to
+  Your DevOps Journey
+message: >-
+  If you use information from this repository, please
+  cite it using the metadata from this file.
+type: software
+authors:
+  - given-names: Jan-Niclas
+    family-names: Strüwer
+    email: jan-niclas.struewer@iem.fraunhofer.de
+    affiliation: Fraunhofer IEM
+    orcid: 'https://orcid.org/0000-0002-4876-3483'
+  - given-names: Benedict
+    family-names: Wohlers
+    email: benedict.wohlers@iem.fraunhofer.de
+    affiliation: Fraunhofer IEM
+    orcid: 'https://orcid.org/0000-0001-8285-2343'
+  - given-names: Felix
+    email: felix.barczewicz@iem.fraunhofer.de
+    family-names: Barczewicz
+    affiliation: Fraunhofer IEM
+  - email: nitin.chamoli@iem.fraunhofer.de
+    affiliation: FraunhoferIEM
+    given-names: Nitin
+    family-names: Chamoli
+  - given-names: Til
+    family-names: Schulz
+    email: til.schulz@iem.fraunhofer.de
+    affiliation: Fraunhofer IEM

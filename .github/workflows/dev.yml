@@ -1,0 +1,42 @@
+name: CI/CD dev
+
+on:
+  push:
+    branches:
+      - dev
+
+  pull_request:
+    branches:
+      - dev
+
+  workflow_dispatch:
+
+concurrency: tagging
+
+jobs:
+  lint:
+    uses: fraunhofer-iem/dodo-database-service/.github/workflows/lint.yml@main
+
+  test:
+    uses: fraunhofer-iem/dodo-database-service/.github/workflows/test.yml@main
+    needs: lint
+
+  tag:
+    if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch'}}
+    needs: test
+    uses: fraunhofer-iem/dodo-database-service/.github/workflows/tag.yml@main
+    with:
+      suffix: vortex
+      
+  release:
+    needs: tag
+    uses: fraunhofer-iem/dodo-database-service/.github/workflows/release.yml@main
+    with:
+      tag: ${{ needs.tag.outputs.new_tag }}
+      prerelease: true
+
+  deploy:
+    needs: tag
+    uses: fraunhofer-iem/dodo-database-service/.github/workflows/updateDeploy.yml@main
+    with:
+      tag: ${{ needs.tag.outputs.new_tag }}

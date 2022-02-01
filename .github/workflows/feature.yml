@@ -1,0 +1,44 @@
+name: CI/CD feature
+
+on:
+  push:
+    branches:
+      - feature/*
+
+  workflow_dispatch:
+
+concurrency: feature
+
+jobs:
+  lint:
+    uses: fraunhofer-iem/dodo-database-service/.github/workflows/lint.yml@main
+
+  test:
+    needs: lint
+    uses: fraunhofer-iem/dodo-database-service/.github/workflows/test.yml@main
+  
+  format:
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+        
+      - name: node setup
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16.x
+
+      - name: format
+        run: |
+          npm install
+          npm run format
+
+      - name: push format changes
+        run: |
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions - applied format"
+          git add --all
+          git commit -m "Applied Format" || echo "No changes to commit"
+          git push

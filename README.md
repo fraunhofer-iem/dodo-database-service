@@ -1,6 +1,11 @@
 # Overview
 
-This repository is intended as a playground to calculate and thereby verify some KPIs and metrics defined in the research project [DoDo](https://fraunhofer-iem.github.io/dodo-web/).
+This repository is intended as a playground to calculate and verify KPIs and metrics defined in the research project [DoDo](https://fraunhofer-iem.github.io/dodo-web/).
+The repository contains a description of the calculated KPIs [here](https://github.com/fraunhofer-iem/dodo-database-service/tree/main/doc/KPIs).
+
+## Further Repositories
+An additional project is used to visualize the calculated data and can be found [here](https://github.com/fraunhofer-iem/dodo-github-visualization).\
+To deploy the complete setup using docker and adding traefik for routing between the containers you can use this [repository](https://github.com/fraunhofer-iem/dodo-deployment).
 
 ## Installation
 
@@ -38,7 +43,12 @@ $ npm run test:e2e
 # test coverage
 $ npm run test:cov
 ```
+### Run the statistic tests
+```bash
+$ npm test
+```
 
+If you run the newest Linux Version (21) you might run into problems, because the mongodb binary is not found. In this case manually set the binary download url as an environment variable (MONGOMS_DOWNLOAD_URL=https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu2004-5.0.3.tgz).
 ## Configuration
 
 Create local `.env.local` file in which you store a GitHub access token under the `GITHUB_ACCESS_TOKEN` key. The GitHub REST API is restricted to 60 requests per hour if you don't use any access token and this will be exceeded by one of the predefined queries. For more details of the limited rates see the GitHub [documentation](https://docs.github.com/en/rest/overview/resources-in-the-rest-api#rate-limiting).
