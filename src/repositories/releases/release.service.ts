@@ -1,8 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { OCTOKIT } from '../../lib';
-import { updateRepo } from '../lib';
+import { OCTOKIT, updateArray } from '../../lib';
 import { RepositoryIdentifier } from '../model';
 import { RepositoryDocument } from '../model/schemas';
 import { Release } from './model';
@@ -19,29 +18,25 @@ export class ReleaseService {
     private readonly repoModel: Model<RepositoryDocument>,
   ) {}
 
-  public async storeReleases(repoIdent: RepositoryIdentifier, repoId: string) {
-    this.logger.log(
-      `querying releases for ${repoIdent.owner}/${repoIdent.repo}`,
-    );
-    this.processReleases(repoIdent, repoId, 1);
-  }
-
-  private async processReleases(
+  public async storeReleases(
     repoIdent: RepositoryIdentifier,
     repoId: string,
-    pageNumber: number,
+    pageNumber = 1,
   ) {
-    const releases = await this.getReleases(repoIdent, pageNumber);
+    const releases = await this.queryReleases(repoIdent, pageNumber);
 
     for (const release of releases) {
       await this.saveReleases(release, repoId);
     }
     if (releases.length == 100) {
-      this.processReleases(repoIdent, repoId, pageNumber + 1);
+      this.storeReleases(repoIdent, repoId, pageNumber + 1);
     }
   }
 
-  private async getReleases(repoIdent: RepositoryIdentifier, pageNumber) {
+  private async queryReleases(
+    repoIdent: RepositoryIdentifier,
+    pageNumber: number,
+  ) {
     const { owner, repo } = repoIdent;
     return OCTOKIT.rest.repos
       .listReleases({
@@ -72,7 +67,7 @@ export class ReleaseService {
 
     const savedRelease = await releaseModel.save();
 
-    await updateRepo(this.repoModel, repoId, { releases: [savedRelease] });
+    await updateArray(this.repoModel, repoId, { releases: [savedRelease] });
 
     this.logger.debug('saving releases to database finished');
 

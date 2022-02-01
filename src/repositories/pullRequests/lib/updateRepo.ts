@@ -1,5 +1,5 @@
 import { Model } from 'mongoose';
-import { updateRepo } from '../../lib';
+import { updateArray } from '../../../lib';
 import { RepositoryDocument } from '../../model/schemas';
 import { Diff } from '../model';
 import {
@@ -37,5 +37,5 @@ export async function savePullRequestDiff(
   createdDiff.pullRequest = pullRequest;
   const savedDiff = await createdDiff.save();
 
-  await updateRepo(Repo, repoId, { diffs: [savedDiff] });
+  await updateArray(Repo, repoId, { diffs: [savedDiff] });
 }

@@ -1,6 +1,6 @@
 import { Model } from 'mongoose';
 import { UserDocument } from '../../../model/schemas';
-import { updateRepo } from '../../lib';
+import { updateArray } from '../../../lib';
 import { RepositoryIdentifier } from '../../model';
 import { RepositoryDocument } from '../../model/schemas';
 import { Issue } from '../model';
@@ -55,12 +55,12 @@ export async function saveIssue(
   issueModel.assignees = await AssigneeModel.create(issue.assignees);
   issueModel.milestone = await MilestoneModel.create(issue.milestone);
 
-  const issueEvents = await getIssueEvents(repoIdent, issue.number, 1);
+  const issueEvents = await getIssueEvents(repoIdent, issue.number);
 
   issueModel.events = await IssueEventModel.create(issueEvents);
 
   const savedIssue = await issueModel.save();
-  await updateRepo(RepoModel, repoId, {
+  await updateArray(RepoModel, repoId, {
     issues: [savedIssue],
   });
 
@@ -70,7 +70,7 @@ export async function saveIssue(
 async function getIssueEvents(
   repoIdent: RepositoryIdentifier,
   issueNumber: number,
-  pageNumber: number,
+  pageNumber = 1,
 ): Promise<Partial<IssueEvent>[]> {
   const events = await queryIssueEvents(repoIdent, issueNumber, pageNumber);
 

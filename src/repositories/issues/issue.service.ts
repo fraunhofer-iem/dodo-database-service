@@ -5,7 +5,7 @@ import { UserDocument } from '../../model/schemas';
 import { RepositoryIdentifier } from '../model';
 import { RepositoryDocument } from '../model/schemas';
 
-import { getIssues, saveIssue } from './lib';
+import { queryIssues, saveIssue } from './lib';
 import {
   IssueDocument,
   IssueEventDocument,
@@ -32,16 +32,12 @@ export class IssueService {
     private readonly issueEventModel: Model<IssueEventDocument>,
   ) {}
 
-  public async storeIssues(repoIdent: RepositoryIdentifier, repoId: string) {
-    this.processIssues(repoIdent, repoId, 1);
-  }
-
-  private async processIssues(
+  public async storeIssues(
     repoIdent: RepositoryIdentifier,
     repoId: string,
-    pageNumber: number,
+    pageNumber = 1,
   ) {
-    const issues = await getIssues(repoIdent, pageNumber);
+    const issues = await queryIssues(repoIdent, pageNumber);
     for (const issue of issues) {
       await saveIssue(
         repoIdent,
@@ -59,7 +55,7 @@ export class IssueService {
     }
 
     if (issues.length == 100) {
-      this.processIssues(repoIdent, repoId, pageNumber + 1);
+      this.storeIssues(repoIdent, repoId, pageNumber + 1);
     }
   }
 }

@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Logger, Param, Post } from '@nestjs/common';
+import { repoExists } from './lib';
 import { CreateRepositoryDto } from './model';
 import { RepositoryService } from './repository.service';
 
@@ -18,7 +19,9 @@ export class RepositoryController {
     this.logger.log(
       `Creating entry for owner ${createRepositoryDto.owner} and repository ${createRepositoryDto.repo}`,
     );
-    return this.repoService.createRepository(createRepositoryDto);
+    if (repoExists(createRepositoryDto)) {
+      return this.repoService.initializeRepository(createRepositoryDto);
+    }
   }
 
   @Get(':id')
