@@ -53,7 +53,7 @@ export class ReleaseService {
    * @param repoId
    * @returns
    */
-  async saveReleases(release: Release, repoId: string) {
+  private async saveReleases(release: Release, repoId: string) {
     this.logger.debug('saving Releases to database');
     const releaseModel = new this.releaseModel();
 
