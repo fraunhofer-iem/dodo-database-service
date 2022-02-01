@@ -1,15 +1,19 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { UserDocument } from '../../model/schemas';
+import { User, UserDocument } from '../../model/schemas';
 import { RepositoryIdentifier } from '../model';
-import { RepositoryDocument } from '../model/schemas';
+import { Repository, RepositoryDocument } from '../model/schemas';
 
 import { queryIssues, saveIssue } from './lib';
 import {
+  Issue,
   IssueDocument,
+  IssueEvent,
   IssueEventDocument,
+  Label,
   LabelDocument,
+  Milestone,
   MilestoneDocument,
 } from './model/schemas';
 
@@ -18,17 +22,17 @@ export class IssueService {
   private readonly logger = new Logger(IssueService.name);
 
   constructor(
-    @InjectModel('Repository')
+    @InjectModel(Repository.name)
     private readonly repoModel: Model<RepositoryDocument>,
-    @InjectModel('Issue')
+    @InjectModel(Issue.name)
     private readonly issueModel: Model<IssueDocument>,
-    @InjectModel('User')
+    @InjectModel(User.name)
     private readonly assigneeModel: Model<UserDocument>,
-    @InjectModel('Label')
+    @InjectModel(Label.name)
     private readonly labelModel: Model<LabelDocument>,
-    @InjectModel('Milestone')
+    @InjectModel(Milestone.name)
     private readonly milestoneModel: Model<MilestoneDocument>,
-    @InjectModel('IssueEvent')
+    @InjectModel(IssueEvent.name)
     private readonly issueEventModel: Model<IssueEventDocument>,
   ) {}
 

@@ -54,9 +54,9 @@ export async function saveIssue(
   issueModel.assignee = await AssigneeModel.create(issue.assignee);
   issueModel.assignees = await AssigneeModel.create(issue.assignees);
   issueModel.milestone = await MilestoneModel.create(issue.milestone);
-
+  console.log('here');
   const issueEvents = await getIssueEvents(repoIdent, issue.number);
-
+  console.log(issueEvents);
   issueModel.events = await IssueEventModel.create(issueEvents);
 
   const savedIssue = await issueModel.save();

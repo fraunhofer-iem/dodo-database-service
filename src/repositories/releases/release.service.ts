@@ -3,18 +3,18 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { OCTOKIT, updateArray } from '../../lib';
 import { RepositoryIdentifier } from '../model';
-import { RepositoryDocument } from '../model/schemas';
+import { Repository, RepositoryDocument } from '../model/schemas';
 import { Release } from './model';
-import { ReleaseDocument } from './model/schemas';
+import { Release as ReleaseM, ReleaseDocument } from './model/schemas';
 
 @Injectable()
 export class ReleaseService {
   private readonly logger = new Logger(ReleaseService.name);
 
   constructor(
-    @InjectModel('Release')
+    @InjectModel(ReleaseM.name)
     private readonly releaseModel: Model<ReleaseDocument>,
-    @InjectModel('Repository')
+    @InjectModel(Repository.name)
     private readonly repoModel: Model<RepositoryDocument>,
   ) {}
 

@@ -3,19 +3,19 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { updateArray } from '../../lib';
 import { RepositoryIdentifier } from '../model';
-import { RepositoryDocument } from '../model/schemas';
+import { Repository, RepositoryDocument } from '../model/schemas';
 import { queryCommits } from './lib';
 import { Commit } from './model';
-import { CommitDocument } from './model/schemas';
+import { Commit as CommitM, CommitDocument } from './model/schemas';
 
 @Injectable()
 export class CommitService {
   private readonly logger = new Logger(CommitService.name);
 
   constructor(
-    @InjectModel('Repository')
+    @InjectModel(Repository.name)
     private readonly repoModel: Model<RepositoryDocument>,
-    @InjectModel('Commit')
+    @InjectModel(CommitM.name)
     private readonly commitModel: Model<CommitDocument>,
   ) {}
 
