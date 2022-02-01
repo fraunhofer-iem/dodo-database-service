@@ -4,6 +4,10 @@ import { Model } from 'mongoose';
 import { RepositoryDocument } from './model/schemas';
 import { CreateRepositoryDto } from './model';
 import { documentExists } from 'src/lib';
+import { IssueService } from './issues/issue.service';
+import { CommitService } from './commits/commit.service';
+import { ReleaseService } from './releases/release.service';
+import { PullRequestService } from './pullRequests/pullRequest.service';
 
 @Injectable()
 export class RepositoryService {
@@ -12,10 +16,22 @@ export class RepositoryService {
   constructor(
     @InjectModel('Repository')
     private readonly repoModel: Model<RepositoryDocument>,
+    private issueService: IssueService,
+    private commitService: CommitService,
+    private releaseService: ReleaseService,
+    private pullRequestService: PullRequestService,
   ) {}
 
   public async initializeRepository(createRepoDto: CreateRepositoryDto) {
-    return this.getRepo(createRepoDto);
+    const repo = await this.getRepo(createRepoDto);
+    await this.issueService.storeIssues(createRepoDto, repo._id);
+    await this.commitService.storeCommits(createRepoDto, repo._id);
+    await this.releaseService.storeReleases(createRepoDto, repo._id);
+    await this.pullRequestService.storePullRequestDiffsForRepo(
+      createRepoDto,
+      repo._id,
+    );
+    return repo;
   }
 
   public async getRepositoryById(id: string) {
@@ -48,6 +64,10 @@ export class RepositoryService {
       return new this.repoModel({
         owner: repoIdent.owner,
         repo: repoIdent.repo,
+        commits: [],
+        releases: [],
+        diffs: [],
+        issues: [],
       }).save();
     }
   }

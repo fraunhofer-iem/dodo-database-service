@@ -53,14 +53,14 @@ export class OrganizationService {
   ) {
     const repos = await queryRepos(owner, pageNumber, repoNames);
 
-    repos.forEach(async (repo) => {
+    for (const repo of repos) {
       this.logger.log(`initializing repo ${repo.name}`);
       const currRepos = await this.repoService.initializeRepository({
         owner: owner,
         repo: repo.name,
       });
       updateArray(this.orgModel, id, { repositories: currRepos });
-    });
+    }
 
     if (repos.length == 100) {
       this.addRepos(owner, id, repoNames, pageNumber + 1);
