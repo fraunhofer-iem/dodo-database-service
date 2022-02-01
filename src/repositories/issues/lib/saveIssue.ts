@@ -20,6 +20,7 @@ interface IssueModels {
   AssigneeModel: Model<UserDocument>;
   MilestoneModel: Model<MilestoneDocument>;
   IssueEventModel: Model<IssueEventDocument>;
+  UserModel: Model<UserDocument>;
 }
 
 export async function saveIssue(
@@ -35,6 +36,7 @@ export async function saveIssue(
     AssigneeModel,
     MilestoneModel,
     IssueEventModel,
+    UserModel,
   } = issueModels;
 
   const issueModel = new IssueModel();
@@ -54,9 +56,12 @@ export async function saveIssue(
   issueModel.assignee = await AssigneeModel.create(issue.assignee);
   issueModel.assignees = await AssigneeModel.create(issue.assignees);
   issueModel.milestone = await MilestoneModel.create(issue.milestone);
-  console.log('here');
-  const issueEvents = await getIssueEvents(repoIdent, issue.number);
-  console.log(issueEvents);
+
+  const issueEvents = await getIssueEventsWithActor(
+    repoIdent,
+    issue.number,
+    UserModel,
+  );
   issueModel.events = await IssueEventModel.create(issueEvents);
 
   const savedIssue = await issueModel.save();
@@ -65,6 +70,19 @@ export async function saveIssue(
   });
 
   return savedIssue.id;
+}
+
+async function getIssueEventsWithActor(
+  repoIdent: RepositoryIdentifier,
+  issueNumber: number,
+  userModel: Model<UserDocument>,
+) {
+  const issueEvents = await getIssueEvents(repoIdent, issueNumber);
+
+  return issueEvents.map(async (currIssueEvent) => {
+    const actor = await userModel.create(currIssueEvent.actor);
+    return { ...currIssueEvent, actor: actor };
+  });
 }
 
 async function getIssueEvents(

@@ -34,6 +34,8 @@ export class IssueService {
     private readonly milestoneModel: Model<MilestoneDocument>,
     @InjectModel(IssueEvent.name)
     private readonly issueEventModel: Model<IssueEventDocument>,
+    @InjectModel(User.name)
+    private readonly userModel: Model<UserDocument>,
   ) {}
 
   public async storeIssues(
@@ -52,6 +54,7 @@ export class IssueService {
           AssigneeModel: this.assigneeModel,
           MilestoneModel: this.milestoneModel,
           IssueEventModel: this.issueEventModel,
+          UserModel: this.userModel,
         },
         issue,
         repoId,
