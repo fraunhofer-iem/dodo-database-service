@@ -78,11 +78,12 @@ async function getIssueEventsWithActor(
   userModel: Model<UserDocument>,
 ) {
   const issueEvents = await getIssueEvents(repoIdent, issueNumber);
-
-  return issueEvents.map(async (currIssueEvent) => {
+  const filledEvents: Partial<IssueEventDocument>[] = [];
+  for (const currIssueEvent of issueEvents) {
     const actor = await userModel.create(currIssueEvent.actor);
-    return { ...currIssueEvent, actor: actor };
-  });
+    filledEvents.push({ ...currIssueEvent, actor: actor });
+  }
+  return filledEvents;
 }
 
 async function getIssueEvents(
