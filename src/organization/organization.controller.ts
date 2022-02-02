@@ -1,9 +1,12 @@
 import { Body, Controller, Get, Logger, Param, Post } from '@nestjs/common';
 import { CreateOrgDto } from './model';
+import { OrganizationService } from './organization.service';
 
 @Controller('api/organizations')
 export class OrganizationController {
   private readonly logger = new Logger(OrganizationController.name);
+
+  constructor(private orgaService: OrganizationService) {}
 
   @Get()
   async getOrgs() {
@@ -15,6 +18,7 @@ export class OrganizationController {
     this.logger.log(
       `Creating entry for organization ${createOrgDto.identifier}`,
     );
+    this.orgaService.initializeOrga(createOrgDto.identifier);
   }
 
   @Get(':id')
