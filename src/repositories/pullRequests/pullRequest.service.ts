@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { RepositoryIdentifier } from '../model/RepositoryDtos';
-import { RepositoryDocument } from '../model/schemas';
+import { Repository, RepositoryDocument } from '../model/schemas';
 import { getMergeTargetAndFeatureFiles, queryPullRequests } from './lib';
 import { savePullRequestDiff } from './lib/updateRepo';
 import { PullRequest } from './model';
@@ -11,6 +11,10 @@ import {
   PullRequestFileDocument,
   PullRequestDocument,
   DiffDocument,
+  RepositoryFile,
+  PullRequestFile,
+  PullRequest as PullRequestM,
+  Diff,
 } from './model/schemas';
 
 export interface Tree {
@@ -27,15 +31,15 @@ export class PullRequestService {
   private readonly logger = new Logger(PullRequestService.name);
 
   constructor(
-    @InjectModel('Repository')
+    @InjectModel(Repository.name)
     private readonly repoModel: Model<RepositoryDocument>,
-    @InjectModel('RepositoryFiles')
+    @InjectModel(RepositoryFile.name)
     private readonly repoFileModel: Model<RepositoryFileDocument>,
-    @InjectModel('PullRequestFiles')
+    @InjectModel(PullRequestFile.name)
     private readonly pullFileModel: Model<PullRequestFileDocument>,
-    @InjectModel('PullRequest')
+    @InjectModel(PullRequestM.name)
     private readonly pullRequestModel: Model<PullRequestDocument>,
-    @InjectModel('Diff')
+    @InjectModel(Diff.name)
     private readonly diffModel: Model<DiffDocument>,
   ) {}
 

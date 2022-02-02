@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { RepositoryDocument } from './model/schemas';
+import { Repository, RepositoryDocument } from './model/schemas';
 import { CreateRepositoryDto } from './model';
 import { documentExists } from 'src/lib';
 import { IssueService } from './issues/issue.service';
@@ -14,7 +14,7 @@ export class RepositoryService {
   private readonly logger = new Logger(RepositoryService.name);
 
   constructor(
-    @InjectModel('Repository')
+    @InjectModel(Repository.name)
     private readonly repoModel: Model<RepositoryDocument>,
     private issueService: IssueService,
     private commitService: CommitService,

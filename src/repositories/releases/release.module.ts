@@ -8,10 +8,11 @@ import { ReleaseService } from './release.service';
 @Module({
   imports: [
     MongooseModule.forFeature([
-      { name: 'Releases', schema: ReleaseSchema },
+      { name: 'Release', schema: ReleaseSchema },
       { name: 'Repository', schema: RepositorySchema },
     ]),
   ],
   providers: [ReleaseService],
+  exports: [ReleaseService],
 })
 export class ReleaseModule {}

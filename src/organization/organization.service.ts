@@ -4,7 +4,7 @@ import { Model } from 'mongoose';
 import { RepositoryService } from '../repositories/repository.service';
 import { updateArray, documentExists } from '../lib';
 import { User } from '../model';
-import { OrganizationDocument } from './model/schemas';
+import { Organization, OrganizationDocument } from './model/schemas';
 import { queryMembers, queryRepos } from './lib';
 
 @Injectable()
@@ -12,7 +12,7 @@ export class OrganizationService {
   private readonly logger = new Logger(OrganizationService.name);
 
   constructor(
-    @InjectModel('Organization')
+    @InjectModel(Organization.name)
     private readonly orgModel: Model<OrganizationDocument>,
     private repoService: RepositoryService,
   ) {}

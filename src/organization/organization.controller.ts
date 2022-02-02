@@ -6,7 +6,7 @@ import { OrganizationService } from './organization.service';
 export class OrganizationController {
   private readonly logger = new Logger(OrganizationController.name);
 
-  constructor(private orgaService: OrganizationService) {}
+  constructor(private orgService: OrganizationService) {}
 
   @Get()
   async getOrgs() {
@@ -18,7 +18,7 @@ export class OrganizationController {
     this.logger.log(
       `Creating entry for organization ${createOrgDto.identifier}`,
     );
-    this.orgaService.initializeOrga(createOrgDto.identifier);
+    this.orgService.initializeOrga(createOrgDto.identifier);
   }
 
   @Get(':id')
