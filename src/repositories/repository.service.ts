@@ -25,12 +25,12 @@ export class RepositoryService {
   public async initializeRepository(createRepoDto: CreateRepositoryDto) {
     const repo = await this.getRepo(createRepoDto);
     await this.issueService.storeIssues(createRepoDto, repo._id);
-    await this.commitService.storeCommits(createRepoDto, repo._id);
-    await this.releaseService.storeReleases(createRepoDto, repo._id);
-    await this.pullRequestService.storePullRequestDiffsForRepo(
-      createRepoDto,
-      repo._id,
-    );
+    // await this.commitService.storeCommits(createRepoDto, repo._id);
+    // await this.releaseService.storeReleases(createRepoDto, repo._id);
+    // await this.pullRequestService.storePullRequestDiffsForRepo(
+    //   createRepoDto,
+    //   repo._id,
+    // );
     return repo;
   }
 

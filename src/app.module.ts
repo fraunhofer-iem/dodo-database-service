@@ -4,6 +4,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { RepositoryModule } from './repositories/repository.module';
 import { KpiModule } from './kpi/kpi.module';
 import { OrganizationModule } from './organization/organization.module';
+import { DeveloperSpreadModule } from './kpi/statistics/developerSpread/developerSpread.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { OrganizationModule } from './organization/organization.module';
     RepositoryModule,
     KpiModule,
     OrganizationModule,
+    DeveloperSpreadModule,
   ],
   controllers: [],
   providers: [],

@@ -4,8 +4,7 @@ import { Model } from 'mongoose';
 import { User, UserDocument } from '../../model/schemas';
 import { RepositoryIdentifier } from '../model';
 import { Repository, RepositoryDocument } from '../model/schemas';
-
-import { queryIssues, saveIssue } from './lib';
+import { issueQuerier, saveIssue } from './lib';
 import {
   Issue,
   IssueDocument,
@@ -38,13 +37,8 @@ export class IssueService {
     private readonly userModel: Model<UserDocument>,
   ) {}
 
-  public async storeIssues(
-    repoIdent: RepositoryIdentifier,
-    repoId: string,
-    pageNumber = 1,
-  ) {
-    const issues = await queryIssues(repoIdent, pageNumber);
-    for (const issue of issues) {
+  public async storeIssues(repoIdent: RepositoryIdentifier, repoId: string) {
+    for await (let issue of issueQuerier(repoIdent)) {
       await saveIssue(
         repoIdent,
         {
@@ -59,10 +53,6 @@ export class IssueService {
         issue,
         repoId,
       );
-    }
-
-    if (issues.length == 100) {
-      this.storeIssues(repoIdent, repoId, pageNumber + 1);
     }
   }
 }

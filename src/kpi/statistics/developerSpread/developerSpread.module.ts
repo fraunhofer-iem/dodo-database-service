@@ -3,6 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { UserSchema } from '../../../model/schemas';
 import { CommitSchema } from '../../../repositories/commits/model/schemas';
 import { RepositorySchema } from '../../../repositories/model/schemas';
+import { DeveloperSpreadController } from './developerSpread.controller';
 import { DeveloperSpreadService } from './developerSpread.service';
 
 @Module({
@@ -14,6 +15,6 @@ import { DeveloperSpreadService } from './developerSpread.service';
       { name: 'Repository', schema: RepositorySchema },
     ]),
   ],
-  controllers: [],
+  controllers: [DeveloperSpreadController],
 })
 export class DeveloperSpreadModule {}

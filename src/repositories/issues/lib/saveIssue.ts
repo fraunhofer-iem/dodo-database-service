@@ -1,6 +1,6 @@
 import { Model } from 'mongoose';
 import { UserDocument } from '../../../model/schemas';
-import { updateArray } from '../../../lib';
+import { updateArray, retrieveDocument, createDocument } from '../../../lib';
 import { RepositoryIdentifier } from '../../model';
 import { RepositoryDocument } from '../../model/schemas';
 import { Issue } from '../model';
@@ -78,12 +78,19 @@ async function getIssueEventsWithActor(
   userModel: Model<UserDocument>,
 ) {
   const issueEvents = await getIssueEvents(repoIdent, issueNumber);
-  const filledEvents: Partial<IssueEventDocument>[] = [];
+  const issueEventDocuments: Partial<IssueEventDocument>[] = [];
   for (const currIssueEvent of issueEvents) {
-    const actor = await userModel.create(currIssueEvent.actor);
-    filledEvents.push({ ...currIssueEvent, actor: actor });
+    let actor: UserDocument;
+    if (currIssueEvent.actor) {
+      actor = await retrieveDocument(userModel, { id: currIssueEvent.actor });
+      if (!actor) {
+        actor = await createDocument(userModel, currIssueEvent.actor);
+      }
+      currIssueEvent.actor = actor;
+      issueEventDocuments.push(currIssueEvent);
+    }
   }
-  return filledEvents;
+  return issueEventDocuments;
 }
 
 async function getIssueEvents(

@@ -4,6 +4,7 @@ import { Model } from 'mongoose';
 import { CommitDocument } from '../../../repositories/commits/model/schemas';
 import { UserDocument } from '../../../model/schemas';
 import { RepositoryDocument } from '../../../repositories/model/schemas';
+import { getUsersRetriever } from '../lib';
 
 @Injectable()
 export class DeveloperSpreadService {
@@ -18,5 +19,8 @@ export class DeveloperSpreadService {
     private readonly repoModel: Model<RepositoryDocument>,
   ) {}
 
-  async developerSpread() {}
+  async developerSpread() {
+    const users = await getUsersRetriever(this.userModel).exec();
+    console.log(users);
+  }
 }
