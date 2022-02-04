@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { RepositoryService } from '../repositories/repository.service';
 import { updateArray, documentExists } from '../lib';
-import { User } from '../model';
+import { User } from '../users/model';
 import { Organization, OrganizationDocument } from './model/schemas';
 import { queryMembers, queryRepos } from './lib';
 

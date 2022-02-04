@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CommitDocument } from '../../../repositories/commits/model/schemas';
-import { UserDocument } from '../../../model/schemas';
+import { UserDocument } from '../../../users/model/schemas';
 import { RepositoryDocument } from '../../../repositories/model/schemas';
 import { getUsersRetriever } from '../lib';
 

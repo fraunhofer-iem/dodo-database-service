@@ -1,8 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { User, UserDocument } from '../../model/schemas';
-import { updateArray, retrieveDocument, createDocument } from '../../lib';
+import { updateArray } from '../../lib';
 import { RepositoryIdentifier } from '../model';
 import { Repository, RepositoryDocument } from '../model/schemas';
 import { queryCommits } from './lib';
@@ -18,8 +17,6 @@ export class CommitService {
     private readonly repoModel: Model<RepositoryDocument>,
     @InjectModel(CommitModel.name)
     private readonly commitModel: Model<CommitDocument>,
-    @InjectModel(User.name)
-    private readonly userModel: Model<UserDocument>,
   ) {}
 
   public async storeCommits(
@@ -30,16 +27,9 @@ export class CommitService {
     const commits: Commit[] = await queryCommits(repoIdent, pageNumber);
     const commitDocuments: CommitDocument[] = [];
     for (const commit of commits) {
-      let author: UserDocument;
       if (commit.author) {
-        author = await retrieveDocument(this.userModel, {
-          id: commit.author.id,
-        });
-        if (!author) {
-          author = await createDocument(this.userModel, commit.author);
-        }
-        commit.author = author;
-        const commitDocument = new this.commitModel(commit);
+        this.logger.log(`Storing commit ${commit.url}`);
+        const commitDocument = await this.commitModel.create(commit);
         commitDocuments.push(commitDocument);
       }
     }

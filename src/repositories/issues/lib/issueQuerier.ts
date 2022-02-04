@@ -1,9 +1,10 @@
 import { OCTOKIT } from '../../../lib';
 import { RepositoryIdentifier } from '../../model';
-import { Issue, Label } from '../model';
+import { Issue } from '../model';
+import { Label } from '../../../labels/model';
 
 export async function* issueQuerier(repoIdent: RepositoryIdentifier) {
-  let page: Partial<Issue>[] = [];
+  let page: Issue[] = [];
   let pageNumber = 1;
 
   do {
@@ -32,7 +33,7 @@ async function queryIssuePage(
         issue.labels = issue.labels.filter((label) => {
           return typeof label != 'string';
         });
-        return { ...issue, labels: issue.labels as Label[] };
+        return { ...issue, labels: issue.labels as Label[], events: [] };
       }),
     );
 }

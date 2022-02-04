@@ -1,16 +1,29 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { User, UserSchema } from '../../model/schemas';
 import { Repository, RepositorySchema } from '../model/schemas';
 import { CommitService } from './commit.service';
 import { Commit, CommitSchema } from './model/schemas';
+import { UserModule } from '../../users/user.module';
+import { UserService } from '../../users/user.service';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Repository.name, schema: RepositorySchema },
-      { name: Commit.name, schema: CommitSchema },
-      { name: User.name, schema: UserSchema },
+    ]),
+    MongooseModule.forFeatureAsync([
+      {
+        name: Commit.name,
+        imports: [UserModule],
+        useFactory: (userService: UserService) => {
+          const schema = CommitSchema;
+          schema.pre<Commit>('validate', async function (this: Commit) {
+            this.author = (await userService.validate(this.author))._id;
+          });
+          return schema;
+        },
+        inject: [UserService],
+      },
     ]),
   ],
   providers: [CommitService],

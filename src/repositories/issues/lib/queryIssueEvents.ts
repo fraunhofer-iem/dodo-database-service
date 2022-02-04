@@ -1,12 +1,29 @@
 import { OCTOKIT } from '../../../lib';
 import { RepositoryIdentifier } from '../../model';
-import { IssueEvent } from '../model';
+import { IssueEvent } from '../../../issueEvents/model';
+
+export async function getIssueEvents(
+  repoIdent: RepositoryIdentifier,
+  issueNumber: number,
+): Promise<IssueEvent[]> {
+  const events: IssueEvent[] = [];
+
+  let page: IssueEvent[] = [];
+  let pageNumber = 1;
+  do {
+    page = await queryIssueEvents(repoIdent, issueNumber, pageNumber);
+    events.push(...page);
+    pageNumber += 1;
+  } while (events.length == 100);
+
+  return events;
+}
 
 export async function queryIssueEvents(
   repoIdent: RepositoryIdentifier,
   issueNumber: number,
   pageNumber: number,
-): Promise<Partial<IssueEvent>[]> {
+): Promise<IssueEvent[]> {
   const { owner, repo } = repoIdent;
 
   return OCTOKIT.rest.issues
@@ -17,5 +34,5 @@ export async function queryIssueEvents(
       per_page: 100,
       page: pageNumber,
     })
-    .then((res) => res.data);
+    .then((res) => res.data as any);
 }

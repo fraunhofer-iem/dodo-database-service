@@ -5,9 +5,8 @@ export async function retrieveDocument<T extends Document>(
   model: Model<T>,
   filter: FilterQuery<T>,
 ): Promise<T> {
-  if (documentExists(model, filter)) {
-    return model.findOne(filter).exec();
-  } else {
-    return undefined;
+  if (!(await documentExists(model, filter))) {
+    throw new Error(`No such document: ${filter}`);
   }
+  return model.findOne(filter).exec();
 }

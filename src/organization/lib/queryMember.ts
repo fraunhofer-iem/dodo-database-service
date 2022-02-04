@@ -1,5 +1,5 @@
 import { OCTOKIT } from '../../lib';
-import { User } from '../../model';
+import { User } from '../../users/model';
 
 export async function queryMembers(
   owner: string,

@@ -1,4 +1,4 @@
-import { User } from 'src/model/schemas';
+import { User } from '../../../users/model';
 
 export interface Commit {
   url: string;

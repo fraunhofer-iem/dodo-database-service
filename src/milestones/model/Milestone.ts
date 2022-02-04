@@ -1,4 +1,4 @@
-import { User } from '../../../model';
+import { User } from '../../users/model';
 
 export interface Milestone {
   id: number;

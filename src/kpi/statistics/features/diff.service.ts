@@ -3,7 +3,6 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { RepositoryIdentifier } from '../../../repositories/model';
 import { RepositoryDocument } from '../../../repositories/model/schemas';
-import { getRepoFilter } from '../lib';
 import { getAvg, getMostChangedFiles } from './lib';
 
 @Injectable()

@@ -1,13 +1,8 @@
 import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
-import { UserSchema } from '../../src/model/schemas';
+import { UserSchema } from '../../src/users/model/schemas';
 import { CommitSchema } from '../../src/repositories/commits/model/schemas';
-import {
-  IssueEventSchema,
-  IssueSchema,
-  LabelSchema,
-  MilestoneSchema,
-} from '../../src/repositories/issues/model/schemas';
+import { IssueSchema } from '../../src/repositories/issues/model/schemas';
 import { RepositorySchema } from '../../src/repositories/model/schemas';
 import {
   DiffSchema,
@@ -16,8 +11,11 @@ import {
   RepositoryFileSchema,
 } from '../../src/repositories/pullRequests/model/schemas';
 import { ReleaseSchema } from '../../src/repositories/releases/model/schemas';
-import { TestData } from './sampleData';
+// import { TestData } from './sampleData';
 import { TestDbHelper } from './testDbHelper';
+import { IssueEventSchema } from '../../src/issueEvents/model/schemas';
+import { LabelSchema } from '../../src/labels/model/schemas';
+import { MilestoneSchema } from '../../src/milestones/model/schemas';
 
 /**
  * test suite for all KPIs from statistic service
@@ -26,7 +24,7 @@ import { TestDbHelper } from './testDbHelper';
 
 describe('StatisticService', () => {
   const dbHelper = new TestDbHelper();
-  const _testData = new TestData();
+  // const _testData = new TestData();
   let _testMod: TestingModule;
   beforeAll(async () => {
     const uri = await dbHelper.start();

@@ -1,6 +1,6 @@
 import { Aggregate, Model } from 'mongoose';
 import { CommitDocument } from '../../../repositories/commits/model/schemas';
-import { User } from '../../../model';
+import { User } from '../../../users/model';
 import { Commit } from '../../../repositories/commits/model';
 
 const userLookup = (user?: User) => {

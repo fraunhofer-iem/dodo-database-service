@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 import { Document, Schema as mSchema } from 'mongoose';
-import { User } from '../../../../model';
+import { User } from '../../../users/model/schemas';
 /**
  * For further information, see: https://docs.github.com/en/rest/reference/issues#events
  */

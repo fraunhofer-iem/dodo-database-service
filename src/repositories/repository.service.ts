@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Repository, RepositoryDocument } from './model/schemas';
 import { CreateRepositoryDto } from './model';
-import { documentExists } from 'src/lib';
+import { documentExists } from '../lib';
 import { IssueService } from './issues/issue.service';
 import { CommitService } from './commits/commit.service';
 import { ReleaseService } from './releases/release.service';
@@ -24,9 +24,9 @@ export class RepositoryService {
 
   public async initializeRepository(createRepoDto: CreateRepositoryDto) {
     const repo = await this.getRepo(createRepoDto);
-    await this.issueService.storeIssues(createRepoDto, repo._id);
+    // await this.issueService.storeIssues(createRepoDto, repo._id);
     // await this.commitService.storeCommits(createRepoDto, repo._id);
-    // await this.releaseService.storeReleases(createRepoDto, repo._id);
+    await this.releaseService.storeReleases(createRepoDto, repo._id);
     // await this.pullRequestService.storePullRequestDiffsForRepo(
     //   createRepoDto,
     //   repo._id,

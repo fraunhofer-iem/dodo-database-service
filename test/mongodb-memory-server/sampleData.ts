@@ -1,5 +1,5 @@
 import { Issue } from '../../src/repositories/issues/model';
-import { IssueEvent } from '../../src/repositories/issues/model/schemas';
+import { IssueEvent } from '../../src/issueEvents/model/schemas';
 import {
   CreateRepositoryDto,
   RepositoryIdentifier,

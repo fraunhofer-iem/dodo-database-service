@@ -1,20 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { User, UserDocument } from '../../model/schemas';
+import { updateArray } from '../../lib';
 import { RepositoryIdentifier } from '../model';
 import { Repository, RepositoryDocument } from '../model/schemas';
-import { issueQuerier, saveIssue } from './lib';
-import {
-  Issue,
-  IssueDocument,
-  IssueEvent,
-  IssueEventDocument,
-  Label,
-  LabelDocument,
-  Milestone,
-  MilestoneDocument,
-} from './model/schemas';
+import { getIssueEvents, issueQuerier } from './lib';
+import { Issue, IssueDocument } from './model/schemas';
 
 @Injectable()
 export class IssueService {
@@ -25,34 +16,19 @@ export class IssueService {
     private readonly repoModel: Model<RepositoryDocument>,
     @InjectModel(Issue.name)
     private readonly issueModel: Model<IssueDocument>,
-    @InjectModel(User.name)
-    private readonly assigneeModel: Model<UserDocument>,
-    @InjectModel(Label.name)
-    private readonly labelModel: Model<LabelDocument>,
-    @InjectModel(Milestone.name)
-    private readonly milestoneModel: Model<MilestoneDocument>,
-    @InjectModel(IssueEvent.name)
-    private readonly issueEventModel: Model<IssueEventDocument>,
-    @InjectModel(User.name)
-    private readonly userModel: Model<UserDocument>,
   ) {}
 
   public async storeIssues(repoIdent: RepositoryIdentifier, repoId: string) {
-    for await (let issue of issueQuerier(repoIdent)) {
-      await saveIssue(
-        repoIdent,
-        {
-          RepoModel: this.repoModel,
-          IssueModel: this.issueModel,
-          LabelModel: this.labelModel,
-          AssigneeModel: this.assigneeModel,
-          MilestoneModel: this.milestoneModel,
-          IssueEventModel: this.issueEventModel,
-          UserModel: this.userModel,
-        },
-        issue,
-        repoId,
-      );
+    const issueDocuments: IssueDocument[] = [];
+
+    for await (const issue of issueQuerier(repoIdent)) {
+      this.logger.log(`Storing issue ${issue.number}`);
+      const events = await getIssueEvents(repoIdent, issue.number);
+      issue.events = events;
+      const issueDocument = await this.issueModel.create(issue);
+      issueDocuments.push(issueDocument);
     }
+
+    await updateArray(this.repoModel, repoId, { issues: issueDocuments });
   }
 }

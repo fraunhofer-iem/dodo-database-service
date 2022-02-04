@@ -1,11 +1,12 @@
-import { User } from 'src/model';
-import { IssueEvent } from '.';
-import { Label } from './Label';
-import { Milestone } from './Milestone';
+import { User } from '../../../users/model';
+import { IssueEvent } from '../../../issueEvents/model';
+import { Label } from '../../../labels/model';
+import { Milestone } from '../../../milestones/model';
 
 export interface Issue {
   state: string;
   labels: Partial<Label>[];
+  user: User;
   assignee: User;
   assignees?: User[];
   milestone: Milestone;

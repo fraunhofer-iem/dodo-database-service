@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as mSchema } from 'mongoose';
-import { User } from '../../../../model/schemas';
+import { User } from '../../../users/model/schemas';
 
 /**
  * For further information, see: https://docs.github.com/en/rest/reference/issues#milestones
@@ -32,7 +32,7 @@ export class Milestone {
   @Prop()
   due_on: string;
 
-  @Prop({ type: mSchema.Types.ObjectId, ref: 'User' })
+  @Prop({ type: mSchema.Types.Mixed, ref: 'User' })
   creator: User;
 }
 

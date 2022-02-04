@@ -1,6 +1,6 @@
 import { Aggregate, Model } from 'mongoose';
-import { User } from '../../../model';
-import { UserDocument } from '../../../model/schemas';
+import { User } from '../../../users/model';
+import { UserDocument } from '../../../users/model/schemas';
 
 export function getUsersRetriever(
   userModel: Model<UserDocument>,

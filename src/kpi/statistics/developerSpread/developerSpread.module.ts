@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { UserSchema } from '../../../model/schemas';
+import { UserSchema } from '../../../users/model/schemas';
 import { CommitSchema } from '../../../repositories/commits/model/schemas';
 import { RepositorySchema } from '../../../repositories/model/schemas';
 import { DeveloperSpreadController } from './developerSpread.controller';

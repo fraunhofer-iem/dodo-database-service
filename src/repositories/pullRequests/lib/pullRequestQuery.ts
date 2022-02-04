@@ -1,4 +1,4 @@
-import { OCTOKIT } from 'src/lib/OctokitHelper';
+import { OCTOKIT } from '../../../lib/OctokitHelper';
 import { RepositoryIdentifier } from '../../model';
 import { PullRequest, PullRequestFile, RepositoryFile } from '../model';
 
