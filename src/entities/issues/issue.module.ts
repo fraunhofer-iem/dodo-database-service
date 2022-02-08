@@ -29,19 +29,23 @@ import { IssueSchema, Issue } from './model/schemas';
         ) => {
           const schema = IssueSchema;
           schema.pre<Issue>('validate', async function (this: Issue) {
-            this.user = (await userService.validate(this.user))._id;
+            this.user = (await userService.readOrCreate(this.user))._id;
             if (this.assignee) {
-              this.assignee = (await userService.validate(this.assignee))._id;
+              this.assignee = (
+                await userService.readOrCreate(this.assignee)
+              )._id;
             }
             if (this.assignees) {
               for (let i = 0; i < this.assignees.length; i++) {
                 this.assignees[i] = (
-                  await userService.validate(this.assignees[i])
+                  await userService.readOrCreate(this.assignees[i])
                 )._id;
               }
             }
             if (this.closed_by) {
-              this.closed_by = (await userService.validate(this.closed_by))._id;
+              this.closed_by = (
+                await userService.readOrCreate(this.closed_by)
+              )._id;
             }
           });
           schema.pre<Issue>('validate', async function (this: Issue) {
@@ -54,14 +58,14 @@ import { IssueSchema, Issue } from './model/schemas';
           schema.pre<Issue>('validate', async function (this: Issue) {
             for (let i = 0; i < this.labels.length; i++) {
               this.labels[i] = (
-                await labelService.validate(this.labels[i])
+                await labelService.readOrCreate(this.labels[i])
               )._id;
             }
           });
           schema.pre<Issue>('validate', async function (this: Issue) {
             if (this.milestone) {
               this.milestone = (
-                await milestoneService.validate(this.milestone)
+                await milestoneService.readOrCreate(this.milestone)
               )._id;
             }
           });

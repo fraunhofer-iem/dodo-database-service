@@ -15,7 +15,7 @@ import { IssueEvent, IssueEventSchema } from './model/schemas';
           return IssueEventSchema.pre<IssueEvent>(
             'validate',
             async function (this: IssueEvent) {
-              this.actor = await userService.validate(this.actor);
+              this.actor = await userService.readOrCreate(this.actor);
             },
           );
         },

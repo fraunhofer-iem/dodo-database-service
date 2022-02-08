@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model } from 'mongoose';
-import { documentExists } from '../../lib';
+import { retrieveDocument } from '../../lib';
 import { Label, LabelDocument } from './model/schemas';
 
 @Injectable()
@@ -13,8 +13,7 @@ export class LabelService {
     private readonly labelModel: Model<LabelDocument>,
   ) {}
 
-  public async validate(json: Label): Promise<LabelDocument> {
-    // TODO: is there a term for "look for object and create if not"?
+  public async readOrCreate(json: Label): Promise<LabelDocument> {
     let label: LabelDocument;
     try {
       label = await this.read({ node_id: json.node_id });
@@ -27,10 +26,11 @@ export class LabelService {
   public async read(
     filter: FilterQuery<LabelDocument>,
   ): Promise<LabelDocument> {
-    if (!(await documentExists(this.labelModel, filter))) {
-      throw new Error('Label does not exist');
+    try {
+      return retrieveDocument(this.labelModel, filter);
+    } catch (e) {
+      throw e;
     }
-    return this.labelModel.findOne(filter).exec();
   }
 
   public async create(json: Label): Promise<LabelDocument> {

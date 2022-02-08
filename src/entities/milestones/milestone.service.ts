@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model } from 'mongoose';
-import { documentExists } from '../../lib';
+import { retrieveDocument } from '../../lib';
 import { Milestone, MilestoneDocument } from './model/schemas';
 
 @Injectable()
@@ -13,8 +13,7 @@ export class MilestoneService {
     private readonly milestoneModel: Model<MilestoneDocument>,
   ) {}
 
-  public async validate(json: Milestone): Promise<MilestoneDocument> {
-    // TODO: is there a term for "look for object and create if not"?
+  public async readOrCreate(json: Milestone): Promise<MilestoneDocument> {
     let milestone: MilestoneDocument;
     try {
       milestone = await this.read({ node_id: json.node_id });
@@ -27,10 +26,11 @@ export class MilestoneService {
   public async read(
     filter: FilterQuery<MilestoneDocument>,
   ): Promise<MilestoneDocument> {
-    if (!(await documentExists(this.milestoneModel, filter))) {
-      throw new Error('Milestone does not exist');
+    try {
+      return retrieveDocument(this.milestoneModel, filter);
+    } catch (e) {
+      throw e;
     }
-    return this.milestoneModel.findOne(filter).exec();
   }
 
   public async create(json: Milestone): Promise<MilestoneDocument> {

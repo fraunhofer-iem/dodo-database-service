@@ -11,5 +11,7 @@ export class DeveloperSpreadService {
     private readonly commitService: CommitService,
   ) {}
 
-  async developerSpread() {}
+  async developerSpread() {
+    this.logger.log('Developer spread calculation');
+  }
 }

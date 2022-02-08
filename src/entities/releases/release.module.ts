@@ -1,15 +1,15 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { RepositorySchema } from '../repositories/model/schemas';
-import { ReleaseSchema } from './model/schemas';
+import { Repository, RepositorySchema } from '../repositories/model/schemas';
+import { Release, ReleaseSchema } from './model/schemas';
 
 import { ReleaseService } from './release.service';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
-      { name: 'Release', schema: ReleaseSchema },
-      { name: 'Repository', schema: RepositorySchema },
+      { name: Release.name, schema: ReleaseSchema },
+      { name: Repository.name, schema: RepositorySchema },
     ]),
   ],
   providers: [ReleaseService],

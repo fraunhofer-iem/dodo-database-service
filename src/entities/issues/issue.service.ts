@@ -19,16 +19,11 @@ export class IssueService {
   ) {}
 
   public async storeIssues(repoIdent: RepositoryIdentifier, repoId: string) {
-    const issueDocuments: IssueDocument[] = [];
-
     for await (const issue of issueQuerier(repoIdent)) {
       this.logger.log(`Storing issue ${issue.number}`);
-      const events = await getIssueEvents(repoIdent, issue.number);
-      issue.events = events;
+      issue.events = await getIssueEvents(repoIdent, issue.number);
       const issueDocument = await this.issueModel.create(issue);
-      issueDocuments.push(issueDocument);
+      await updateArray(this.repoModel, repoId, { issues: issueDocument });
     }
-
-    await updateArray(this.repoModel, repoId, { issues: issueDocuments });
   }
 }

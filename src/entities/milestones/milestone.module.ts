@@ -15,7 +15,7 @@ import { Milestone, MilestoneSchema } from './model/schemas';
           return MilestoneSchema.pre<Milestone>(
             'validate',
             async function (this: Milestone) {
-              this.creator = (await userService.validate(this.creator))._id;
+              this.creator = (await userService.readOrCreate(this.creator))._id;
             },
           );
         },

@@ -18,7 +18,7 @@ import { UserService } from '../users/user.service';
         useFactory: (userService: UserService) => {
           const schema = CommitSchema;
           schema.pre<Commit>('validate', async function (this: Commit) {
-            this.author = (await userService.validate(this.author))._id;
+            this.author = (await userService.readOrCreate(this.author))._id;
           });
           return schema;
         },
