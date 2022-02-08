@@ -1,10 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Issue } from '../../../repositories/issues/model';
-import { RepositoryIdentifier } from '../../../repositories/model';
-import { RepositoryDocument } from '../../../repositories/model/schemas';
-import { Release } from '../../../repositories/releases/model';
+import { Issue } from '../../../entities/issues/model';
+import { RepositoryIdentifier } from '../../../entities/repositories/model';
+import { RepositoryDocument } from '../../../entities/repositories/model/schemas';
+import { Release } from '../../../entities/releases/model';
 import {
   calculateAvgCapability,
   calculateAvgEfficiency,

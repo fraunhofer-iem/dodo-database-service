@@ -1,6 +1,6 @@
 import { Aggregate, Model } from 'mongoose';
-import { RepositoryIdentifier } from '../../../../repositories/model';
-import { RepositoryDocument } from '../../../../repositories/model/schemas';
+import { RepositoryIdentifier } from '../../../../entities/repositories/model';
+import { RepositoryDocument } from '../../../../entities/repositories/model/schemas';
 import { getRepoFilter } from '../../lib';
 
 export function getMostChangedFiles(

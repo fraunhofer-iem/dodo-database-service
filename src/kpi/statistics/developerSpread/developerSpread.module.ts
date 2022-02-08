@@ -1,20 +1,12 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
-import { UserSchema } from '../../../users/model/schemas';
-import { CommitSchema } from '../../../repositories/commits/model/schemas';
-import { RepositorySchema } from '../../../repositories/model/schemas';
 import { DeveloperSpreadController } from './developerSpread.controller';
 import { DeveloperSpreadService } from './developerSpread.service';
+import { UserModule } from '../../../entities/users/user.module';
+import { CommitModule } from '../../../entities/commits/commit.module';
 
 @Module({
   providers: [DeveloperSpreadService],
-  imports: [
-    MongooseModule.forFeature([
-      { name: 'User', schema: UserSchema },
-      { name: 'Commit', schema: CommitSchema },
-      { name: 'Repository', schema: RepositorySchema },
-    ]),
-  ],
+  imports: [UserModule, CommitModule],
   controllers: [DeveloperSpreadController],
 })
 export class DeveloperSpreadModule {}

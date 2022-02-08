@@ -1,4 +1,4 @@
-import { RepositoryIdentifier } from '../../../repositories/model';
+import { RepositoryIdentifier } from '../../../entities/repositories/model';
 
 export function getRepoFilter(repo: RepositoryIdentifier) {
   return {
