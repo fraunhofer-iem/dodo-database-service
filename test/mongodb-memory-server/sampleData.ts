@@ -1,16 +1,16 @@
-import { Issue } from '../../src/repositories/issues/model';
-import { IssueEvent } from '../../src/issueEvents/model/schemas';
+import { Issue } from '../../src/entities/issues/model';
+import { IssueEvent } from '../../src/entities/issueEvents/model/schemas';
 import {
   CreateRepositoryDto,
   RepositoryIdentifier,
-} from '../../src/repositories/model';
+} from '../../src/entities/repositories/model';
 import {
   Diff,
   PullRequest,
   RepositoryFile,
   PullRequestFile,
-} from '../../src/repositories/pullRequests/model';
-import { Release } from '../../src/repositories/releases/model';
+} from '../../src/entities/pullRequests/model';
+import { Release } from '../../src/entities/releases/model';
 
 /**
  * Class to get all relevant test data for the statistic tests
@@ -601,6 +601,20 @@ export class TestData {
           site_admin: false,
         },
       },
+      user: {
+        id: 83863595,
+        node_id: 'MDQ6VXNlcjgzODYzNTk1',
+        login: 'ravali-rimmalapudi',
+        type: 'User',
+        site_admin: false,
+      },
+      closed_by: {
+        login: 'ravali-rimmalapudi',
+        id: 83863595,
+        node_id: 'MDQ6VXNlcjgzODYzNTk1',
+        type: 'User',
+        site_admin: false,
+      },
       created_at: '2021-09-15T07:49:07Z',
       updated_at: '2021-10-01T16:26:19Z',
       closed_at: '2021-10-01T09:00:26Z',
@@ -646,6 +660,20 @@ export class TestData {
           type: 'User',
           site_admin: false,
         },
+      },
+      user: {
+        login: 'renovate[bot]',
+        id: 29139614,
+        node_id: 'MDM6Qm90MjkxMzk2MTQ=',
+        type: 'Bot',
+        site_admin: false,
+      },
+      closed_by: {
+        login: 'gr2m',
+        id: 39992,
+        node_id: 'MDQ6VXNlcjM5OTky',
+        type: 'User',
+        site_admin: false,
       },
       created_at: '2021-09-30T07:49:07Z',
       updated_at: '2021-10-01T16:26:19Z',
@@ -699,6 +727,13 @@ export class TestData {
           site_admin: false,
         },
       },
+      user: {
+        login: 'renovate[bot]',
+        id: 29139614,
+        node_id: 'MDM6Qm90MjkxMzk2MTQ=',
+        type: 'Bot',
+        site_admin: false,
+      },
       created_at: '2021-09-30T07:49:07Z',
       updated_at: '2021-10-01T16:26:19Z',
       closed_at: null,
@@ -750,6 +785,20 @@ export class TestData {
           type: 'User',
           site_admin: false,
         },
+      },
+      user: {
+        login: 'renovate[bot]',
+        id: 29139614,
+        node_id: 'MDM6Qm90MjkxMzk2MTQ=',
+        type: 'Bot',
+        site_admin: false,
+      },
+      closed_by: {
+        login: 'gr2m',
+        id: 39992,
+        node_id: 'MDQ6VXNlcjM5OTky',
+        type: 'User',
+        site_admin: false,
       },
       created_at: '2021-09-30T07:49:07Z',
       updated_at: '2021-10-01T16:26:19Z',

@@ -19,4 +19,5 @@ export interface Issue {
   node_id: string;
   locked: boolean;
   events: IssueEvent[];
+  closed_by?: User;
 }
