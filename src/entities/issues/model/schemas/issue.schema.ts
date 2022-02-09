@@ -13,7 +13,7 @@ export class Issue {
   @Prop([{ type: mSchema.Types.Mixed, ref: 'Label' }])
   labels: Label[];
 
-  @Prop({ type: mSchema.Types.Mixed, ref: 'User', default: null })
+  @Prop({ type: mSchema.Types.Mixed, ref: 'User' })
   assignee: User;
 
   @Prop([{ type: mSchema.Types.Mixed, ref: 'User' }])
@@ -49,7 +49,7 @@ export class Issue {
   @Prop()
   title: string;
 
-  @Prop({ type: mSchema.Types.Mixed, ref: 'User', default: null })
+  @Prop({ type: mSchema.Types.Mixed, ref: 'User' })
   closed_by: User;
 
   @Prop()

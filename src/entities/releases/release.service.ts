@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { updateArray } from '../../lib';
+import { FilterQuery, Model } from 'mongoose';
+import { retrieveDocument, updateArray } from '../../lib';
 import { RepositoryIdentifier } from '../repositories/model';
 import { Repository, RepositoryDocument } from '../repositories/model/schemas';
 import { queryReleases } from './lib/queryReleases';
@@ -36,5 +36,17 @@ export class ReleaseService {
     if (releases.length == 100) {
       this.storeReleases(repoIdent, repoId, pageNumber + 1);
     }
+  }
+
+  public async read(
+    filter: FilterQuery<ReleaseDocument>,
+  ): Promise<ReleaseDocument> {
+    let release: ReleaseDocument;
+    try {
+      release = await retrieveDocument(this.releaseModel, filter);
+    } catch (e) {
+      throw e;
+    }
+    return release;
   }
 }

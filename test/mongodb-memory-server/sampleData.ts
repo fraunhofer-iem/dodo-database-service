@@ -619,7 +619,6 @@ export class TestData {
       updated_at: '2021-10-01T16:26:19Z',
       closed_at: '2021-10-01T09:00:26Z',
       title: "Getting Error: Empty value for parameter 'tag': undefined",
-      locked: false,
     };
     // closed but not assigned
     const issue2: Issue = {
@@ -679,7 +678,6 @@ export class TestData {
       updated_at: '2021-10-01T16:26:19Z',
       closed_at: '2021-10-01T09:00:26Z',
       title: "Getting Error: Empty value for parameter 'tag': undefined",
-      locked: false,
     };
     // assigend but still open
     const issue3: Issue = {
@@ -738,7 +736,6 @@ export class TestData {
       updated_at: '2021-10-01T16:26:19Z',
       closed_at: null,
       title: "Getting Error: Empty value for parameter 'tag': undefined",
-      locked: false,
     };
     // closed and assigned
     const issue4: Issue = {
@@ -804,7 +801,6 @@ export class TestData {
       updated_at: '2021-10-01T16:26:19Z',
       closed_at: '2021-10-01T09:00:26Z',
       title: "Getting Error: Empty value for parameter 'tag': undefined",
-      locked: false,
     };
     const issues: Issue[] = [issue1, issue2, issue3, issue4];
     return issues;

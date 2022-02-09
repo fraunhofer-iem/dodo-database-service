@@ -17,7 +17,6 @@ export interface Issue {
   id: number;
   number: number;
   node_id: string;
-  locked: boolean;
   events: IssueEvent[];
   closed_by?: User;
 }
