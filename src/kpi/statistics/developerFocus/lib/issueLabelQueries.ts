@@ -2,36 +2,22 @@ import { Aggregate, Model } from 'mongoose';
 import { avgDataPerLabel } from '../model';
 import { RepositoryDocument } from '../../../../entities/repositories/model/schemas';
 
-const lookupIssuesWithEvents = {
-  from: 'issuewithevents',
-  localField: 'issuesWithEvents',
-  foreignField: '_id',
-  as: 'expandedIssuesWithEvents',
-};
-
-const lookupIssueEventTypes = {
-  from: 'issueeventtypes',
-  localField: 'expandedIssuesWithEvents.issueEventTypes',
-  foreignField: '_id',
-  as: 'expanadedissueEventTypes',
-};
-
 const lookupIssue = {
   from: 'issues',
-  localField: 'expandedIssuesWithEvents.issue',
+  localField: 'issues',
   foreignField: '_id',
   as: 'expandedIssue',
 };
 
 const lookupLabels = {
   from: 'labels',
-  localField: 'expandedIssue.label',
+  localField: 'expandedIssue.labels',
   foreignField: '_id',
   as: 'expandedLabels',
 };
 
 const lookupAssignees = {
-  from: 'assignees',
+  from: 'users',
   localField: 'expandedIssue.assignees',
   foreignField: '_id',
   as: 'expandedAssignees',
@@ -48,25 +34,21 @@ const lookupAssignees = {
  */
 export function getIssueLabelQuery(
   repomodel: Model<RepositoryDocument>,
-  repoId: string,
+  repoId: { owner: string; repo: string },
   loginFilter?: string[],
   issueLimit: number = 100,
 ): Aggregate<avgDataPerLabel[]> {
   const query: Aggregate<avgDataPerLabel[]> = repomodel
     .aggregate()
-    .match({ repo: repoId })
-    .project({ issuesWithEvents: 1 })
-    .unwind('$issuesWithEvents')
-    .lookup(lookupIssuesWithEvents)
-    .unwind('$expandedIssuesWithEvents')
-    .lookup(lookupIssueEventTypes)
-    .unwind('$expanadedissueEventTypes')
-    .match({
-      'expanadedissueEventTypes.event': { $in: ['assigned', 'labeled'] },
-    })
+    .match({ repo: repoId.repo, owner: repoId.owner })
     .lookup(lookupIssue)
     .unwind('$expandedIssue')
     .project({ expandedIssue: 1 })
+    .match({
+      'expandedIssue.author_association': 'MEMBER',
+      'expandedIssue.assignees': { $exists: true, $not: { $size: 0 } },
+      'expandedIssue.labels': { $exists: true, $not: { $size: 0 } },
+    })
     .lookup(lookupAssignees)
     .unwind('$expandedAssignees')
     .lookup(lookupLabels)

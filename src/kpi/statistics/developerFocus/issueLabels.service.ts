@@ -21,7 +21,7 @@ export class IssueLabels {
    * issues and only considers devs who are in @param loginFilter.
    */
   async labelPrioritiesAvg(
-    repoId: string,
+    repoId: { owner: string; repo: string },
     loginFilter?: string[],
     issueLimit?: number,
   ) {

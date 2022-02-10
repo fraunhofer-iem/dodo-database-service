@@ -1,10 +1,14 @@
 import { Controller, Get, Logger, Param } from '@nestjs/common';
 import { IssueTrackingService } from './statistics/issueTracking/issueTracking.service';
+import { IssueLabels } from './statistics/developerFocus/issueLabels.service';
 
 @Controller('api/kpis')
 export class KpiController {
   private readonly logger = new Logger(KpiController.name);
-  constructor(private readonly issueTrackingService: IssueTrackingService) {}
+  constructor(
+    private readonly issueTrackingService: IssueTrackingService,
+    private readonly issueLabels: IssueLabels,
+  ) {}
 
   @Get('/fcr')
   async fcr() {
@@ -20,6 +24,15 @@ export class KpiController {
   @Get()
   async getKpis() {
     this.logger.log('Get all KPIs request from user XXX');
+  }
+
+  @Get('/ilp')
+  async getILP() {
+    this.logger.log('Get Issue Label Priorities');
+    return this.issueLabels.labelPrioritiesAvg({
+      owner: 'fraunhofer-iem',
+      repo: 'dodo-database-service',
+    });
   }
 
   @Get(':id')
