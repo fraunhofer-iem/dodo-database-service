@@ -8,3 +8,6 @@ Series of time stamps of releases
 
 ## Data
 * [Release](Release.md)
+
+## Need for additional Input / Interpretation
+* How is the software released? Is it published using GitHub's release platform, is it tagged, is there a specific release branch, ...?

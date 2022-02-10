@@ -2,7 +2,7 @@ import { OCTOKIT } from '../../../lib';
 import { RepositoryIdentifier } from '../../model';
 import { Issue, Label } from '../model';
 
-export async function getIssues(
+export async function queryIssues(
   repoIdent: RepositoryIdentifier,
   pageNumber: number,
 ): Promise<Partial<Issue>[]> {

@@ -7,7 +7,7 @@ enum FileType {
   folder = 'tree',
 }
 
-export async function getPullRequests(
+export async function queryPullRequests(
   repoIdent: RepositoryIdentifier,
   pageNumber: number,
 ): Promise<PullRequest[]> {

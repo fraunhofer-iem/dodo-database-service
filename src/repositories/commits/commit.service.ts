@@ -1,10 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { updateRepo } from '../lib';
+import { updateArray } from '../../lib';
 import { RepositoryIdentifier } from '../model';
 import { RepositoryDocument } from '../model/schemas';
-import { getCommits } from './lib';
+import { queryCommits } from './lib';
 import { Commit } from './model';
 import { CommitDocument } from './model/schemas';
 
@@ -19,29 +19,21 @@ export class CommitService {
     private readonly commitModel: Model<CommitDocument>,
   ) {}
 
-  public async storeCommits(repoIdent: RepositoryIdentifier, repoId: string) {
-    this.logger.log(
-      `Retrieving commits of repo ${repoIdent.owner}/${repoIdent.repo}`,
-    );
-
-    await this.processCommits(repoIdent, repoId, 1);
-  }
-
-  private async processCommits(
+  public async storeCommits(
     repoIdent: RepositoryIdentifier,
     repoId: string,
-    pageNumber: number,
+    pageNumber = 1,
   ) {
-    const commits: Commit[] = await getCommits(repoIdent, pageNumber);
+    const commits: Commit[] = await queryCommits(repoIdent, pageNumber);
 
     //TODO: check what happens here. do we automatically create a user or do we
     // have to do this manually?
     const commitsModel = await this.commitModel.create(commits);
 
-    await updateRepo(this.repoModel, repoId, { commits: commitsModel });
+    await updateArray(this.repoModel, repoId, { commits: commitsModel });
 
     if (commits.length == 100) {
-      this.processCommits(repoIdent, repoId, pageNumber + 1);
+      this.storeCommits(repoIdent, repoId, pageNumber + 1);
     }
   }
 }

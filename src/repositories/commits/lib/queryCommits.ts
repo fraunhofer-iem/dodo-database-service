@@ -2,7 +2,7 @@ import { OCTOKIT } from '../../../lib';
 import { RepositoryIdentifier } from '../../model';
 import { Commit } from '../model';
 
-export async function getCommits(
+export async function queryCommits(
   repoIdent: RepositoryIdentifier,
   pageNumber: number,
 ): Promise<Commit[]> {

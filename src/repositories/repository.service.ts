@@ -1,10 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-
-import { repoExists } from './lib';
 import { RepositoryDocument } from './model/schemas';
 import { CreateRepositoryDto } from './model';
+import { documentExists } from 'src/lib';
+import { IssueService } from './issues/issue.service';
+import { CommitService } from './commits/commit.service';
+import { ReleaseService } from './releases/release.service';
+import { PullRequestService } from './pullRequests/pullRequest.service';
 
 @Injectable()
 export class RepositoryService {
@@ -13,12 +16,22 @@ export class RepositoryService {
   constructor(
     @InjectModel('Repository')
     private readonly repoModel: Model<RepositoryDocument>,
+    private issueService: IssueService,
+    private commitService: CommitService,
+    private releaseService: ReleaseService,
+    private pullRequestService: PullRequestService,
   ) {}
 
-  public async createRepository(createRepoDto: CreateRepositoryDto) {
-    if (repoExists(createRepoDto)) {
-      return this.createRepo(createRepoDto);
-    } // TODO: add propper return type if repo doesn't exist
+  public async initializeRepository(createRepoDto: CreateRepositoryDto) {
+    const repo = await this.getRepo(createRepoDto);
+    await this.issueService.storeIssues(createRepoDto, repo._id);
+    await this.commitService.storeCommits(createRepoDto, repo._id);
+    await this.releaseService.storeReleases(createRepoDto, repo._id);
+    await this.pullRequestService.storePullRequestDiffsForRepo(
+      createRepoDto,
+      repo._id,
+    );
+    return repo;
   }
 
   public async getRepositoryById(id: string) {
@@ -27,35 +40,35 @@ export class RepositoryService {
 
   /**
    * Creates the specified repository if it doesn't exist.
-   * If it exists it returns the id of the existing one.
-   * @param repo
-   * @param owner
-   * @returns id
+   * If it exists it returns the existing one.
    */
-  private async createRepo(repoIdent: CreateRepositoryDto): Promise<string> {
-    const exists = await this.repoModel.exists({
-      repo: repoIdent.repo,
-      owner: repoIdent.owner,
-    });
-
-    if (exists) {
-      const repoM = await this.repoModel
+  private async getRepo(
+    repoIdent: CreateRepositoryDto,
+  ): Promise<RepositoryDocument> {
+    if (
+      await documentExists(this.repoModel, {
+        repo: repoIdent.repo,
+        owner: repoIdent.owner,
+      })
+    ) {
+      this.logger.log(
+        `Model for ${repoIdent.repo} with owner ${repoIdent.owner} already exists`,
+      );
+      return this.repoModel
         .findOne({ repo: repoIdent.repo, owner: repoIdent.owner })
         .exec();
-
-      this.logger.debug('Model already exists ' + repoM);
-      return repoM._id;
     } else {
-      this.logger.debug(
+      this.logger.log(
         `Creating new model for ${repoIdent.repo} with owner ${repoIdent.owner}`,
       );
-      const repoInstance = await new this.repoModel({
+      return new this.repoModel({
         owner: repoIdent.owner,
         repo: repoIdent.repo,
+        commits: [],
+        releases: [],
+        diffs: [],
+        issues: [],
       }).save();
-
-      this.logger.debug('Instance created ' + repoInstance);
-      return repoInstance._id;
     }
   }
 }
