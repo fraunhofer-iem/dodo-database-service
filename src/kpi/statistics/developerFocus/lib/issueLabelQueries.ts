@@ -1,6 +1,6 @@
 import { Aggregate, Model } from 'mongoose';
 import { avgDataPerLabel } from '../model';
-import { RepositoryDocument } from '../../../../repositories/model/schemas';
+import { RepositoryDocument } from '../../../../entities/repositories/model/schemas';
 
 const lookupIssuesWithEvents = {
   from: 'issuewithevents',
