@@ -20,7 +20,10 @@ export class IssueTrackingService {
     repoIdent: RepositoryIdentifier,
     labelNames?: string[],
   ) {
-    const repo = await this.repoService.read({ ...repoIdent });
+    const repo = await this.repoService.read(
+      { ...repoIdent },
+      { commits: false, diffs: false },
+    );
     await this.populateRepository(repo, labelNames);
 
     const releaseIssueMap = mapReleasesToIssues(repo.releases, repo.issues);
@@ -36,7 +39,10 @@ export class IssueTrackingService {
     labelNames?: string[],
     timeToComplete: number = 14 * 24 * 60 * 60 * 1000,
   ) {
-    const repo = await this.repoService.read({ ...repoIdent });
+    const repo = await this.repoService.read(
+      { ...repoIdent },
+      { commits: false, diffs: false },
+    );
     await this.populateRepository(repo, labelNames);
 
     const releaseIssueMap = mapReleasesToIssues(repo.releases, repo.issues);
@@ -53,7 +59,10 @@ export class IssueTrackingService {
     labelNames?: string[],
     timeToComplete: number = 14 * 24 * 60 * 60 * 1000,
   ) {
-    const repo = await this.repoService.read({ ...repoIdent });
+    const repo = await this.repoService.read(
+      { ...repoIdent },
+      { commits: false, diffs: false },
+    );
     await this.populateRepository(repo, labelNames);
 
     const releaseIssueMap = mapReleasesToIssues(repo.releases, repo.issues);
@@ -81,7 +90,11 @@ export class IssueTrackingService {
         path: 'labels',
         match: { name: { $in: labelNames } },
       },
+      select: {
+        events: false,
+      },
     });
+
     repo.issues = repo.issues.filter((issue) => issue.labels.length > 0);
   }
 }
