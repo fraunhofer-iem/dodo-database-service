@@ -40,9 +40,10 @@ export class RepositoryService {
 
   public async read(
     filter: FilterQuery<RepositoryDocument>,
+    project?: { [P in keyof RepositoryDocument]?: boolean },
   ): Promise<RepositoryDocument> {
     try {
-      return retrieveDocument(this.repoModel, filter);
+      return retrieveDocument(this.repoModel, filter, project);
     } catch (e) {
       throw e;
     }
