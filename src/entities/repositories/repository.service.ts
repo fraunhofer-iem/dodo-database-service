@@ -1,13 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model } from 'mongoose';
+import { Aggregate, FilterQuery, Model } from 'mongoose';
 import { Repository, RepositoryDocument } from './model/schemas';
-import { CreateRepositoryDto } from './model';
+import { CreateRepositoryDto, RepositoryIdentifier } from './model';
 import { retrieveDocument } from '../../lib';
 import { IssueService } from '../issues/issue.service';
 import { CommitService } from '../commits/commit.service';
 import { ReleaseService } from '../releases/release.service';
 import { PullRequestService } from '../pullRequests/pullRequest.service';
+import { issuesLabelsAssigneesLookup } from './lib';
 
 @Injectable()
 export class RepositoryService {
@@ -63,5 +64,47 @@ export class RepositoryService {
       repo = await this.repoModel.create(json);
     }
     return repo;
+  }
+
+  public preAggregate(
+    repoIdent: RepositoryIdentifier,
+    options: {
+      issues?: {
+        labels?: boolean;
+        assignees?: boolean;
+        events?: {
+          actor?: boolean;
+        };
+      };
+      commits?: {
+        author?: boolean;
+      };
+    },
+  ): Aggregate<any[]> {
+    const query = this.repoModel.aggregate().match(repoIdent);
+    if (options.issues) {
+      if (options.issues.labels && options.issues.assignees) {
+        return issuesLabelsAssigneesLookup(query);
+      }
+      if (options.issues.events) {
+        // event lookup
+        if (options.issues.events.actor) {
+          // actor lookup
+        }
+      }
+      if (options.issues.labels) {
+        // label lookup
+      }
+    }
+    if (options.issues.labels) {
+      // label lookup
+    }
+    if (options.commits) {
+      // commits lookup
+      if (options.commits.author) {
+        // commit author lookup
+      }
+    }
+    return query;
   }
 }

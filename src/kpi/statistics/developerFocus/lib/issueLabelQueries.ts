@@ -1,27 +1,7 @@
 import { Aggregate, Model } from 'mongoose';
 import { avgDataPerLabel } from '../model';
 import { RepositoryDocument } from '../../../../entities/repositories/model/schemas';
-
-const lookupIssue = {
-  from: 'issues',
-  localField: 'issues',
-  foreignField: '_id',
-  as: 'expandedIssue',
-};
-
-const lookupLabels = {
-  from: 'labels',
-  localField: 'expandedIssue.labels',
-  foreignField: '_id',
-  as: 'expandedLabels',
-};
-
-const lookupAssignees = {
-  from: 'users',
-  localField: 'expandedIssue.assignees',
-  foreignField: '_id',
-  as: 'expandedAssignees',
-};
+import { RepositoryIdentifier } from 'src/entities/repositories/model';
 
 /**
  * Querys every issue in repo @param repoId
@@ -33,26 +13,16 @@ const lookupAssignees = {
  * @returns the final query
  */
 export function getIssueLabelQuery(
-  repomodel: Model<RepositoryDocument>,
-  repoId: { owner: string; repo: string },
+  lookUpQuery: Aggregate<any[]>,
   loginFilter?: string[],
   issueLimit: number = 100,
 ): Aggregate<avgDataPerLabel[]> {
-  const query: Aggregate<avgDataPerLabel[]> = repomodel
-    .aggregate()
-    .match({ repo: repoId.repo, owner: repoId.owner })
-    .lookup(lookupIssue)
-    .unwind('$expandedIssue')
-    .project({ expandedIssue: 1 })
+  const query: Aggregate<avgDataPerLabel[]> = lookUpQuery
     .match({
       'expandedIssue.author_association': 'MEMBER',
       'expandedIssue.assignees': { $exists: true, $not: { $size: 0 } },
       'expandedIssue.labels': { $exists: true, $not: { $size: 0 } },
     })
-    .lookup(lookupAssignees)
-    .unwind('$expandedAssignees')
-    .lookup(lookupLabels)
-    .unwind('expandedLabels')
     .group({
       _id: '$expandedIssue',
       assignees: { $addToSet: '$expandedAssignees.login' },

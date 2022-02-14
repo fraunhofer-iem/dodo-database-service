@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
 import { wAvgPerDev } from './model';
-import { RepositoryDocument } from '../../../entities/repositories/model/schemas';
 import { getIssueLabelQuery } from './lib/issueLabelQueries';
+import { RepositoryService } from 'src/entities/repositories/repository.service';
+import { RepositoryIdentifier } from 'src/entities/repositories/model';
 
 @Injectable()
 export class IssueLabels {
@@ -11,7 +11,7 @@ export class IssueLabels {
 
   constructor(
     @InjectModel('Repository')
-    private readonly repoModel: Model<RepositoryDocument>,
+    private readonly repoService: RepositoryService,
   ) {}
 
   /**
@@ -21,13 +21,16 @@ export class IssueLabels {
    * issues and only considers devs who are in @param loginFilter.
    */
   async labelPrioritiesAvg(
-    repoId: { owner: string; repo: string },
+    repoIdent: RepositoryIdentifier,
     loginFilter?: string[],
     issueLimit?: number,
   ) {
+    const lookUpQuery = this.repoService.preAggregate(repoIdent, {
+      issues: { labels: true, assignees: true },
+    });
+
     const issueLabelQuery = getIssueLabelQuery(
-      this.repoModel,
-      repoId,
+      lookUpQuery,
       loginFilter,
       issueLimit,
     );

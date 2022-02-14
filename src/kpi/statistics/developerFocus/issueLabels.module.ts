@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { RepositoryModule } from 'src/entities/repositories/repository.module';
 import { RepositorySchema } from '../../../entities/repositories/model/schemas';
 import { IssueLabels } from './issueLabels.service';
 
@@ -9,6 +10,7 @@ import { IssueLabels } from './issueLabels.service';
     MongooseModule.forFeature([
       { name: 'Repository', schema: RepositorySchema },
     ]),
+    RepositoryModule,
   ],
   exports: [IssueLabels],
   controllers: [],
