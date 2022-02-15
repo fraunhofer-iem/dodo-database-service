@@ -23,7 +23,6 @@ async function queryIssuePage(
     .listForRepo({
       owner: owner,
       repo: repo,
-      filter: 'assigned',
       state: 'all',
       per_page: 100,
       page: pageNumber,

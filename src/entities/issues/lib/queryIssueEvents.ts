@@ -34,5 +34,5 @@ export async function queryIssueEvents(
       per_page: 100,
       page: pageNumber,
     })
-    .then((res) => res.data as any);
+    .then((res) => res.data as IssueEvent[]);
 }
