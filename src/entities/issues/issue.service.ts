@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { updateArray } from '../../lib';
+import { FilterQuery, Model } from 'mongoose';
+import { retrieveDocument, updateArray } from '../../lib';
 import { RepositoryIdentifier } from '../repositories/model';
 import { Repository, RepositoryDocument } from '../repositories/model/schemas';
 import { getIssueEvents, issueQuerier } from './lib';
@@ -25,5 +25,17 @@ export class IssueService {
       const issueDocument = await this.issueModel.create(issue);
       await updateArray(this.repoModel, repoId, { issues: issueDocument });
     }
+  }
+
+  public async read(
+    filter: FilterQuery<IssueDocument>,
+  ): Promise<IssueDocument> {
+    let release: IssueDocument;
+    try {
+      release = await retrieveDocument(this.issueModel, filter);
+    } catch (e) {
+      throw e;
+    }
+    return release;
   }
 }

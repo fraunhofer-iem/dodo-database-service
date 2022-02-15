@@ -25,7 +25,7 @@ export class IssueEvent {
   @Prop()
   created_at: string;
 
-  @Prop([{ type: mSchema.Types.ObjectId, ref: 'User' }])
+  @Prop({ type: mSchema.Types.Mixed, ref: 'User' })
   actor: User;
 }
 

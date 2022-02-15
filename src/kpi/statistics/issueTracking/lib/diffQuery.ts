@@ -1,7 +1,6 @@
 import { Aggregate, Model } from 'mongoose';
 import { RepositoryIdentifier } from '../../../../entities/repositories/model';
 import { RepositoryDocument } from '../../../../entities/repositories/model/schemas';
-import { getRepoFilter } from '../../lib';
 
 export function getMostChangedFiles(
   repoIdent: RepositoryIdentifier,
@@ -29,7 +28,7 @@ export function getMostChangedFiles(
   // TODO: check which data is actually returned and use projection
   return repoModel
     .aggregate()
-    .match(getRepoFilter(repoIdent))
+    .match(repoIdent)
     .unwind('$diffs')
     .lookup(getDiffs)
     .lookup(getPullFiles)

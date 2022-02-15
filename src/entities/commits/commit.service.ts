@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { AnyObject, Model } from 'mongoose';
 import { updateArray } from '../../lib';
 import { RepositoryIdentifier } from '../repositories/model';
 import { Repository, RepositoryDocument } from '../repositories/model/schemas';
@@ -39,5 +39,21 @@ export class CommitService {
     if (commits.length == 100) {
       this.storeCommits(repoIdent, repoId, pageNumber + 1);
     }
+  }
+
+  public async *readAll(filter: AnyObject) {
+    let page: CommitDocument[] = [];
+    let pageNumber = 0;
+    do {
+      page = await this.commitModel
+        .aggregate()
+        .project({ _id: 0, __v: 0 })
+        .match(filter)
+        .skip(100 * pageNumber)
+        .limit(100)
+        .exec();
+      yield* page;
+      pageNumber += 1;
+    } while (page.length == 100);
   }
 }

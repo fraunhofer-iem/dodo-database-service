@@ -13,7 +13,7 @@ export class Commit {
   @Prop()
   timestamp: string;
 
-  @Prop([{ type: mSchema.Types.Mixed, ref: 'User' }])
+  @Prop({ type: mSchema.Types.Mixed, ref: 'User' })
   author: User;
 
   @Prop()

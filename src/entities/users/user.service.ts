@@ -14,7 +14,7 @@ export class UserService {
     private readonly userModel: Model<UserDocument>,
   ) {}
 
-  public async *readAll(filter: AnyObject) {
+  public async *readAll(filter: AnyObject = {}) {
     let page: UserDocument[] = [];
     let pageNumber = 0;
     do {
