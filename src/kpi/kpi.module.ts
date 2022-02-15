@@ -4,6 +4,7 @@ import { DeveloperFocusModule } from './statistics/developerFocus/developerFocus
 import { IssueTrackingModule } from './statistics/issueTracking/issueTracking.module';
 import { IssueModule } from './statistics/issues/issue.module';
 import { IssueLabelsModule } from './statistics/developerFocus/issueLabels.module';
+import { ReleaseCycleModule } from './statistics/releaseCycles/releaseCycle.module';
 
 @Module({
   providers: [],
@@ -12,6 +13,7 @@ import { IssueLabelsModule } from './statistics/developerFocus/issueLabels.modul
     IssueModule,
     IssueTrackingModule,
     IssueLabelsModule,
+    ReleaseCycleModule,
   ],
   controllers: [KpiController],
 })

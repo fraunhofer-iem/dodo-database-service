@@ -8,7 +8,7 @@ import { IssueService } from '../issues/issue.service';
 import { CommitService } from '../commits/commit.service';
 import { ReleaseService } from '../releases/release.service';
 import { PullRequestService } from '../pullRequests/pullRequest.service';
-import { issuesLabelsAssigneesLookup } from './lib';
+import { issuesLabelsAssigneesLookup, releasesLookup } from './lib';
 
 @Injectable()
 export class RepositoryService {
@@ -76,6 +76,7 @@ export class RepositoryService {
           actor?: boolean;
         };
       };
+      releases?;
       commits?: {
         author?: boolean;
       };
@@ -96,8 +97,8 @@ export class RepositoryService {
         // label lookup
       }
     }
-    if (options.issues.labels) {
-      // label lookup
+    if (options.releases) {
+      return releasesLookup(query);
     }
     if (options.commits) {
       // commits lookup
@@ -105,6 +106,5 @@ export class RepositoryService {
         // commit author lookup
       }
     }
-    return query;
   }
 }
