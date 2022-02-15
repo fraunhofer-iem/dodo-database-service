@@ -1,8 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { RepositoryIdentifier } from '../../../repositories/model';
-import { RepositoryDocument } from '../../../repositories/model/schemas';
+import { RepositoryIdentifier } from '../../../entities/repositories/model';
+import { RepositoryDocument } from '../../../entities/repositories/model/schemas';
+import { getAvg, getMostChangedFiles } from './lib';
 
 @Injectable()
 export class DiffService {
@@ -16,62 +17,25 @@ export class DiffService {
   /**
    *
    * @param repoIdent
-   * @param limit a maximum of 100 files is returned
    */
-  async getMostChangedFiles(
-    repoIdent: RepositoryIdentifier,
-    userLimit?: number,
-  ) {
-    const limit = userLimit ? userLimit : 100;
+  async getMostChangedFiles(repoIdent: RepositoryIdentifier, limit = 100) {
     this.logger.log(
-      `getting the ${limit} most changed files for ${repoIdent.owner}/${repoIdent.repo}`,
-    );
-    const filter = {
-      repo: repoIdent.repo,
-      owner: repoIdent.owner,
-    };
-
-    const group = {
-      _id: '$pullFiles.filename',
-      count: { $sum: 1 },
-    };
-
-    const getDiffs = {
-      from: 'diffs',
-      localField: 'diffs',
-      foreignField: '_id',
-      as: 'expandedDiffs',
-    };
-
-    const getPullFiles = {
-      from: 'pullrequestfiles',
-      localField: 'expandedDiffs.pullRequestFiles',
-      foreignField: '_id',
-      as: 'pullFiles',
-    };
-
-    const res: { _id: string; count: number }[] = await this.repoModel
-      .aggregate()
-      .match(filter)
-      .unwind('$diffs')
-      .lookup(getDiffs)
-      .lookup(getPullFiles)
-      .unwind('$pullFiles')
-      .group(group)
-      .sort({ count: -1 }) //sort reverted
-      .limit(limit)
-      .exec();
-
-    let avg = 0;
-    res.forEach((e) => {
-      avg += e.count;
-    });
-    avg = avg / res.length;
-    this.logger.log(
-      `Calculation of most changed files for ${repoIdent.owner}/${repoIdent.repo} finished. Retrieved ${res.length} files. Average changes to the first files: ${avg}`,
+      `getting most changed files for ${repoIdent.owner}/${repoIdent.repo}`,
     );
 
-    return avg;
+    // TODO: we definitly want to include the file name
+    const files = await getMostChangedFiles(
+      repoIdent,
+      this.repoModel,
+      limit,
+    ).exec();
+
+    const avg = getAvg(files);
+    this.logger.log(
+      `Calculation of most changed files for ${repoIdent.owner}/${repoIdent.repo} finished. Retrieved ${files.length} files. Average changes to the first files: ${avg}`,
+    );
+
+    return { files: files, avg: avg };
   }
 
   /**
