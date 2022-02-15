@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
 import { wAvgPerDev } from './model';
 import { getIssueLabelQuery } from './lib/issueLabelQueries';
 import { RepositoryService } from 'src/entities/repositories/repository.service';
@@ -9,10 +8,7 @@ import { RepositoryIdentifier } from 'src/entities/repositories/model';
 export class IssueLabels {
   private readonly logger = new Logger(IssueLabels.name);
 
-  constructor(
-    @InjectModel('Repository')
-    private readonly repoService: RepositoryService,
-  ) {}
+  constructor(private readonly repoService: RepositoryService) {}
 
   /**
    * Computes the weighted avg times (days, weeks, months)

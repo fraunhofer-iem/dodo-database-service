@@ -1,7 +1,5 @@
-import { Aggregate, Model } from 'mongoose';
+import { Aggregate } from 'mongoose';
 import { avgDataPerLabel } from '../model';
-import { RepositoryDocument } from '../../../../entities/repositories/model/schemas';
-import { RepositoryIdentifier } from 'src/entities/repositories/model';
 
 /**
  * Querys every issue in repo @param repoId
