@@ -78,22 +78,24 @@ export class IssueTrackingService {
     repo: RepositoryDocument,
     labelNames?: string[],
   ) {
-    await repo.populate({
-      path: 'releases',
-      options: {
-        sort: 'created_at',
+    await repo.populate([
+      {
+        path: 'releases',
+        options: {
+          sort: 'created_at',
+        },
       },
-    });
-    await repo.populate({
-      path: 'issues',
-      populate: {
-        path: 'labels',
-        match: { name: { $in: labelNames } },
+      {
+        path: 'issues',
+        populate: {
+          path: 'labels',
+          match: { name: { $in: labelNames } },
+        },
+        select: {
+          events: false,
+        },
       },
-      select: {
-        events: false,
-      },
-    });
+    ]);
 
     repo.issues = repo.issues.filter((issue) => issue.labels.length > 0);
   }
