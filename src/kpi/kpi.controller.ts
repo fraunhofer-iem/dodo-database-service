@@ -1,8 +1,21 @@
 import { Controller, Get, Logger, Param } from '@nestjs/common';
+import { IssueTrackingService } from './statistics/issueTracking/issueTracking.service';
 
 @Controller('api/kpis')
 export class KpiController {
   private readonly logger = new Logger(KpiController.name);
+  constructor(private readonly issueTrackingService: IssueTrackingService) {}
+
+  @Get('/fcr')
+  async fcr() {
+    return this.issueTrackingService.issueCompletionRate(
+      {
+        owner: 'octokit',
+        repo: 'octokit.js',
+      },
+      ['bug'],
+    );
+  }
 
   @Get()
   async getKpis() {

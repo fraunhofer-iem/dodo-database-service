@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { RepositoryIdentifier } from '../../../repositories/model';
-import { RepositoryDocument } from '../../../repositories/model/schemas';
+import { RepositoryIdentifier } from '../../../entities/repositories/model';
+import { RepositoryDocument } from '../../../entities/repositories/model/schemas';
 import {
   SprintData,
   DevSpread,

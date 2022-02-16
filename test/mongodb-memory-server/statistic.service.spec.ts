@@ -1,23 +1,21 @@
 import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
-import { UserSchema } from '../../src/model/schemas';
-import { CommitSchema } from '../../src/repositories/commits/model/schemas';
-import {
-  IssueEventSchema,
-  IssueSchema,
-  LabelSchema,
-  MilestoneSchema,
-} from '../../src/repositories/issues/model/schemas';
-import { RepositorySchema } from '../../src/repositories/model/schemas';
+import { UserSchema } from '../../src/entities/users/model/schemas';
+import { CommitSchema } from '../../src/entities/commits/model/schemas';
+import { IssueSchema } from '../../src/entities/issues/model/schemas';
+import { RepositorySchema } from '../../src/entities/repositories/model/schemas';
 import {
   DiffSchema,
   PullRequestSchema,
   PullRequestFileSchema,
   RepositoryFileSchema,
-} from '../../src/repositories/pullRequests/model/schemas';
-import { ReleaseSchema } from '../../src/repositories/releases/model/schemas';
-import { TestData } from './sampleData';
+} from '../../src/entities/pullRequests/model/schemas';
+import { ReleaseSchema } from '../../src/entities/releases/model/schemas';
+// import { TestData } from './sampleData';
 import { TestDbHelper } from './testDbHelper';
+import { IssueEventSchema } from '../../src/entities/issueEvents/model/schemas';
+import { LabelSchema } from '../../src/entities/labels/model/schemas';
+import { MilestoneSchema } from '../../src/entities/milestones/model/schemas';
 
 /**
  * test suite for all KPIs from statistic service
@@ -26,7 +24,7 @@ import { TestDbHelper } from './testDbHelper';
 
 describe('StatisticService', () => {
   const dbHelper = new TestDbHelper();
-  const _testData = new TestData();
+  // const _testData = new TestData();
   let _testMod: TestingModule;
   beforeAll(async () => {
     const uri = await dbHelper.start();
