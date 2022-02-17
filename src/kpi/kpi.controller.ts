@@ -1,10 +1,14 @@
-import { Controller, Get, Logger, Param } from '@nestjs/common';
+import { Controller, Get, Logger, Param, Query } from '@nestjs/common';
+import { DeveloperSpreadService } from './statistics/developerSpread/developerSpread.service';
 import { IssueTrackingService } from './statistics/issueTracking/issueTracking.service';
 
 @Controller('api/kpis')
 export class KpiController {
   private readonly logger = new Logger(KpiController.name);
-  constructor(private readonly issueTrackingService: IssueTrackingService) {}
+  constructor(
+    private readonly issueTrackingService: IssueTrackingService,
+    private readonly developerSpreadService: DeveloperSpreadService,
+  ) {}
 
   @Get('/fcr')
   async fcr() {
@@ -15,6 +19,13 @@ export class KpiController {
       },
       ['bug'],
     );
+  }
+
+  @Get('/devSpread')
+  async devSpread(@Query('owner') owner: string, @Query('repo') repo: string) {
+    this.logger.log('Calculating developer spread for repository:');
+    this.logger.log({ owner, repo });
+    this.developerSpreadService.developerSpread({ owner, repo });
   }
 
   @Get()
