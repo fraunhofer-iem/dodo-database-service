@@ -79,12 +79,11 @@ export class RepositoryService {
       commits?: {
         author?: boolean;
       };
+      releases?: boolean;
+      diffs?: boolean;
     },
   ): Aggregate<any[]> {
-    const pipeline = this.repoModel
-      .aggregate()
-      .match(repoIdent)
-      .project({ releases: 0, diffs: 0, commits: 0 });
+    const pipeline = this.repoModel.aggregate().match(repoIdent);
     if (options.issues) {
       pipeline.lookup({
         from: 'issues',
@@ -93,6 +92,34 @@ export class RepositoryService {
         as: 'issues',
       });
       pipeline.unwind('$issues');
+      pipeline.lookup({
+        from: 'users',
+        localField: 'issues.user',
+        foreignField: '_id',
+        as: 'issues.user',
+      });
+      pipeline.lookup({
+        from: 'users',
+        localField: 'issues.assignee',
+        foreignField: '_id',
+        as: 'issues.assignee',
+      });
+      pipeline.addFields({
+        'issues.user': {
+          $arrayElemAt: ['$issues.user', 0],
+        },
+        'issues.assignee': {
+          $arrayElemAt: ['$issues.assignee', 0],
+        },
+      });
+      if (options.issues.assignees) {
+        pipeline.lookup({
+          from: 'users',
+          localField: 'issues.assignees',
+          foreignField: '_id',
+          as: 'issues.assignees',
+        });
+      }
       if (options.issues.events) {
         pipeline.lookup({
           from: 'issueevents',
@@ -134,16 +161,34 @@ export class RepositoryService {
       }
       pipeline.group({
         _id: '$_id',
+        data: { $first: '$$ROOT' },
         issues: {
           $push: '$issues',
         },
       });
+      pipeline.addFields({
+        'data.issues': '$issues',
+      });
+      pipeline.replaceRoot('$data');
+    } else {
+      pipeline.project({ issues: 0 });
     }
     if (options.commits) {
       // commits lookup
       if (options.commits.author) {
         // commit author lookup
       }
+    } else {
+      pipeline.project({ commits: 0 });
+    }
+    if (options.releases) {
+    } else {
+      pipeline.project({ releases: 0 });
+    }
+
+    if (options.diffs) {
+    } else {
+      pipeline.project({ diffs: 0 });
     }
     return pipeline;
   }
