@@ -28,6 +28,20 @@ const lookupAssignees = {
   as: 'expandedAssignees',
 };
 
+const lookupDiff = {
+  from: 'diffs',
+  localField: 'diffs',
+  foreignField: '_id',
+  as: 'expandedDiff',
+};
+
+const lookupPullRequestFiles = {
+  from: 'pullrequestfiles',
+  localField: 'expandedDiff.pullRequestFiles',
+  foreignField: '_id',
+  as: 'expandedPullRequestFiles',
+};
+
 export function issuesLabelsAssigneesLookup(
   query: Aggregate<any[]>,
 ): Aggregate<any[]> {
@@ -46,4 +60,15 @@ export function releasesLookup(query: Aggregate<any[]>): Aggregate<any[]> {
     .lookup(lookupRelease)
     .unwind('$expandedRelease')
     .project({ expandedRelease: 1 });
+}
+
+export function diffsPullrequestfilesLookup(
+  query: Aggregate<any[]>,
+): Aggregate<any[]> {
+  return query
+    .lookup(lookupDiff)
+    .unwind('$expandedDiff')
+    .project({ expandedDiff: 1 })
+    .lookup(lookupPullRequestFiles)
+    .unwind('$expandedPullRequestFiles');
 }

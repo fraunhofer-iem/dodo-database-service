@@ -13,7 +13,7 @@ export class IssueLabels {
   /**
    * Computes the weighted avg times (days, weeks, months)
    * for completion for all label categorys of a repository
-   * @param repoId. It includes the first @param issueLimit
+   * @param repoIdent. It includes the first @param issueLimit
    * issues and only considers devs who are in @param loginFilter.
    */
   async labelPrioritiesAvg(

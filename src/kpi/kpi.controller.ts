@@ -2,6 +2,7 @@ import { Controller, Get, Logger, Param } from '@nestjs/common';
 import { IssueTrackingService } from './statistics/issueTracking/issueTracking.service';
 import { IssueLabels } from './statistics/developerFocus/issueLabels.service';
 import { ReleaseCycle } from './statistics/releaseCycles/releaseCycle.service';
+import { CouplingOfComponents } from './statistics/coupelingOfComponents/couplingOfComponents.service';
 
 @Controller('api/kpis')
 export class KpiController {
@@ -10,6 +11,7 @@ export class KpiController {
     private readonly issueTrackingService: IssueTrackingService,
     private readonly issueLabels: IssueLabels,
     private readonly releaseCycle: ReleaseCycle,
+    private readonly couplingOfComponents: CouplingOfComponents,
   ) {}
 
   @Get('/fcr')
@@ -41,6 +43,15 @@ export class KpiController {
   async getRC() {
     this.logger.log('Get Release Cycle');
     return this.releaseCycle.releaseCycle({
+      owner: 'fraunhofer-iem',
+      repo: 'dodo-database-service',
+    });
+  }
+
+  @Get('/coc')
+  async getCOC() {
+    this.logger.log('Get Coupling Of Components');
+    return this.couplingOfComponents.couplingOfComponents({
       owner: 'fraunhofer-iem',
       repo: 'dodo-database-service',
     });
