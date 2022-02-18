@@ -8,7 +8,19 @@ import { IssueService } from '../issues/issue.service';
 import { CommitService } from '../commits/commit.service';
 import { ReleaseService } from '../releases/release.service';
 import { PullRequestService } from '../pullRequests/pullRequest.service';
-import { Issue } from '../issues/model/schemas';
+import {
+  commitsAuthorLookup,
+  commitsLookup,
+  diffsLookup,
+  issuesAssigneeLookup,
+  issuesAssigneesLookup,
+  issuesEventsActorLookup,
+  issuesEventsLookup,
+  issuesLabelsLookup,
+  issuesLookup,
+  issuesUserLookup,
+  releasesLookup,
+} from './lib';
 
 @Injectable()
 export class RepositoryService {
@@ -67,7 +79,7 @@ export class RepositoryService {
   }
 
   public preAggregate(
-    repoIdent: RepositoryIdentifier,
+    filter: FilterQuery<RepositoryDocument>,
     options: {
       issues?: {
         labels?: boolean;
@@ -83,27 +95,12 @@ export class RepositoryService {
       diffs?: boolean;
     },
   ): Aggregate<any[]> {
-    const pipeline = this.repoModel.aggregate().match(repoIdent);
+    const pipeline = this.repoModel.aggregate().match(filter);
     if (options.issues) {
-      pipeline.lookup({
-        from: 'issues',
-        localField: 'issues',
-        foreignField: '_id',
-        as: 'issues',
-      });
+      pipeline.lookup(issuesLookup);
       pipeline.unwind('$issues');
-      pipeline.lookup({
-        from: 'users',
-        localField: 'issues.user',
-        foreignField: '_id',
-        as: 'issues.user',
-      });
-      pipeline.lookup({
-        from: 'users',
-        localField: 'issues.assignee',
-        foreignField: '_id',
-        as: 'issues.assignee',
-      });
+      pipeline.lookup(issuesUserLookup);
+      pipeline.lookup(issuesAssigneeLookup);
       pipeline.addFields({
         'issues.user': {
           $arrayElemAt: ['$issues.user', 0],
@@ -113,28 +110,13 @@ export class RepositoryService {
         },
       });
       if (options.issues.assignees) {
-        pipeline.lookup({
-          from: 'users',
-          localField: 'issues.assignees',
-          foreignField: '_id',
-          as: 'issues.assignees',
-        });
+        pipeline.lookup(issuesAssigneesLookup);
       }
       if (options.issues.events) {
-        pipeline.lookup({
-          from: 'issueevents',
-          localField: 'issues.events',
-          foreignField: '_id',
-          as: 'issues.events',
-        });
+        pipeline.lookup(issuesEventsLookup);
         if (options.issues.events.actor) {
           pipeline.unwind('$issues.events');
-          pipeline.lookup({
-            from: 'users',
-            localField: 'issues.events.actor',
-            foreignField: '_id',
-            as: 'issues.events.actor',
-          });
+          pipeline.lookup(issuesEventsActorLookup);
           pipeline.addFields({
             'issues.events.actor': {
               $arrayElemAt: ['$issues.events.actor', 0],
@@ -152,12 +134,7 @@ export class RepositoryService {
         }
       }
       if (options.issues.labels) {
-        pipeline.lookup({
-          from: 'labels',
-          localField: 'issues.labels',
-          foreignField: '_id',
-          as: 'issues.labels',
-        });
+        pipeline.lookup(issuesLabelsLookup);
       }
       pipeline.group({
         _id: '$_id',
@@ -174,19 +151,38 @@ export class RepositoryService {
       pipeline.project({ issues: 0 });
     }
     if (options.commits) {
-      // commits lookup
+      pipeline.lookup(commitsLookup);
       if (options.commits.author) {
-        // commit author lookup
+        pipeline.unwind('$commits');
+        pipeline.lookup(commitsAuthorLookup);
+        pipeline.addFields({
+          'commits.author': {
+            $arrayElemAt: ['$commits.author', 0],
+          },
+        });
+        pipeline.group({
+          _id: '$_id',
+          data: { $first: '$$ROOT' },
+          commits: {
+            $push: '$commits',
+          },
+        });
+        pipeline.addFields({
+          'data.commits': '$commits',
+        });
+        pipeline.replaceRoot('$data');
       }
     } else {
       pipeline.project({ commits: 0 });
     }
     if (options.releases) {
+      pipeline.lookup(releasesLookup);
     } else {
       pipeline.project({ releases: 0 });
     }
-
     if (options.diffs) {
+      pipeline.lookup(diffsLookup);
+      //TODO: Add options to populate repositoryFiles, prFiles and PR props
     } else {
       pipeline.project({ diffs: 0 });
     }

@@ -17,6 +17,8 @@ export class DeveloperSpreadService {
   async developerSpread(repo: RepositoryIdentifier) {
     const pipeline = this.repoService.preAggregate(repo, {
       issues: { events: { actor: true }, assignees: true },
+      commits: { author: true },
+      releases: true,
     });
     const result = await pipeline.exec();
     console.log(result);
