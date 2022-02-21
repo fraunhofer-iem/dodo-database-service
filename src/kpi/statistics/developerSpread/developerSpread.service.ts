@@ -24,16 +24,16 @@ export class DeveloperSpreadService {
       },
     );
     pipeline.unwind('$commits');
-    pipeline.match({
-      'commits.timestamp': { $gte: new Date(since) },
-      'commits.author.type': 'User',
-    });
     pipeline.addFields({
       'commits.timestamp': {
         $dateFromString: {
           dateString: '$commits.timestamp',
         },
       },
+    });
+    pipeline.match({
+      'commits.timestamp': { $gte: new Date(since) },
+      'commits.author.type': 'User',
     });
     pipeline.group({
       _id: {
@@ -74,9 +74,21 @@ export class DeveloperSpreadService {
       spread: '$spread',
       devs: '$devs',
     });
+    pipeline.group({
+      _id: null,
+      data: { $push: '$$ROOT' },
+      sum: { $sum: { $multiply: ['$spread', '$devs'] } },
+      intervals: { $sum: '$devs' },
+    });
+    pipeline.project({
+      avg: { $divide: ['$sum', '$intervals'] },
+      data: '$data',
+    });
 
+    const [result] = await pipeline.exec();
+    console.log(result);
     const spreads = {};
-    for (const spread of await pipeline.exec()) {
+    for (const spread of result.data) {
       const { year, spread: avg, devs } = spread;
       if (!spreads[year]) {
         spreads[year] = {};
@@ -86,7 +98,7 @@ export class DeveloperSpreadService {
         devs: devs,
       };
     }
-    return spreads;
+    return { avg: result.avg, data: spreads };
   }
 }
 // // avg spread per dev

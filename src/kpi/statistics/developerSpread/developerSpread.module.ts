@@ -6,7 +6,7 @@ import { RepositoryModule } from 'src/entities/repositories/repository.module';
 
 @Module({
   providers: [DeveloperSpreadService],
-  imports: [UserModule, CommitModule, RepositoryModule],
+  imports: [RepositoryModule],
   exports: [DeveloperSpreadService],
 })
 export class DeveloperSpreadModule {}
