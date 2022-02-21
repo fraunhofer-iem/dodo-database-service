@@ -19,40 +19,66 @@ export class DeveloperSpreadService {
     const pipeline = this.repoService.preAggregate(
       { owner: repo.owner },
       {
-        // issues: { events: { actor: true }, assignees: true },
-        commits: { author: true },
+        issues: { events: { actor: true, since: since } },
+        commits: { author: true, since: since },
       },
     );
     pipeline.unwind('$commits');
-    pipeline.addFields({
-      'commits.timestamp': {
-        $dateFromString: {
-          dateString: '$commits.timestamp',
+    pipeline.unwind('$issues');
+    pipeline.unwind('$issues.events');
+    pipeline.group({
+      _id: '$owner',
+      contributors: {
+        $addToSet: '$commits.author',
+      },
+      commits: {
+        $addToSet: {
+          user: '$commits.author',
+          timestamp: '$commits.timestamp',
+          repo: '$repo',
+        },
+      },
+      events: {
+        $addToSet: {
+          user: '$issues.events.actor',
+          timestamp: '$issues.events.created_at',
+          repo: '$repo',
         },
       },
     });
-    pipeline.match({
-      'commits.timestamp': { $gte: new Date(since) },
-      'commits.author.type': 'User',
+    pipeline.project({
+      activities: {
+        $setUnion: ['$commits', '$events'],
+      },
+      contributors: 1,
     });
+    pipeline.unwind('$activities');
+    pipeline.match({
+      'activities.user.type': 'User',
+    });
+    pipeline.redact(
+      { $in: ['$activities.user', '$contributors'] },
+      '$$KEEP',
+      '$$PRUNE',
+    );
     pipeline.group({
       _id: {
-        login: '$commits.author.login',
-        year: { $year: '$commits.timestamp' },
+        login: '$activities.user.login',
+        year: { $year: '$activities.timestamp' },
         month:
           interval === Intervals.MONTH
-            ? { $month: '$commits.timestamp' }
+            ? { $month: '$activities.timestamp' }
             : undefined,
         week:
           interval === Intervals.WEEK
-            ? { $week: '$commits.timestamp' }
+            ? { $week: '$activities.timestamp' }
             : undefined,
         day:
           interval === Intervals.DAY
-            ? { $dayOfYear: '$commits.timestamp' }
+            ? { $dayOfYear: '$activities.timestamp' }
             : undefined,
       },
-      repos: { $addToSet: '$repo' },
+      repos: { $addToSet: '$activities.repo' },
     });
     pipeline.group({
       _id: {

@@ -190,9 +190,11 @@ export class RepositoryService {
             },
           },
         });
-        pipeline.match({
-          'commits.timestamp': { $gte: new Date(options.commits.since) },
-        });
+        if (options.commits.since) {
+          pipeline.match({
+            'commits.timestamp': { $gte: new Date(options.commits.since) },
+          });
+        }
         pipeline.group({
           _id: '$_id',
           data: { $first: '$$ROOT' },
