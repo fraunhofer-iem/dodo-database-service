@@ -86,10 +86,13 @@ export class RepositoryService {
         assignees?: boolean;
         events?: {
           actor?: boolean;
+          since?: string;
         };
+        since?: string;
       };
       commits?: {
         author?: boolean;
+        since?: string;
       };
       releases?: boolean;
       diffs?: boolean;
@@ -108,7 +111,17 @@ export class RepositoryService {
         'issues.assignee': {
           $arrayElemAt: ['$issues.assignee', 0],
         },
+        'issues.created_at': {
+          $dateFromString: {
+            dateString: '$issues.created_at',
+          },
+        },
       });
+      if (options.issues.since) {
+        pipeline.match({
+          'issues.created_at': { $gte: new Date(options.issues.since) },
+        });
+      }
       if (options.issues.assignees) {
         pipeline.lookup(issuesAssigneesLookup);
       }
@@ -121,7 +134,19 @@ export class RepositoryService {
             'issues.events.actor': {
               $arrayElemAt: ['$issues.events.actor', 0],
             },
+            'issues.events.created_at': {
+              $dateFromString: {
+                dateString: '$issues.events.created_at',
+              },
+            },
           });
+          if (options.issues.events.since) {
+            pipeline.match({
+              'issues.events.created_at': {
+                $gte: new Date(options.issues.events.since),
+              },
+            });
+          }
           pipeline.group({
             _id: '$issues._id',
             data: { $first: '$$ROOT' },
@@ -159,6 +184,14 @@ export class RepositoryService {
           'commits.author': {
             $arrayElemAt: ['$commits.author', 0],
           },
+          'commits.timestamp': {
+            $dateFromString: {
+              dateString: '$commits.timestamp',
+            },
+          },
+        });
+        pipeline.match({
+          'commits.timestamp': { $gte: new Date(options.commits.since) },
         });
         pipeline.group({
           _id: '$_id',
