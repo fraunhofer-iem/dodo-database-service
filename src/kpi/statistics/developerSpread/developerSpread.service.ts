@@ -24,16 +24,16 @@ export class DeveloperSpreadService {
       },
     );
     pipeline.unwind('$commits');
+    pipeline.match({
+      'commits.timestamp': { $gte: new Date(since) },
+      'commits.author.type': 'User',
+    });
     pipeline.addFields({
       'commits.timestamp': {
         $dateFromString: {
           dateString: '$commits.timestamp',
         },
       },
-    });
-    pipeline.match({
-      'commits.timestamp': { $gte: new Date(since) },
-      'commits.author.type': 'User',
     });
     pipeline.group({
       _id: {
