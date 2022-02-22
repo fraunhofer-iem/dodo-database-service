@@ -274,6 +274,17 @@ export class RepositoryService {
           },
         });
       }
+      pipeline.group({
+        _id: '$_id',
+        data: { $first: '$$ROOT' },
+        releases: {
+          $push: '$releases',
+        },
+      });
+      pipeline.addFields({
+        'data.releases': '$releases',
+      });
+      pipeline.replaceRoot('$data');
     } else {
       pipeline.project({ releases: 0 });
     }
