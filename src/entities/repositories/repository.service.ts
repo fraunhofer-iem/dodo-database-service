@@ -123,6 +123,16 @@ export class RepositoryService {
             dateString: '$issues.created_at',
           },
         },
+        'issues.updated_at': {
+          $dateFromString: {
+            dateString: '$issues.updated_at',
+          },
+        },
+        'issues.closed_at': {
+          $dateFromString: {
+            dateString: '$issues.updated_at',
+          },
+        },
       });
       if (since) {
         pipeline.match({
