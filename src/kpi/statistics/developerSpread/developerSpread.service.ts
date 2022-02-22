@@ -1,10 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { UserService } from '../../../entities/users/user.service';
-import { CommitService } from '../../../entities/commits/commit.service';
-import { RepositoryIdentifier } from '../../../entities/repositories/model';
 import { RepositoryService } from '../../../entities/repositories/repository.service';
 import { Intervals } from './lib';
-import { timeStamp } from 'console';
 
 @Injectable()
 export class DeveloperSpreadService {

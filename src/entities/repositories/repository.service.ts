@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Aggregate, FilterQuery, Model } from 'mongoose';
 import { Repository, RepositoryDocument } from './model/schemas';
-import { CreateRepositoryDto, RepositoryIdentifier } from './model';
+import { CreateRepositoryDto } from './model';
 import { retrieveDocument } from '../../lib';
 import { IssueService } from '../issues/issue.service';
 import { CommitService } from '../commits/commit.service';
