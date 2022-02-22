@@ -4,6 +4,7 @@ import { CommitService } from '../../../entities/commits/commit.service';
 import { RepositoryIdentifier } from '../../../entities/repositories/model';
 import { RepositoryService } from '../../../entities/repositories/repository.service';
 import { Intervals } from './lib';
+import { timeStamp } from 'console';
 
 @Injectable()
 export class DeveloperSpreadService {
@@ -12,24 +13,48 @@ export class DeveloperSpreadService {
   constructor(private readonly repoService: RepositoryService) {}
 
   async developerSpread(
-    repo: RepositoryIdentifier,
     interval: Intervals = Intervals.MONTH,
-    since: string = '1970-01-01',
+    owner: string,
+    repo: string = undefined,
+    since: string = undefined,
+    to: string = undefined,
   ) {
     const pipeline = this.repoService.preAggregate(
-      { owner: repo.owner },
+      { owner: owner },
       {
-        issues: { events: { actor: true, since: since } },
-        commits: { author: true, since: since },
+        issues: { events: { actor: true, since: since, to: to } },
+        commits: { author: true, since: since, to: to },
       },
     );
+    pipeline.unwind('$commits');
+    pipeline.group({
+      _id: '$_id',
+      contributors: {
+        $addToSet: '$commits.author',
+      },
+      owner: { $first: '$owner' },
+      repo: { $first: '$repo' },
+      commits: { $push: '$commits' },
+      issues: { $first: '$issues' },
+    });
+    if (repo) {
+      pipeline.addFields({
+        contributors: {
+          $cond: {
+            if: { $eq: ['$repo', repo] },
+            then: '$contributors',
+            else: null,
+          },
+        },
+      });
+    }
     pipeline.unwind('$commits');
     pipeline.unwind('$issues');
     pipeline.unwind('$issues.events');
     pipeline.group({
       _id: '$owner',
       contributors: {
-        $addToSet: '$commits.author',
+        $addToSet: '$contributors',
       },
       commits: {
         $addToSet: {
@@ -52,9 +77,25 @@ export class DeveloperSpreadService {
       },
       contributors: 1,
     });
+    // without a repo filter, contributors looks like:
+    //    [ [<contributors of repo 1>], [<contributors of repo 2>], [<contributors of repo 3>]]
+    // with a repo filter, contributors looks like:
+    //    [ [], [<contributors of filtered repo>]]
+    // I couldn't find a more elegant way to flatten this array than this combination of unwind-unwind-group
+    pipeline.unwind('$contributors');
+    pipeline.unwind('$contributors');
+    pipeline.group({
+      _id: '_id',
+      contributors: {
+        $addToSet: '$contributors',
+      },
+      activities: {
+        $first: '$activities',
+      },
+    });
     pipeline.unwind('$activities');
     pipeline.match({
-      'activities.user.type': 'User',
+      'activities.user.type': 'User', // filter Bots
     });
     pipeline.redact(
       { $in: ['$activities.user', '$contributors'] },
@@ -103,37 +144,32 @@ export class DeveloperSpreadService {
     pipeline.group({
       _id: null,
       data: { $push: '$$ROOT' },
-      sum: { $sum: { $multiply: ['$spread', '$devs'] } },
+      sum: { $sum: { $multiply: ['$spread', '$devs'] } }, // weighted average spread
       intervals: { $sum: '$devs' },
     });
     pipeline.project({
-      avg: { $divide: ['$sum', '$intervals'] },
+      avg: { $divide: ['$sum', '$intervals'] }, // total weighted average spread
       data: '$data',
     });
 
     const [result] = await pipeline.exec();
-    console.log(result);
-    const spreads = {};
-    for (const spread of result.data) {
-      const { year, spread: avg, devs } = spread;
-      if (!spreads[year]) {
-        spreads[year] = {};
+    if (!result) {
+      this.logger.error(`Could not calculate: no data in selected time frame`);
+      // TODO: throw an error to respond with 404?
+      return { avg: null, data: {} };
+    } else {
+      const spreads = {};
+      for (const spread of result.data) {
+        const { year, spread: avg, devs } = spread;
+        if (!spreads[year]) {
+          spreads[year] = {};
+        }
+        spreads[year][spread[interval]] = {
+          spread: avg,
+          devs: devs,
+        };
+        return { avg: result.avg, data: spreads };
       }
-      spreads[year][spread[interval]] = {
-        spread: avg,
-        devs: devs,
-      };
     }
-    return { avg: result.avg, data: spreads };
   }
 }
-// // avg spread per dev
-// pipeline.group({
-//   _id: '$_id.login',
-//   spread: {
-//     $avg: { $size: '$repos' },
-//   },
-//   intervals: {
-//     $sum: 1,
-//   },
-// });
