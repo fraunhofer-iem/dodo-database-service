@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { RepositoryService } from '../../../entities/repositories/repository.service';
-import { Intervals } from './lib';
+import { Intervals } from '../../statistics/lib';
 
 @Injectable()
 export class DeveloperSpreadService {

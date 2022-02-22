@@ -1,6 +1,6 @@
 import { Controller, Get, Logger, Param, Query } from '@nestjs/common';
 import { DeveloperSpreadService } from './statistics/developerSpread/developerSpread.service';
-import { Intervals } from './statistics/developerSpread/lib';
+import { Intervals } from './statistics/lib';
 import { IssueTrackingService } from './statistics/issueTracking/issueTracking.service';
 
 @Controller('api/kpis')
