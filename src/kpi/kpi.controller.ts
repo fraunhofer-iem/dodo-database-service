@@ -24,17 +24,20 @@ export class KpiController {
 
   @Get('/devSpread')
   async devSpread(
-    @Query('owner') owner: string,
-    @Query('repo') repo: string,
     @Query('interval') interval: Intervals = Intervals.MONTH,
+    @Query('owner') owner: string,
+    @Query('repo') repo?: string,
     @Query('since') since?: string,
+    @Query('to') to?: string,
   ) {
     this.logger.log('Calculating developer spread for repository:');
-    this.logger.log({ owner, repo, interval, since });
+    this.logger.log({ owner, repo, interval, since, to });
     return this.developerSpreadService.developerSpread(
-      { owner, repo },
       interval,
+      owner,
+      repo,
       since,
+      to,
     );
   }
 
