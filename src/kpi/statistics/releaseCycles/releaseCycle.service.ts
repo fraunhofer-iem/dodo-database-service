@@ -16,7 +16,7 @@ export class ReleaseCycle {
    */
   async releaseCycle(repoIdent: RepositoryIdentifier, releaseLimit?: number) {
     const lookUpQuery = this.repoService.preAggregate(repoIdent, {
-      releases: true,
+      releases: {},
     });
 
     const releaseCycleQuery = getReleaseCycleQuery(lookUpQuery, releaseLimit);

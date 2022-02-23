@@ -78,9 +78,12 @@ export class KpiController {
         owner: 'fraunhofer-iem',
         repo: 'dodo-database-service',
       },
-      // 100,
-      // ['README.md'],
-      // 5,
+      100,
+      ['README.md'],
+      3,
+      2,
+      '2022-01-01',
+      '2022-02-15',
     );
   }
 

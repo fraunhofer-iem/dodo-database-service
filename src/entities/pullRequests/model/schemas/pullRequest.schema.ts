@@ -14,6 +14,18 @@ export class PullRequest {
 
   @Prop()
   url: string;
+
+  @Prop()
+  created_at: string;
+
+  @Prop()
+  updated_at: string;
+
+  @Prop()
+  closed_at: string;
+
+  @Prop()
+  merged_at: string;
 }
 
 export type PullRequestDocument = PullRequest & Document;
