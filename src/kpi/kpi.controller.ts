@@ -48,13 +48,16 @@ export class KpiController {
     this.logger.log('Get all KPIs request from user XXX');
   }
 
-  @Get('/rc')
-  async getRC() {
+  @Get('/releaseCycles')
+  async getRC(
+    @Query('interval') interval: Intervals = Intervals.MONTH,
+    @Query('owner') owner: string,
+    @Query('repo') repo: string,
+    @Query('since') since?: string,
+    @Query('to') to?: string,
+  ) {
     this.logger.log('Get Release Cycle');
-    return this.releaseCycle.releaseCycle({
-      owner: 'fraunhofer-iem',
-      repo: 'dodo-database-service',
-    });
+    return this.releaseCycle.releaseCycle(interval, owner, repo, since, to);
   }
 
   @Get(':id')
