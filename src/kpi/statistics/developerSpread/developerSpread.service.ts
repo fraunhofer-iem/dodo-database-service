@@ -164,8 +164,8 @@ export class DeveloperSpreadService {
           spread: avg,
           devs: devs,
         };
-        return { avg: result.avg, data: spreads };
       }
+      return { avg: result.avg, data: spreads };
     }
   }
 }
