@@ -1,6 +1,7 @@
-import { Controller, Get, Logger, Param } from '@nestjs/common';
+import { Controller, Get, Logger, Param, Query } from '@nestjs/common';
+import { DeveloperSpreadService } from './statistics/developerSpread/developerSpread.service';
+import { Intervals } from './statistics/lib';
 import { IssueTrackingService } from './statistics/issueTracking/issueTracking.service';
-import { IssueLabels } from './statistics/developerFocus/issueLabels.service';
 import { ReleaseCycle } from './statistics/releaseCycles/releaseCycle.service';
 
 @Controller('api/kpis')
@@ -8,8 +9,8 @@ export class KpiController {
   private readonly logger = new Logger(KpiController.name);
   constructor(
     private readonly issueTrackingService: IssueTrackingService,
-    private readonly issueLabels: IssueLabels,
     private readonly releaseCycle: ReleaseCycle,
+    private readonly developerSpreadService: DeveloperSpreadService,
   ) {}
 
   @Get('/fcr')
@@ -23,18 +24,28 @@ export class KpiController {
     );
   }
 
+  @Get('/devSpread')
+  async devSpread(
+    @Query('interval') interval: Intervals = Intervals.MONTH,
+    @Query('owner') owner: string,
+    @Query('repo') repo?: string,
+    @Query('since') since?: string,
+    @Query('to') to?: string,
+  ) {
+    this.logger.log('Calculating developer spread for repository:');
+    this.logger.log({ owner, repo, interval, since, to });
+    return this.developerSpreadService.developerSpread(
+      interval,
+      owner,
+      repo,
+      since,
+      to,
+    );
+  }
+
   @Get()
   async getKpis() {
     this.logger.log('Get all KPIs request from user XXX');
-  }
-
-  @Get('/ilp')
-  async getILP() {
-    this.logger.log('Get Issue Label Priorities');
-    return this.issueLabels.labelPrioritiesAvg({
-      owner: 'fraunhofer-iem',
-      repo: 'dodo-database-service',
-    });
   }
 
   @Get('/rc')
