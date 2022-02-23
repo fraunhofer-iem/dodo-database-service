@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { RepositoryService } from 'src/entities/repositories/repository.service';
-import { Intervals } from '../lib';
+import { groupByIntervalSelector, Intervals, serialize } from '../lib';
 
 @Injectable()
 export class ReleaseCycle {
@@ -63,17 +63,7 @@ export class ReleaseCycle {
       created_at: { $arrayElemAt: ['$cycles', 1] },
     });
     pipeline.group({
-      _id: {
-        year: { $year: '$created_at' },
-        month:
-          interval === Intervals.MONTH ? { $month: '$created_at' } : undefined,
-        week:
-          interval === Intervals.WEEK ? { $week: '$created_at' } : undefined,
-        day:
-          interval === Intervals.DAY
-            ? { $dayOfYear: '$created_at' }
-            : undefined,
-      },
+      _id: groupByIntervalSelector('$created_at', interval),
       intervals: { $push: '$interval' },
     });
     pipeline.addFields({
@@ -93,24 +83,10 @@ export class ReleaseCycle {
     });
 
     const [result] = await pipeline.exec();
-    if (!result) {
-      this.logger.error(`Could not calculate: no data in selected time frame`);
-      // TODO: throw an error to respond with 404?
-      return { avg: null, data: {} };
-    } else {
-      const cycles = {};
-      for (const cycle of result.data) {
-        const { _id, avg, intervals: releases } = cycle;
-        const { year, ...intervals } = _id;
-        if (!cycles[year]) {
-          cycles[year] = {};
-        }
-        cycles[year][intervals[interval]] = {
-          avg: avg,
-          releases: releases.length,
-        };
-      }
-      return { avg: result.avg, data: cycles };
+    try {
+      return serialize(result, interval, 'numberOfReleases');
+    } catch (err) {
+      this.logger.error(err);
     }
   }
 }
