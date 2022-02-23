@@ -6,6 +6,7 @@ import { IssueModule } from './statistics/issues/issue.module';
 import { IssueLabelsModule } from './statistics/developerFocus/issueLabels.module';
 import { ReleaseCycleModule } from './statistics/releaseCycles/releaseCycle.module';
 import { CouplingOfComponentsModule } from './statistics/coupelingOfComponents/couplingOfComponents.module';
+import { DeveloperSpreadModule } from './statistics/developerSpread/developerSpread.module';
 
 @Module({
   providers: [],
@@ -16,6 +17,7 @@ import { CouplingOfComponentsModule } from './statistics/coupelingOfComponents/c
     IssueLabelsModule,
     ReleaseCycleModule,
     CouplingOfComponentsModule,
+    DeveloperSpreadModule,
   ],
   controllers: [KpiController],
 })

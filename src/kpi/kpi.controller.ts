@@ -1,4 +1,5 @@
-import { Controller, Get, Logger, Param } from '@nestjs/common';
+import { Controller, Get, Logger, Param, Query } from '@nestjs/common';
+import { DeveloperSpreadService } from './statistics/developerSpread/developerSpread.service';
 import { IssueTrackingService } from './statistics/issueTracking/issueTracking.service';
 import { IssueLabels } from './statistics/developerFocus/issueLabels.service';
 import { ReleaseCycle } from './statistics/releaseCycles/releaseCycle.service';
@@ -12,6 +13,7 @@ export class KpiController {
     private readonly issueLabels: IssueLabels,
     private readonly releaseCycle: ReleaseCycle,
     private readonly couplingOfComponents: CouplingOfComponents,
+    private readonly developerSpreadService: DeveloperSpreadService,
   ) {}
 
   @Get('/fcr')
@@ -23,6 +25,13 @@ export class KpiController {
       },
       ['bug'],
     );
+  }
+
+  @Get('/devSpread')
+  async devSpread(@Query('owner') owner: string, @Query('repo') repo: string) {
+    this.logger.log('Calculating developer spread for repository:');
+    this.logger.log({ owner, repo });
+    this.developerSpreadService.developerSpread({ owner, repo });
   }
 
   @Get()
@@ -51,10 +60,15 @@ export class KpiController {
   @Get('/coc')
   async getCOC() {
     this.logger.log('Get Coupling Of Components');
-    return this.couplingOfComponents.couplingOfComponents({
-      owner: 'fraunhofer-iem',
-      repo: 'dodo-database-service',
-    });
+    return this.couplingOfComponents.couplingOfComponents(
+      {
+        owner: 'fraunhofer-iem',
+        repo: 'dodo-database-service',
+      },
+      // 100,
+      // ['README.md'],
+      // 5,
+    );
   }
 
   @Get(':id')

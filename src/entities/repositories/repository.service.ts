@@ -9,9 +9,20 @@ import { CommitService } from '../commits/commit.service';
 import { ReleaseService } from '../releases/release.service';
 import { PullRequestService } from '../pullRequests/pullRequest.service';
 import {
-  diffsPullrequestfilesLookup,
-  issuesLabelsAssigneesLookup,
+  // diffsPullrequestfilesLookup,
+  // issuesLabelsAssigneesLookup,
+  commitsAuthorLookup,
+  commitsLookup,
+  diffsLookup,
+  issuesAssigneeLookup,
+  issuesAssigneesLookup,
+  issuesEventsActorLookup,
+  issuesEventsLookup,
+  issuesLabelsLookup,
+  issuesLookup,
+  issuesUserLookup,
   releasesLookup,
+  diffsPRfilesLookup,
 } from './lib';
 
 @Injectable()
@@ -71,7 +82,7 @@ export class RepositoryService {
   }
 
   public preAggregate(
-    repoIdent: RepositoryIdentifier,
+    filter: FilterQuery<RepositoryDocument>,
     options: {
       issues?: {
         labels?: boolean;
@@ -80,44 +91,109 @@ export class RepositoryService {
           actor?: boolean;
         };
       };
-      releases?;
-      diffs?: {
-        pullrequestfiles?: boolean;
-      };
       commits?: {
         author?: boolean;
       };
+      releases?: boolean;
+      diffs?: { prFiles: boolean };
     },
   ): Aggregate<any[]> {
-    const query = this.repoModel.aggregate().match(repoIdent);
+    const pipeline = this.repoModel.aggregate().match(filter);
     if (options.issues) {
-      if (options.issues.labels && options.issues.assignees) {
-        return issuesLabelsAssigneesLookup(query);
+      pipeline.lookup(issuesLookup);
+      pipeline.unwind('$issues');
+      pipeline.lookup(issuesUserLookup);
+      pipeline.lookup(issuesAssigneeLookup);
+      pipeline.addFields({
+        'issues.user': {
+          $arrayElemAt: ['$issues.user', 0],
+        },
+        'issues.assignee': {
+          $arrayElemAt: ['$issues.assignee', 0],
+        },
+      });
+      if (options.issues.assignees) {
+        pipeline.lookup(issuesAssigneesLookup);
       }
       if (options.issues.events) {
-        // event lookup
+        pipeline.lookup(issuesEventsLookup);
         if (options.issues.events.actor) {
-          // actor lookup
+          pipeline.unwind('$issues.events');
+          pipeline.lookup(issuesEventsActorLookup);
+          pipeline.addFields({
+            'issues.events.actor': {
+              $arrayElemAt: ['$issues.events.actor', 0],
+            },
+          });
+          pipeline.group({
+            _id: '$issues._id',
+            data: { $first: '$$ROOT' },
+            events: { $push: '$issues.events' },
+          });
+          pipeline.addFields({
+            'data.issues.events': '$events',
+          });
+          pipeline.replaceRoot('$data');
         }
       }
       if (options.issues.labels) {
-        // label lookup
+        pipeline.lookup(issuesLabelsLookup);
       }
-    }
-    if (options.releases) {
-      return releasesLookup(query);
-    }
-    if (options.diffs) {
-      // diffs lookup
-      if (options.diffs.pullrequestfiles) {
-        return diffsPullrequestfilesLookup(query);
-      }
+      pipeline.group({
+        _id: '$_id',
+        data: { $first: '$$ROOT' },
+        issues: {
+          $push: '$issues',
+        },
+      });
+      pipeline.addFields({
+        'data.issues': '$issues',
+      });
+      pipeline.replaceRoot('$data');
+    } else {
+      pipeline.project({ issues: 0 });
     }
     if (options.commits) {
-      // commits lookup
+      pipeline.lookup(commitsLookup);
       if (options.commits.author) {
-        // commit author lookup
+        pipeline.unwind('$commits');
+        pipeline.lookup(commitsAuthorLookup);
+        pipeline.addFields({
+          'commits.author': {
+            $arrayElemAt: ['$commits.author', 0],
+          },
+        });
+        pipeline.group({
+          _id: '$_id',
+          data: { $first: '$$ROOT' },
+          commits: {
+            $push: '$commits',
+          },
+        });
+        pipeline.addFields({
+          'data.commits': '$commits',
+        });
+        pipeline.replaceRoot('$data');
       }
+    } else {
+      pipeline.project({ commits: 0 });
     }
+    if (options.releases) {
+      pipeline.lookup(releasesLookup);
+    } else {
+      pipeline.project({ releases: 0 });
+    }
+    if (options.diffs) {
+      pipeline.lookup(diffsLookup);
+      if (options.diffs.prFiles) {
+        pipeline.unwind('$diffs');
+        pipeline.lookup(diffsPRfilesLookup);
+        pipeline.unwind('$prFiles');
+      }
+      //TODO: Add options to populate repositoryFiles, prFiles and PR props
+    } else {
+      pipeline.project({ diffs: 0 });
+    }
+    return pipeline;
   }
 }
