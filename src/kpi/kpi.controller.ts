@@ -1,5 +1,6 @@
 import { Controller, Get, Logger, Param, Query } from '@nestjs/common';
 import { DeveloperSpreadService } from './statistics/developerSpread/developerSpread.service';
+import { Intervals } from './statistics/lib';
 import { IssueTrackingService } from './statistics/issueTracking/issueTracking.service';
 import { IssueLabels } from './statistics/developerFocus/issueLabels.service';
 import { ReleaseCycle } from './statistics/releaseCycles/releaseCycle.service';
@@ -28,10 +29,22 @@ export class KpiController {
   }
 
   @Get('/devSpread')
-  async devSpread(@Query('owner') owner: string, @Query('repo') repo: string) {
+  async devSpread(
+    @Query('interval') interval: Intervals = Intervals.MONTH,
+    @Query('owner') owner: string,
+    @Query('repo') repo?: string,
+    @Query('since') since?: string,
+    @Query('to') to?: string,
+  ) {
     this.logger.log('Calculating developer spread for repository:');
-    this.logger.log({ owner, repo });
-    this.developerSpreadService.developerSpread({ owner, repo });
+    this.logger.log({ owner, repo, interval, since, to });
+    return this.developerSpreadService.developerSpread(
+      interval,
+      owner,
+      repo,
+      since,
+      to,
+    );
   }
 
   @Get()
