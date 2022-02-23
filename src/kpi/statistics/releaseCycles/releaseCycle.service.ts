@@ -70,6 +70,9 @@ export class ReleaseCycle {
       avg: {
         $avg: '$intervals',
       },
+      data: {
+        $size: '$intervals',
+      },
     });
     pipeline.group({
       _id: null,
