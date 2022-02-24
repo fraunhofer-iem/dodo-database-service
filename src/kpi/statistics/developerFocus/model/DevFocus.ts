@@ -74,17 +74,3 @@ export interface SprintData {
   end: string;
   developers: string[];
 }
-
-export interface avgDataPerLabel {
-  _id: string;
-  total: number;
-  count: number[];
-  assignee: string[];
-  dayAvg: number[];
-  weekAvg: number[];
-  monthAvg: number[];
-}
-
-export interface wAvgPerDev {
-  [key: string]: { daysAvg: number; weeksAvg: number; monthsAvg: number };
-}

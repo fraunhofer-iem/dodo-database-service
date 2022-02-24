@@ -344,11 +344,11 @@ export class RepositoryService {
           },
         });
       }
-    }
-    if (options.diffs.prFiles) {
-      pipeline.lookup(diffsPrPrfilesLookup);
-      pipeline.unwind('$prFiles');
-      //TODO: Add options to populate repositoryFiles, PR props
+      if (options.diffs.prFiles) {
+        pipeline.lookup(diffsPrPrfilesLookup);
+        pipeline.unwind('$prFiles');
+        //TODO: Add options to populate repositoryFiles, PR props
+      }
     } else {
       pipeline.project({ diffs: 0 });
     }

@@ -3,7 +3,7 @@ import { KpiController } from './kpi.controller';
 import { DeveloperFocusModule } from './statistics/developerFocus/developerFocus.module';
 import { IssueTrackingModule } from './statistics/issueTracking/issueTracking.module';
 import { IssueModule } from './statistics/issues/issue.module';
-import { IssueLabelsModule } from './statistics/developerFocus/issueLabels.module';
+import { IssueLabelsModule } from './statistics/meanTimeToResolution/meanTimeToResolution.module';
 import { ReleaseCycleModule } from './statistics/releaseCycles/releaseCycle.module';
 import { CouplingOfComponentsModule } from './statistics/coupelingOfComponents/couplingOfComponents.module';
 import { DeveloperSpreadModule } from './statistics/developerSpread/developerSpread.module';

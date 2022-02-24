@@ -2,7 +2,7 @@ import { Controller, Get, Logger, Param, Query } from '@nestjs/common';
 import { DeveloperSpreadService } from './statistics/developerSpread/developerSpread.service';
 import { Intervals } from './statistics/lib';
 import { IssueTrackingService } from './statistics/issueTracking/issueTracking.service';
-import { IssueLabels } from './statistics/developerFocus/issueLabels.service';
+import { TimeToResolution } from './statistics/meanTimeToResolution/meanTimeToResolution.service';
 import { ReleaseCycle } from './statistics/releaseCycles/releaseCycle.service';
 import { CouplingOfComponents } from './statistics/coupelingOfComponents/couplingOfComponents.service';
 
@@ -11,7 +11,7 @@ export class KpiController {
   private readonly logger = new Logger(KpiController.name);
   constructor(
     private readonly issueTrackingService: IssueTrackingService,
-    private readonly issueLabels: IssueLabels,
+    private readonly timeToResolution: TimeToResolution,
     private readonly releaseCycle: ReleaseCycle,
     private readonly couplingOfComponents: CouplingOfComponents,
     private readonly developerSpreadService: DeveloperSpreadService,
@@ -52,10 +52,10 @@ export class KpiController {
     this.logger.log('Get all KPIs request from user XXX');
   }
 
-  @Get('/ilp')
+  @Get('/mttr')
   async getILP() {
-    this.logger.log('Get Issue Label Priorities');
-    return this.issueLabels.labelPrioritiesAvg({
+    this.logger.log('Get Mean Time To Resolution');
+    return this.timeToResolution.meanTimeToResolution({
       owner: 'fraunhofer-iem',
       repo: 'dodo-database-service',
     });
