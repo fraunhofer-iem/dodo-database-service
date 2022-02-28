@@ -9,8 +9,6 @@ import { CommitService } from '../commits/commit.service';
 import { ReleaseService } from '../releases/release.service';
 import { PullRequestService } from '../pullRequests/pullRequest.service';
 import {
-  // diffsPullrequestfilesLookup,
-  // issuesLabelsAssigneesLookup,
   commitsAuthorLookup,
   commitsLookup,
   diffsLookup,

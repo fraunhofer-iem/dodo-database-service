@@ -53,37 +53,24 @@ export class KpiController {
   }
 
   @Get('/mttr')
-  async getILP() {
+  async mttr(
+    @Query('interval') interval: Intervals = Intervals.MONTH,
+    @Query('owner') owner: string,
+    @Query('repo') repo?: string,
+    @Query('labels') labels?: string[],
+    @Query('since') since?: string,
+    @Query('to') to?: string,
+  ) {
     this.logger.log('Get Mean Time To Resolution');
-    return this.timeToResolution.meanTimeToResolution({
-      owner: 'fraunhofer-iem',
-      repo: 'dodo-database-service',
-    });
-  }
-
-  @Get('/rc')
-  async getRC() {
-    this.logger.log('Get Release Cycle');
-    return this.releaseCycle.releaseCycle({
-      owner: 'fraunhofer-iem',
-      repo: 'dodo-database-service',
-    });
-  }
-
-  @Get('/coc')
-  async getCOC() {
-    this.logger.log('Get Coupling Of Components');
-    return this.couplingOfComponents.couplingOfComponents(
+    return this.timeToResolution.meanTimeToResolution(
       {
-        owner: 'fraunhofer-iem',
-        repo: 'dodo-database-service',
+        owner: owner,
+        repo: repo,
       },
-      100,
-      ['README.md'],
-      3,
-      2,
-      '2022-01-01',
-      '2022-02-15',
+      interval,
+      labels,
+      since,
+      to,
     );
   }
 
