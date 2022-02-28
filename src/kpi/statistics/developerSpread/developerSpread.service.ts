@@ -98,8 +98,11 @@ export class DeveloperSpreadService {
       'activities.user.type': 'User', // filter Bots
     });
     pipeline.redact(
+      // if
       { $in: ['$activities.user', '$contributors'] },
+      // then
       '$$KEEP',
+      // else
       '$$PRUNE',
     );
     pipeline.group({
