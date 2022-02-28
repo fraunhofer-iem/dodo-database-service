@@ -3,8 +3,8 @@ import { RepositoryService } from 'src/entities/repositories/repository.service'
 import { groupByIntervalSelector, Intervals, serialize } from '../lib';
 
 @Injectable()
-export class ReleaseCycle {
-  private readonly logger = new Logger(ReleaseCycle.name);
+export class ReleaseCycleService {
+  private readonly logger = new Logger(ReleaseCycleService.name);
 
   constructor(private readonly repoService: RepositoryService) {}
 

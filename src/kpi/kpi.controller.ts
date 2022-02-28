@@ -2,11 +2,8 @@ import { Controller, Get, Logger, Param, Query } from '@nestjs/common';
 import { DeveloperSpreadService } from './statistics/developerSpread/developerSpread.service';
 import { Intervals } from './statistics/lib';
 import { IssueTrackingService } from './statistics/issueTracking/issueTracking.service';
-<<<<<<< HEAD
-import { TimeToResolution } from './statistics/meanTimeToResolution/meanTimeToResolution.service';
-=======
->>>>>>> dev
-import { ReleaseCycle } from './statistics/releaseCycles/releaseCycle.service';
+import { MeanTimeToResolutionService } from './statistics/meanTimeToResolution/meanTimeToResolution.service';
+import { ReleaseCycleService } from './statistics/releaseCycles/releaseCycle.service';
 import { CouplingOfComponents } from './statistics/coupelingOfComponents/couplingOfComponents.service';
 
 @Controller('api/kpis')
@@ -14,13 +11,9 @@ export class KpiController {
   private readonly logger = new Logger(KpiController.name);
   constructor(
     private readonly issueTrackingService: IssueTrackingService,
-<<<<<<< HEAD
-    private readonly timeToResolution: TimeToResolution,
-    private readonly releaseCycle: ReleaseCycle,
+    private readonly meanTimeToResolutionService: MeanTimeToResolutionService,
+    private readonly releaseCycleService: ReleaseCycleService,
     private readonly couplingOfComponents: CouplingOfComponents,
-=======
-    private readonly releaseCycle: ReleaseCycle,
->>>>>>> dev
     private readonly developerSpreadService: DeveloperSpreadService,
   ) {}
 
@@ -59,7 +52,6 @@ export class KpiController {
     this.logger.log('Get all KPIs request from user XXX');
   }
 
-<<<<<<< HEAD
   @Get('/mttr')
   async mttr(
     @Query('interval') interval: Intervals = Intervals.MONTH,
@@ -70,7 +62,7 @@ export class KpiController {
     @Query('to') to?: string,
   ) {
     this.logger.log('Get Mean Time To Resolution');
-    return this.timeToResolution.meanTimeToResolution(
+    return this.meanTimeToResolutionService.meanTimeToResolution(
       {
         owner: owner,
         repo: repo,
@@ -80,7 +72,8 @@ export class KpiController {
       since,
       to,
     );
-=======
+  }
+
   @Get('/releaseCycles')
   async getRC(
     @Query('interval') interval: Intervals = Intervals.MONTH,
@@ -90,8 +83,13 @@ export class KpiController {
     @Query('to') to?: string,
   ) {
     this.logger.log('Get Release Cycle');
-    return this.releaseCycle.releaseCycle(interval, owner, repo, since, to);
->>>>>>> dev
+    return this.releaseCycleService.releaseCycle(
+      interval,
+      owner,
+      repo,
+      since,
+      to,
+    );
   }
 
   @Get(':id')
