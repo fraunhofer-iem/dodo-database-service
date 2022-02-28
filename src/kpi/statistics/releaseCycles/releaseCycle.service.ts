@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { Aggregate } from 'mongoose';
 import { RepositoryService } from 'src/entities/repositories/repository.service';
 import { groupByIntervalSelector, Intervals, serialize } from '../lib';
 
@@ -15,7 +16,23 @@ export class ReleaseCycleService {
     since: string = undefined,
     to: string = undefined,
   ) {
-    const pipeline = this.repoService.preAggregate(
+    const pipeline: Aggregate<
+      {
+        avg: number; // average release cycle (in days)
+        data: {
+          // development of release cycle over time
+          _id: {
+            // granularity information as defined by the interval parameter
+            year: number | undefined;
+            month: number | undefined;
+            week: number | undefined;
+            day: number | undefined;
+          };
+          avg: number; // release cycle (in days) for current interval
+          data: any; // number of releases that were created in this interval
+        }[];
+      }[]
+    > = this.repoService.preAggregate(
       { owner: owner, repo: repo },
       { releases: { since: since, to: to } },
     );
