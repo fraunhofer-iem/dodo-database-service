@@ -1,6 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { RepositoryService } from '../../../entities/repositories/repository.service';
-import { Intervals } from '../../statistics/lib';
+import {
+  Intervals,
+  groupByIntervalSelector,
+  serialize,
+} from '../../statistics/lib';
 
 @Injectable()
 export class DeveloperSpreadService {
@@ -94,54 +98,33 @@ export class DeveloperSpreadService {
       'activities.user.type': 'User', // filter Bots
     });
     pipeline.redact(
+      // if
       { $in: ['$activities.user', '$contributors'] },
+      // then
       '$$KEEP',
+      // else
       '$$PRUNE',
     );
     pipeline.group({
       _id: {
         login: '$activities.user.login',
-        year: { $year: '$activities.timestamp' },
-        month:
-          interval === Intervals.MONTH
-            ? { $month: '$activities.timestamp' }
-            : undefined,
-        week:
-          interval === Intervals.WEEK
-            ? { $week: '$activities.timestamp' }
-            : undefined,
-        day:
-          interval === Intervals.DAY
-            ? { $dayOfYear: '$activities.timestamp' }
-            : undefined,
+        ...groupByIntervalSelector('$activities.timestamp', interval),
       },
+      timestamp: { $last: '$activities.timestamp' },
       repos: { $addToSet: '$activities.repo' },
     });
     pipeline.group({
-      _id: {
-        year: '$_id.year',
-        month: interval === Intervals.MONTH ? '$_id.month' : undefined,
-        week: interval === Intervals.WEEK ? '$_id.week' : undefined,
-        day: interval === Intervals.DAY ? '$_id.day' : undefined,
-      },
-      spread: {
+      _id: groupByIntervalSelector('$timestamp', interval),
+      avg: {
         $avg: { $size: '$repos' },
       },
-      devs: { $sum: 1 },
-    });
-    pipeline.project({
-      year: '$_id.year',
-      month: '$_id.month',
-      week: '$_id.week',
-      day: '$_id.day',
-      spread: '$spread',
-      devs: '$devs',
+      data: { $sum: 1 },
     });
     pipeline.group({
       _id: null,
       data: { $push: '$$ROOT' },
-      sum: { $sum: { $multiply: ['$spread', '$devs'] } }, // weighted average spread
-      intervals: { $sum: '$devs' },
+      sum: { $sum: { $multiply: ['$avg', '$data'] } }, // weighted average spread
+      intervals: { $sum: '$data' },
     });
     pipeline.project({
       avg: { $divide: ['$sum', '$intervals'] }, // total weighted average spread
@@ -149,23 +132,10 @@ export class DeveloperSpreadService {
     });
 
     const [result] = await pipeline.exec();
-    if (!result) {
-      this.logger.error(`Could not calculate: no data in selected time frame`);
-      // TODO: throw an error to respond with 404?
-      return { avg: null, data: {} };
-    } else {
-      const spreads = {};
-      for (const spread of result.data) {
-        const { year, spread: avg, devs } = spread;
-        if (!spreads[year]) {
-          spreads[year] = {};
-        }
-        spreads[year][spread[interval]] = {
-          spread: avg,
-          devs: devs,
-        };
-        return { avg: result.avg, data: spreads };
-      }
+    try {
+      return serialize(result, interval, 'numberOfDevs');
+    } catch (err) {
+      this.logger.error(err);
     }
   }
 }
