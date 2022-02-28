@@ -2,7 +2,10 @@ import { Controller, Get, Logger, Param, Query } from '@nestjs/common';
 import { DeveloperSpreadService } from './statistics/developerSpread/developerSpread.service';
 import { Intervals } from './statistics/lib';
 import { IssueTrackingService } from './statistics/issueTracking/issueTracking.service';
+<<<<<<< HEAD
 import { TimeToResolution } from './statistics/meanTimeToResolution/meanTimeToResolution.service';
+=======
+>>>>>>> dev
 import { ReleaseCycle } from './statistics/releaseCycles/releaseCycle.service';
 import { CouplingOfComponents } from './statistics/coupelingOfComponents/couplingOfComponents.service';
 
@@ -11,9 +14,13 @@ export class KpiController {
   private readonly logger = new Logger(KpiController.name);
   constructor(
     private readonly issueTrackingService: IssueTrackingService,
+<<<<<<< HEAD
     private readonly timeToResolution: TimeToResolution,
     private readonly releaseCycle: ReleaseCycle,
     private readonly couplingOfComponents: CouplingOfComponents,
+=======
+    private readonly releaseCycle: ReleaseCycle,
+>>>>>>> dev
     private readonly developerSpreadService: DeveloperSpreadService,
   ) {}
 
@@ -52,6 +59,7 @@ export class KpiController {
     this.logger.log('Get all KPIs request from user XXX');
   }
 
+<<<<<<< HEAD
   @Get('/mttr')
   async mttr(
     @Query('interval') interval: Intervals = Intervals.MONTH,
@@ -72,6 +80,18 @@ export class KpiController {
       since,
       to,
     );
+=======
+  @Get('/releaseCycles')
+  async getRC(
+    @Query('interval') interval: Intervals = Intervals.MONTH,
+    @Query('owner') owner: string,
+    @Query('repo') repo: string,
+    @Query('since') since?: string,
+    @Query('to') to?: string,
+  ) {
+    this.logger.log('Get Release Cycle');
+    return this.releaseCycle.releaseCycle(interval, owner, repo, since, to);
+>>>>>>> dev
   }
 
   @Get(':id')
