@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 import { RepositoryModule } from 'src/entities/repositories/repository.module';
-import { TimeToResolution } from './meanTimeToResolution.service';
+import { MeanTimeToResolutionService } from './meanTimeToResolution.service';
 
 @Module({
-  providers: [TimeToResolution],
+  providers: [MeanTimeToResolutionService],
   imports: [RepositoryModule],
-  exports: [TimeToResolution],
+  exports: [MeanTimeToResolutionService],
   controllers: [],
 })
-export class IssueLabelsModule {}
+export class MeanTimeToResolutionModule {}

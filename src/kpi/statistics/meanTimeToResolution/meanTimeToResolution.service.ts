@@ -5,8 +5,8 @@ import { Aggregate } from 'mongoose';
 import { groupByIntervalSelector, Intervals, serialize } from '../lib';
 
 @Injectable()
-export class TimeToResolution {
-  private readonly logger = new Logger(TimeToResolution.name);
+export class MeanTimeToResolutionService {
+  private readonly logger = new Logger(MeanTimeToResolutionService.name);
 
   constructor(private readonly repoService: RepositoryService) {}
 
