@@ -28,7 +28,7 @@ export class CouplingOfComponentsService {
     to: string = undefined,
   ) {
     const lookUpQuery = this.repoService.preAggregate(repoIdent, {
-      diffs: { prFiles: true, since: since, to: to },
+      diffs: { pullRequestFiles: true, pullRequest: { since: since, to: to } },
     });
 
     const prFilesQuery = getPrFilesQuery(lookUpQuery, diffsLimit, fileFilter);
