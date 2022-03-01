@@ -6,8 +6,8 @@ import { getCoupling } from './lib/prFilesUtil';
 import { coupling } from './model/coupling';
 
 @Injectable()
-export class CouplingOfComponents {
-  private readonly logger = new Logger(CouplingOfComponents.name);
+export class CouplingOfComponentsService {
+  private readonly logger = new Logger(CouplingOfComponentsService.name);
 
   constructor(private readonly repoService: RepositoryService) {}
 

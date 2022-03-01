@@ -3,14 +3,14 @@ import { DeveloperSpreadService } from './statistics/developerSpread/developerSp
 import { Intervals } from './statistics/lib';
 import { IssueTrackingService } from './statistics/issueTracking/issueTracking.service';
 import { ReleaseCycle } from './statistics/releaseCycles/releaseCycle.service';
-import { CouplingOfComponents } from './statistics/couplingOfComponents/couplingOfComponents.service';
+import { CouplingOfComponentsService } from './statistics/couplingOfComponents/couplingOfComponents.service';
 
 @Controller('api/kpis')
 export class KpiController {
   private readonly logger = new Logger(KpiController.name);
   constructor(
     private readonly issueTrackingService: IssueTrackingService,
-    private readonly couplingOfComponents: CouplingOfComponents,
+    private readonly couplingOfComponents: CouplingOfComponentsService,
     private readonly releaseCycle: ReleaseCycle,
     private readonly developerSpreadService: DeveloperSpreadService,
   ) {}
