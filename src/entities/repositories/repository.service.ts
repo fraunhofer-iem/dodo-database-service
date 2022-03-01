@@ -315,6 +315,9 @@ export class RepositoryService {
         const { since, to } = options.diffs.pullRequest;
         pipeline.lookup(diffsPullRequestLookup);
         pipeline.addFields({
+          'diffs.pullRequest': { $arrayElemAt: ['$diffs.pullRequest', 0] },
+        });
+        pipeline.addFields({
           'diffs.pullRequest.created_at': {
             $dateFromString: {
               dateString: '$diffs.pullRequest.created_at',
