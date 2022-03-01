@@ -3,7 +3,7 @@ import { DeveloperSpreadService } from './statistics/developerSpread/developerSp
 import { Intervals } from './statistics/lib';
 import { IssueTrackingService } from './statistics/issueTracking/issueTracking.service';
 import { ReleaseCycle } from './statistics/releaseCycles/releaseCycle.service';
-import { CouplingOfComponents } from './statistics/coupelingOfComponents/couplingOfComponents.service';
+import { CouplingOfComponents } from './statistics/couplingOfComponents/couplingOfComponents.service';
 
 @Controller('api/kpis')
 export class KpiController {
