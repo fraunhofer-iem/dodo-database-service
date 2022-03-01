@@ -40,9 +40,9 @@ export function getCoupling(
   return res;
 
   function increaseCounterAndAddPR(key: string, prId: string) {
-    const newAmount = combinationMap.get(key).occs + 1;
-    const newPRs = [...combinationMap.get(key).pullrequests, ...[prId]];
-    combinationMap.set(key, { occs: newAmount, pullrequests: newPRs });
+    const currEntry = combinationMap.get(key);
+    currEntry.occs += 1;
+    currEntry.pullrequests.push(prId);
   }
 
   function addFileCombinationToMap(key: string, pr: string) {
