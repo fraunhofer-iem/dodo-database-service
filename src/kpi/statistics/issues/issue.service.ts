@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { RepositoryIdentifier } from '../../../entities/repositories/model';
 import { RepositoryDocument } from '../../../entities/repositories/model/schemas';
-import { msToDateString } from '../developerFocus/lib';
+import { msToDateString } from './lib/msToDateString';
 
 @Injectable()
 export class IssueService {

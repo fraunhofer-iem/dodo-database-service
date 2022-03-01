@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { RepositoryService } from 'src/entities/repositories/repository.service';
-import { RepositoryIdentifier } from 'src/entities/repositories/model';
-import { getReleaseCycleQuery } from './lib/releaseQuery';
+import { groupByIntervalSelector, Intervals, serialize } from '../lib';
 
 @Injectable()
 export class ReleaseCycle {
@@ -9,20 +8,88 @@ export class ReleaseCycle {
 
   constructor(private readonly repoService: RepositoryService) {}
 
-  /**
-   * Lists the release cycle in ascending order
-   * for repository @param repoIdent. It consider
-   * the @param releaseLimit and @returns an array.
-   */
-  async releaseCycle(repoIdent: RepositoryIdentifier, releaseLimit?: number) {
-    const lookUpQuery = this.repoService.preAggregate(repoIdent, {
-      releases: {},
+  async releaseCycle(
+    interval: Intervals = Intervals.MONTH,
+    owner: string,
+    repo: string = undefined,
+    since: string = undefined,
+    to: string = undefined,
+  ) {
+    const pipeline = this.repoService.preAggregate(
+      { owner: owner, repo: repo },
+      { releases: { since: since, to: to } },
+    );
+    pipeline.unwind('$releases');
+    pipeline.replaceRoot('$releases');
+    pipeline.sort({ created_at: 1 });
+    pipeline.group({
+      _id: null,
+      dates: {
+        $push: '$created_at',
+      },
+    });
+    pipeline.project({
+      cycles: {
+        $reduce: {
+          input: { $range: [1, { $size: '$dates' }] },
+          initialValue: [],
+          in: {
+            $concatArrays: [
+              '$$value',
+              [
+                [
+                  {
+                    $dateDiff: {
+                      startDate: {
+                        $arrayElemAt: ['$dates', { $subtract: ['$$this', 1] }],
+                      },
+                      endDate: {
+                        $arrayElemAt: ['$dates', '$$this'],
+                      },
+                      unit: 'day',
+                    },
+                  },
+                  { $arrayElemAt: ['$dates', '$$this'] },
+                ],
+              ],
+            ],
+          },
+        },
+      },
+    });
+    pipeline.unwind('$cycles');
+    pipeline.project({
+      interval: { $arrayElemAt: ['$cycles', 0] },
+      created_at: { $arrayElemAt: ['$cycles', 1] },
+    });
+    pipeline.group({
+      _id: groupByIntervalSelector('$created_at', interval),
+      intervals: { $push: '$interval' },
+    });
+    pipeline.addFields({
+      avg: {
+        $avg: '$intervals',
+      },
+      data: {
+        $size: '$intervals',
+      },
+    });
+    pipeline.group({
+      _id: null,
+      data: { $push: '$$ROOT' },
+      sum: { $sum: { $multiply: ['$avg', { $size: '$intervals' }] } },
+      intervals: { $sum: { $size: '$intervals' } },
+    });
+    pipeline.project({
+      data: 1,
+      avg: { $divide: ['$sum', '$intervals'] },
     });
 
-    const releaseCycleQuery = getReleaseCycleQuery(lookUpQuery, releaseLimit);
-
-    const releaseCycle = (await releaseCycleQuery.exec())[0]['published_at'];
-
-    return releaseCycle;
+    const [result] = await pipeline.exec();
+    try {
+      return serialize(result, interval, 'numberOfReleases');
+    } catch (err) {
+      this.logger.error(err);
+    }
   }
 }
