@@ -39,9 +39,9 @@ export function getCoupling(
 
   return res;
 
-  function increaseCounterAndAddPR(key: string, pr: string) {
+  function increaseCounterAndAddPR(key: string, prId: string) {
     const newAmount = combinationMap.get(key).occs + 1;
-    const newPRs = [...combinationMap.get(key).pullrequests, ...[pr]];
+    const newPRs = [...combinationMap.get(key).pullrequests, ...[prId]];
     combinationMap.set(key, { occs: newAmount, pullrequests: newPRs });
   }
 

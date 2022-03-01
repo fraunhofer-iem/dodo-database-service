@@ -19,7 +19,8 @@ export class CouplingOfComponentsService {
    * @returns all couplings sorted descending.
    */
   async couplingOfComponents(
-    repoIdent: RepositoryIdentifier,
+    owner: string,
+    repo: string,
     diffsLimit?: number,
     fileFilter?: string[],
     couplingSize?: number,
@@ -27,20 +28,24 @@ export class CouplingOfComponentsService {
     since: string = undefined,
     to: string = undefined,
   ) {
-    const lookUpQuery = this.repoService.preAggregate(repoIdent, {
-      diffs: { pullRequestFiles: true, pullRequest: { since: since, to: to } },
-    });
+    const lookUpQuery = this.repoService.preAggregate(
+      { owner: owner, repo: repo },
+      {
+        diffs: {
+          pullRequestFiles: true,
+          pullRequest: { since: since, to: to },
+        },
+      },
+    );
 
     const prFilesQuery = getPrFilesQuery(lookUpQuery, diffsLimit, fileFilter);
 
     const prFiles = await prFilesQuery.exec();
-    console.log(prFiles);
+
     const prAmount = prFiles.length;
-    console.log(prAmount);
 
     const coupling: coupling[] = getCoupling(prFiles, couplingSize, occs);
-    console.log(coupling);
 
-    return coupling;
+    return { coupling: coupling, prAmount: prAmount };
   }
 }

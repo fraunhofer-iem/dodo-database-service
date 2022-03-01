@@ -63,19 +63,26 @@ export class KpiController {
   }
 
   @Get('/coc')
-  async getCOC() {
+  async getCOC(
+    @Query('owner') owner: string,
+    @Query('repo') repo: string,
+    @Query('limit') limit?: number,
+    @Query('fileFilter') fileFilter?: string[],
+    @Query('couplingSize') couplingSize?: number,
+    @Query('occs') occurences?: number,
+    @Query('since') since?: string,
+    @Query('to') to?: string,
+  ) {
     this.logger.log('Get Coupling Of Components');
     return this.couplingOfComponents.couplingOfComponents(
-      {
-        owner: 'fraunhofer-iem',
-        repo: 'dodo-database-service',
-      },
-      100,
-      ['README.md'],
-      3,
-      2,
-      '2022-01-01',
-      '2022-02-15',
+      owner,
+      repo,
+      limit,
+      fileFilter,
+      couplingSize,
+      occurences,
+      since,
+      to,
     );
   }
 
