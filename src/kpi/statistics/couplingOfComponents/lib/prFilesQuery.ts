@@ -7,7 +7,6 @@ import { Aggregate, ObjectId } from 'mongoose';
  */
 export function getPrFilesQuery(
   lookUpQuery: Aggregate<any[]>,
-  diffsLimit: number = 100,
   fileFilter: string[] = [],
 ): Aggregate<{ _id: ObjectId; changedFiles: string[] }[]> {
   const query = lookUpQuery
