@@ -2,7 +2,8 @@ import { Controller, Get, Logger, Param, Query } from '@nestjs/common';
 import { DeveloperSpreadService } from './statistics/developerSpread/developerSpread.service';
 import { Intervals } from './statistics/lib';
 import { IssueTrackingService } from './statistics/issueTracking/issueTracking.service';
-import { ReleaseCycle } from './statistics/releaseCycles/releaseCycle.service';
+import { MeanTimeToResolutionService } from './statistics/meanTimeToResolution/meanTimeToResolution.service';
+import { ReleaseCycleService } from './statistics/releaseCycles/releaseCycle.service';
 import { CouplingOfComponentsService } from './statistics/couplingOfComponents/couplingOfComponents.service';
 
 @Controller('api/kpis')
@@ -10,8 +11,9 @@ export class KpiController {
   private readonly logger = new Logger(KpiController.name);
   constructor(
     private readonly issueTrackingService: IssueTrackingService,
+    private readonly meanTimeToResolutionService: MeanTimeToResolutionService,
+    private readonly releaseCycleService: ReleaseCycleService,
     private readonly couplingOfComponents: CouplingOfComponentsService,
-    private readonly releaseCycle: ReleaseCycle,
     private readonly developerSpreadService: DeveloperSpreadService,
   ) {}
 
@@ -50,7 +52,13 @@ export class KpiController {
         );
       case 'releaseCycle':
         this.logger.log(`Calculating the release cycle for ${owner}/${repo}`);
-        return this.releaseCycle.releaseCycle(interval, owner, repo, since, to);
+        return this.releaseCycleService.releaseCycle(
+          interval,
+          owner,
+          repo,
+          since,
+          to,
+        );
       case 'coc':
         this.logger.log(
           `Calculating coupling of components for ${owner}/${repo}`,
@@ -61,6 +69,19 @@ export class KpiController {
           fileFilter,
           couplingSize,
           occurences,
+          since,
+          to,
+        );
+
+      case 'mttr':
+        this.logger.log('Get Mean Time To Resolution');
+        return this.meanTimeToResolutionService.meanTimeToResolution(
+          {
+            owner: owner,
+            repo: repo,
+          },
+          interval,
+          labelFilter,
           since,
           to,
         );
