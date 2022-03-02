@@ -9,7 +9,7 @@ export function getPrFilesQuery(
   lookUpQuery: Aggregate<any[]>,
   fileFilter: string[] = [],
 ): Aggregate<{ _id: ObjectId; changedFiles: string[] }[]> {
-  const query = lookUpQuery
+  return lookUpQuery
     .unwind('diffs')
     .unwind('diffs.pullRequestFiles')
     .match({
@@ -20,6 +20,4 @@ export function getPrFilesQuery(
       _id: '$diffs.pullRequest._id',
       changedFiles: { $push: '$diffs.pullRequestFiles.filename' },
     });
-
-  return query;
 }

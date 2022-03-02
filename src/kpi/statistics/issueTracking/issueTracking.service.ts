@@ -17,11 +17,12 @@ export class IssueTrackingService {
   constructor(private readonly repoService: RepositoryService) {}
 
   async issueCompletionRate(
-    repoIdent: RepositoryIdentifier,
+    owner: string,
+    repository: string,
     labelNames?: string[],
   ) {
     const repo = await this.repoService.read(
-      { ...repoIdent },
+      { owner: owner, repo: repository },
       { commits: false, diffs: false },
     );
     await this.populateRepository(repo, labelNames);
