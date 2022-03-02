@@ -3,12 +3,14 @@ import { DeveloperSpreadService } from './statistics/developerSpread/developerSp
 import { Intervals } from './statistics/lib';
 import { IssueTrackingService } from './statistics/issueTracking/issueTracking.service';
 import { ReleaseCycle } from './statistics/releaseCycles/releaseCycle.service';
+import { CouplingOfComponentsService } from './statistics/couplingOfComponents/couplingOfComponents.service';
 
 @Controller('api/kpis')
 export class KpiController {
   private readonly logger = new Logger(KpiController.name);
   constructor(
     private readonly issueTrackingService: IssueTrackingService,
+    private readonly couplingOfComponents: CouplingOfComponentsService,
     private readonly releaseCycle: ReleaseCycle,
     private readonly developerSpreadService: DeveloperSpreadService,
   ) {}
@@ -58,6 +60,30 @@ export class KpiController {
   ) {
     this.logger.log('Get Release Cycle');
     return this.releaseCycle.releaseCycle(interval, owner, repo, since, to);
+  }
+
+  @Get('/coc')
+  async getCOC(
+    @Query('owner') owner: string,
+    @Query('repo') repo: string,
+    @Query('limit') limit?: number,
+    @Query('fileFilter') fileFilter?: string[],
+    @Query('couplingSize') couplingSize?: number,
+    @Query('occs') occurences?: number,
+    @Query('since') since?: string,
+    @Query('to') to?: string,
+  ) {
+    this.logger.log('Get Coupling Of Components');
+    return this.couplingOfComponents.couplingOfComponents(
+      owner,
+      repo,
+      limit,
+      fileFilter,
+      couplingSize,
+      occurences,
+      since,
+      to,
+    );
   }
 
   @Get(':id')
