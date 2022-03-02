@@ -33,9 +33,9 @@ export class KpiController {
   ) {
     this.logger.log(`Received query for KPI with id ${id}`);
     switch (id) {
-      case 'fcr':
+      case 'icr':
         this.logger.log(
-          `Calculating feature completion rate for ${owner}/${repo}`,
+          `Calculating issue completion rate for ${owner}/${repo}`,
         );
         return this.issueTrackingService.issueCompletionRate(
           owner,
@@ -43,9 +43,9 @@ export class KpiController {
           labelFilter,
         );
 
-      case 'fcc':
+      case 'icc':
         this.logger.log(
-          `Calculating feature completion capability for ${owner}/${repo}`,
+          `Calculating issue completion capability for ${owner}/${repo}`,
         );
         return this.issueTrackingService.issueCompletionCapability(
           owner,
@@ -54,9 +54,9 @@ export class KpiController {
           timeToComplete,
         );
 
-      case 'fce':
+      case 'ice':
         this.logger.log(
-          `Calculating feature completion efficiency for ${owner}/${repo}`,
+          `Calculating issue completion efficiency for ${owner}/${repo}`,
         );
         return this.issueTrackingService.issueCompletionEfficiency(
           owner,
@@ -115,7 +115,7 @@ export class KpiController {
         );
 
       default:
-        return 'no such kpi endpoint';
+        return 'No such KPI';
     }
   }
 
