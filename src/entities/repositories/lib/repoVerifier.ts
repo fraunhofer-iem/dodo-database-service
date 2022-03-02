@@ -55,7 +55,6 @@ async function getRepoStatus(repoIdent: RepositoryIdentifier): Promise<number> {
       return r.status;
     })
     .catch((r) => {
-      this.logger.log(r);
       if ('status' in r) {
         return r.status;
       } else {
