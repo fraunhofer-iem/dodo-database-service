@@ -108,7 +108,6 @@ export class KpiController {
     return this.couplingOfComponents.couplingOfComponents(
       owner,
       repo,
-      limit,
       fileFilter,
       couplingSize,
       occurences,

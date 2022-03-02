@@ -1,6 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { RepositoryService } from 'src/entities/repositories/repository.service';
-import { RepositoryIdentifier } from 'src/entities/repositories/model';
 import { getPrFilesQuery } from './lib/prFilesQuery';
 import { getCoupling } from './lib/prFilesUtil';
 import { coupling } from './model/coupling';
@@ -21,7 +20,6 @@ export class CouplingOfComponentsService {
   async couplingOfComponents(
     owner: string,
     repo: string,
-    diffsLimit?: number,
     fileFilter?: string[],
     couplingSize?: number,
     occs?: number,
@@ -38,7 +36,7 @@ export class CouplingOfComponentsService {
       },
     );
 
-    const prFilesQuery = getPrFilesQuery(lookUpQuery, diffsLimit, fileFilter);
+    const prFilesQuery = getPrFilesQuery(lookUpQuery, fileFilter);
 
     const prFiles = await prFilesQuery.exec();
 
