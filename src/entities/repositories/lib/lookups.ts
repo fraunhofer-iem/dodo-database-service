@@ -74,3 +74,24 @@ export const diffsLookup = {
   foreignField: '_id',
   as: 'diffs',
 };
+
+export const diffsPullRequestLookup = {
+  from: 'pullrequests',
+  localField: 'diffs.pullRequest',
+  foreignField: '_id',
+  as: 'diffs.pullRequest',
+};
+
+export const diffsPullRequestFilesLookup = {
+  from: 'pullrequestfiles',
+  localField: 'diffs.pullRequestFiles',
+  foreignField: '_id',
+  as: 'diffs.pullRequestFiles',
+};
+
+export const diffsRepositoryFilesLookup = {
+  from: 'repositoryfiles',
+  localField: 'diffs.repositoryFiles',
+  foreignField: '_id',
+  as: 'diffs.repositoryFiles',
+};

@@ -3,12 +3,14 @@ import { DeveloperSpreadService } from './statistics/developerSpread/developerSp
 import { Intervals } from './statistics/lib';
 import { IssueTrackingService } from './statistics/issueTracking/issueTracking.service';
 import { ReleaseCycle } from './statistics/releaseCycles/releaseCycle.service';
+import { CouplingOfComponentsService } from './statistics/couplingOfComponents/couplingOfComponents.service';
 
 @Controller('api/kpis')
 export class KpiController {
   private readonly logger = new Logger(KpiController.name);
   constructor(
     private readonly issueTrackingService: IssueTrackingService,
+    private readonly couplingOfComponents: CouplingOfComponentsService,
     private readonly releaseCycle: ReleaseCycle,
     private readonly developerSpreadService: DeveloperSpreadService,
   ) {}
@@ -49,16 +51,20 @@ export class KpiController {
       case 'releaseCycle':
         this.logger.log(`Calculating the release cycle for ${owner}/${repo}`);
         return this.releaseCycle.releaseCycle(interval, owner, repo, since, to);
-      // case 'coc':
-      //   this.logger.log(`Calculating coupling of components for ${owner}/${repo}`);
-      //   return this.couplingOfComponents.couplingOfComponents(
-      //     repo,
-      //     fileFilter,
-      //     couplingSize,
-      //     occurences,
-      //     since,
-      //     to,
-      //   );
+      case 'coc':
+        this.logger.log(
+          `Calculating coupling of components for ${owner}/${repo}`,
+        );
+        return this.couplingOfComponents.couplingOfComponents(
+          owner,
+          repo,
+          fileFilter,
+          couplingSize,
+          occurences,
+          since,
+          to,
+        );
+
       default:
         return 'no such kpi endpoint';
     }
