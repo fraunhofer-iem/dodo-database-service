@@ -29,18 +29,42 @@ export class KpiController {
     @Query('fileFilter') fileFilter?: string[],
     @Query('couplingSize') couplingSize?: number,
     @Query('occs') occurences?: number,
+    @Query('timeToComplete') timeToComplete?: number,
   ) {
     this.logger.log(`Received query for KPI with id ${id}`);
     switch (id) {
       case 'fcr':
         this.logger.log(
-          `Calculating feature rate completion for ${owner}/${repo}`,
+          `Calculating feature completion rate for ${owner}/${repo}`,
         );
         return this.issueTrackingService.issueCompletionRate(
           owner,
           repo,
           labelFilter,
         );
+
+      case 'fcc':
+        this.logger.log(
+          `Calculating feature completion capability for ${owner}/${repo}`,
+        );
+        return this.issueTrackingService.issueCompletionCapability(
+          owner,
+          repo,
+          labelFilter,
+          timeToComplete,
+        );
+
+      case 'fce':
+        this.logger.log(
+          `Calculating feature completion efficiency for ${owner}/${repo}`,
+        );
+        return this.issueTrackingService.issueCompletionEfficiency(
+          owner,
+          repo,
+          labelFilter,
+          timeToComplete,
+        );
+
       case 'devSpread':
         this.logger.log(`Calculating developer spread for ${owner}/${repo}`);
         return this.developerSpreadService.developerSpread(
@@ -50,6 +74,7 @@ export class KpiController {
           since,
           to,
         );
+
       case 'releaseCycle':
         this.logger.log(`Calculating the release cycle for ${owner}/${repo}`);
         return this.releaseCycleService.releaseCycle(
@@ -59,6 +84,7 @@ export class KpiController {
           since,
           to,
         );
+
       case 'coc':
         this.logger.log(
           `Calculating coupling of components for ${owner}/${repo}`,
@@ -74,7 +100,9 @@ export class KpiController {
         );
 
       case 'mttr':
-        this.logger.log('Get Mean Time To Resolution');
+        this.logger.log(
+          `Calculating the mean time to resolution for ${owner}/${repo}`,
+        );
         return this.meanTimeToResolutionService.meanTimeToResolution(
           {
             owner: owner,
