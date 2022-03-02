@@ -20,8 +20,9 @@ import {
   issuesLookup,
   issuesUserLookup,
   releasesLookup,
-  diffsPrPrfilesLookup,
-  diffsPrLookup,
+  diffsPullRequestLookup,
+  diffsPullRequestFilesLookup,
+  diffsRepositoryFilesLookup,
 } from './lib';
 
 @Injectable()
@@ -103,7 +104,14 @@ export class RepositoryService {
         since?: string;
         to?: string;
       };
-      diffs?: { prFiles?: boolean; since?: string; to?: string };
+      diffs?: {
+        pullRequestFiles?: boolean;
+        repositoryFiles?: boolean;
+        pullRequest?: {
+          since?: string;
+          to?: string;
+        };
+      };
     },
   ): Aggregate<any[]> {
     const pipeline = this.repoModel.aggregate().match(filter);
@@ -301,52 +309,68 @@ export class RepositoryService {
       pipeline.project({ releases: 0 });
     }
     if (options.diffs) {
-      const { since, to } = options.diffs;
       pipeline.lookup(diffsLookup);
       pipeline.unwind('$diffs');
-      pipeline.lookup(diffsPrLookup);
-      pipeline.unwind('$pullrequests');
-      pipeline.addFields({
-        'pullrequests.created_at': {
-          $dateFromString: {
-            dateString: '$pullrequests.created_at',
+      if (options.diffs.pullRequest) {
+        const { since, to } = options.diffs.pullRequest;
+        pipeline.lookup(diffsPullRequestLookup);
+        pipeline.addFields({
+          'diffs.pullRequest': { $arrayElemAt: ['$diffs.pullRequest', 0] },
+        });
+        pipeline.addFields({
+          'diffs.pullRequest.created_at': {
+            $dateFromString: {
+              dateString: '$diffs.pullRequest.created_at',
+            },
           },
-        },
-        'pullrequests.updated_at': {
-          $dateFromString: {
-            dateString: '$pullrequests.updated_at',
+          'diffs.pullRequest.updated_at': {
+            $dateFromString: {
+              dateString: '$diffs.pullRequest.updated_at',
+            },
           },
-        },
-        'pullrequests.closed_at': {
-          $dateFromString: {
-            dateString: '$pullrequests.closed_at',
+          'diffs.pullRequest.closed_at': {
+            $dateFromString: {
+              dateString: '$diffs.pullRequest.closed_at',
+            },
           },
-        },
-        'pullrequests.merged_at': {
-          $dateFromString: {
-            dateString: '$pullrequests.merged_at',
+          'diffs.pullRequest.merged_at': {
+            $dateFromString: {
+              dateString: '$diffs.pullRequest.merged_at',
+            },
           },
+        });
+        if (since) {
+          pipeline.match({
+            'diffs.pullRequest.created_at': {
+              $gte: new Date(since),
+            },
+          });
+        }
+        if (to) {
+          pipeline.match({
+            'diffs.pullRequest.created_at': {
+              $lte: new Date(to),
+            },
+          });
+        }
+      }
+      if (options.diffs.pullRequestFiles) {
+        pipeline.lookup(diffsPullRequestFilesLookup);
+      }
+      if (options.diffs.repositoryFiles) {
+        pipeline.lookup(diffsRepositoryFilesLookup);
+      }
+      pipeline.group({
+        _id: '$_id',
+        data: { $first: '$$ROOT' },
+        diffs: {
+          $push: '$diffs',
         },
       });
-      if (since) {
-        pipeline.match({
-          'pullrequests.created_at': {
-            $gte: new Date(since),
-          },
-        });
-      }
-      if (to) {
-        pipeline.match({
-          'pullrequests.created_at': {
-            $lte: new Date(to),
-          },
-        });
-      }
-      if (options.diffs.prFiles) {
-        pipeline.lookup(diffsPrPrfilesLookup);
-        pipeline.unwind('$prFiles');
-        //TODO: Add options to populate repositoryFiles, PR props
-      }
+      pipeline.addFields({
+        'data.diffs': '$diffs',
+      });
+      pipeline.replaceRoot('$data');
     } else {
       pipeline.project({ diffs: 0 });
     }

@@ -7,24 +7,19 @@ import { Aggregate, ObjectId } from 'mongoose';
  */
 export function getPrFilesQuery(
   lookUpQuery: Aggregate<any[]>,
-  diffsLimit: number = 100,
   fileFilter: string[] = [],
 ): Aggregate<{ _id: ObjectId; changedFiles: string[] }[]> {
   const query = lookUpQuery
-    .project({
-      diffs: 1,
-      'prFiles.filename': 1,
-      'prFiles.status': 1,
-    })
+    .unwind('diffs')
+    .unwind('diffs.pullRequestFiles')
     .match({
-      'prFiles.status': 'modified',
-      'prFiles.filename': { $not: { $in: fileFilter } },
+      'diffs.pullRequestFiles.status': 'modified',
+      'diffs.pullRequestFiles.filename': { $not: { $in: fileFilter } },
     })
     .group({
-      _id: '$diffs.pullRequest',
-      changedFiles: { $push: '$prFiles.filename' },
-    })
-    .limit(diffsLimit);
+      _id: '$diffs.pullRequest._id',
+      changedFiles: { $push: '$diffs.pullRequestFiles.filename' },
+    });
 
   return query;
 }

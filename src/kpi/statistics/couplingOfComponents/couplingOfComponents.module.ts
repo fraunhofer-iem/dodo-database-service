@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 import { RepositoryModule } from 'src/entities/repositories/repository.module';
-import { CouplingOfComponents } from './couplingOfComponents.service';
+import { CouplingOfComponentsService } from './couplingOfComponents.service';
 
 @Module({
-  providers: [CouplingOfComponents],
+  providers: [CouplingOfComponentsService],
   imports: [RepositoryModule],
-  exports: [CouplingOfComponents],
+  exports: [CouplingOfComponentsService],
   controllers: [],
 })
 export class CouplingOfComponentsModule {}

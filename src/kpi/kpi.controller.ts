@@ -4,7 +4,7 @@ import { Intervals } from './statistics/lib';
 import { IssueTrackingService } from './statistics/issueTracking/issueTracking.service';
 import { MeanTimeToResolutionService } from './statistics/meanTimeToResolution/meanTimeToResolution.service';
 import { ReleaseCycleService } from './statistics/releaseCycles/releaseCycle.service';
-import { CouplingOfComponents } from './statistics/coupelingOfComponents/couplingOfComponents.service';
+import { CouplingOfComponentsService } from './statistics/couplingOfComponents/couplingOfComponents.service';
 
 @Controller('api/kpis')
 export class KpiController {
@@ -13,7 +13,7 @@ export class KpiController {
     private readonly issueTrackingService: IssueTrackingService,
     private readonly meanTimeToResolutionService: MeanTimeToResolutionService,
     private readonly releaseCycleService: ReleaseCycleService,
-    private readonly couplingOfComponents: CouplingOfComponents,
+    private readonly couplingOfComponents: CouplingOfComponentsService,
     private readonly developerSpreadService: DeveloperSpreadService,
   ) {}
 
@@ -30,11 +30,11 @@ export class KpiController {
 
   @Get('/devSpread')
   async devSpread(
-    @Query('interval') interval: Intervals = Intervals.MONTH,
     @Query('owner') owner: string,
     @Query('repo') repo?: string,
     @Query('since') since?: string,
     @Query('to') to?: string,
+    @Query('interval') interval: Intervals = Intervals.MONTH,
   ) {
     this.logger.log('Calculating developer spread for repository:');
     this.logger.log({ owner, repo, interval, since, to });
@@ -54,12 +54,12 @@ export class KpiController {
 
   @Get('/mttr')
   async mttr(
-    @Query('interval') interval: Intervals = Intervals.MONTH,
     @Query('owner') owner: string,
     @Query('repo') repo?: string,
     @Query('labels') labels?: string[],
     @Query('since') since?: string,
     @Query('to') to?: string,
+    @Query('interval') interval: Intervals = Intervals.MONTH,
   ) {
     this.logger.log('Get Mean Time To Resolution');
     return this.meanTimeToResolutionService.meanTimeToResolution(
@@ -76,17 +76,42 @@ export class KpiController {
 
   @Get('/releaseCycles')
   async getRC(
-    @Query('interval') interval: Intervals = Intervals.MONTH,
     @Query('owner') owner: string,
     @Query('repo') repo: string,
     @Query('since') since?: string,
     @Query('to') to?: string,
+    @Query('interval') interval: Intervals = Intervals.MONTH,
   ) {
     this.logger.log('Get Release Cycle');
+
     return this.releaseCycleService.releaseCycle(
       interval,
       owner,
       repo,
+      since,
+      to,
+    );
+  }
+
+  @Get('/coc')
+  async getCOC(
+    @Query('owner') owner: string,
+    @Query('repo') repo: string,
+    @Query('limit') limit?: number,
+    @Query('fileFilter') fileFilter?: string[],
+    @Query('couplingSize') couplingSize?: number,
+    @Query('occs') occurences?: number,
+    @Query('since') since?: string,
+    @Query('to') to?: string,
+  ) {
+    this.logger.log('Get Coupling Of Components');
+    return this.couplingOfComponents.couplingOfComponents(
+      owner,
+      repo,
+      limit,
+      fileFilter,
+      couplingSize,
+      occurences,
       since,
       to,
     );
