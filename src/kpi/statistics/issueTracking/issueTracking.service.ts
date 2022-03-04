@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { RepositoryIdentifier } from '../../../entities/repositories/model';
 import { RepositoryDocument } from '../../../entities/repositories/model/schemas';
 import {
   calculateAvgCapability,
@@ -19,13 +18,13 @@ export class IssueTrackingService {
   async issueCompletionRate(
     owner: string,
     repository: string,
-    labelNames?: string[],
+    labelFilter?: string[],
   ) {
     const repo = await this.repoService.read(
       { owner: owner, repo: repository },
       { commits: false, diffs: false },
     );
-    await this.populateRepository(repo, labelNames);
+    await this.populateRepository(repo, labelFilter);
 
     const releaseIssueMap = mapReleasesToIssues(repo.releases, repo.issues);
     const { avgRate, rateMap } = calculateAvgRate(releaseIssueMap);
@@ -36,12 +35,13 @@ export class IssueTrackingService {
   }
 
   async issueCompletionCapability(
-    repoIdent: RepositoryIdentifier,
+    owner: string,
+    repository: string,
     labelNames?: string[],
     timeToComplete: number = 14 * 24 * 60 * 60 * 1000,
   ) {
     const repo = await this.repoService.read(
-      { ...repoIdent },
+      { owner: owner, repo: repository },
       { commits: false, diffs: false },
     );
     await this.populateRepository(repo, labelNames);
@@ -56,12 +56,13 @@ export class IssueTrackingService {
   }
 
   async issueCompletionEfficiency(
-    repoIdent: RepositoryIdentifier,
+    owner: string,
+    repository: string,
     labelNames?: string[],
     timeToComplete: number = 14 * 24 * 60 * 60 * 1000,
   ) {
     const repo = await this.repoService.read(
-      { ...repoIdent },
+      { owner: owner, repo: repository },
       { commits: false, diffs: false },
     );
     await this.populateRepository(repo, labelNames);
