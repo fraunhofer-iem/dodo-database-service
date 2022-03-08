@@ -12,6 +12,13 @@ export class RepositoryController {
   @Get()
   async getRepos() {
     this.logger.log('Get all repositories request from user XXX');
+    const pipeline = this.repoService.preAggregate({}, {});
+    const repos = await pipeline.exec();
+    for (let i = 0; i < repos.length; i++) {
+      const repo = repos[i];
+      repos[i] = await this.getRepo(repo.owner, repo.repo);
+    }
+    return repos;
   }
 
   @Post()
@@ -24,10 +31,25 @@ export class RepositoryController {
     }
   }
 
-  @Get(':id')
-  async getRepo(@Param('id') id: string) {
-    this.logger.log(`Received query for repository with id ${id}`);
-    return this.repoService.getRepositoryById(id);
+  @Get(':owner/:repo')
+  async getRepo(@Param('owner') owner: string, @Param('repo') repo: string) {
+    this.logger.log(`Received query for repository with id ${owner}/${repo}`);
+    const pipeline = this.repoService.preAggregate({ owner, repo }, {});
+    pipeline.addFields({
+      id: { $concat: ['$owner', '/', '$repo'] },
+      name: '$repo',
+      url: { $concat: ['https://github.com/', '$owner', '/', '$repo'] },
+      maturityIndex: 75,
+      kpis: ['icr', 'icc', 'ice', 'devSpread', 'releaseCycle', 'coc', 'mttr'],
+    });
+    pipeline.project({
+      _id: 0,
+      __v: 0,
+      repo: 0,
+    });
+    const [repository] = await pipeline.exec();
+
+    return repository;
   }
 
   @Get(':id/trends')
