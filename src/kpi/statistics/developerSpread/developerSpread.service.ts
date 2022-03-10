@@ -136,6 +136,7 @@ export class DeveloperSpreadService {
       return serialize(result, interval, 'numberOfDevs');
     } catch (err) {
       this.logger.error(err);
+      return { data: [] };
     }
   }
 }

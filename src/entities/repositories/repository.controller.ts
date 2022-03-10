@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Logger, Param, Post } from '@nestjs/common';
+import { KpiController } from 'src/kpi/kpi.controller';
 import { repoExists } from './lib';
 import { CreateRepositoryDto } from './model';
 import { RepositoryService } from './repository.service';
@@ -13,12 +14,15 @@ export class RepositoryController {
   async getRepos() {
     this.logger.log('Get all repositories request from user XXX');
     const pipeline = this.repoService.preAggregate({}, {});
-    const repos = await pipeline.exec();
-    for (let i = 0; i < repos.length; i++) {
-      const repo = repos[i];
-      repos[i] = await this.getRepo(repo.owner, repo.repo);
-    }
-    return repos;
+    pipeline.addFields({
+      name: '$repo',
+    });
+    pipeline.project({
+      _id: 0,
+      __v: 0,
+      repo: 0,
+    });
+    return pipeline.exec();
   }
 
   @Post()
@@ -40,7 +44,6 @@ export class RepositoryController {
       name: '$repo',
       url: { $concat: ['https://github.com/', '$owner', '/', '$repo'] },
       maturityIndex: 75,
-      kpis: ['icr', 'icc', 'ice', 'devSpread', 'releaseCycle', 'coc', 'mttr'],
     });
     pipeline.project({
       _id: 0,
@@ -50,6 +53,26 @@ export class RepositoryController {
     const [repository] = await pipeline.exec();
 
     return repository;
+  }
+
+  @Get(':owner/:repo/kpis')
+  async getRepoKpis(
+    @Param('owner') owner: string,
+    @Param('repo') repo: string,
+  ) {
+    //TODO: extract dynamically
+    return [
+      {
+        id: 'releaseCycle',
+        name: 'Release Cycle',
+        rating: 50,
+      },
+      {
+        id: 'devSpread',
+        name: 'Developer Spread',
+        rating: 50,
+      },
+    ];
   }
 
   @Get(':id/trends')
