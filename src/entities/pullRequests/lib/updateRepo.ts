@@ -3,11 +3,12 @@ import { updateArray } from '../../../lib';
 import { RepositoryDocument } from '../../repositories/model/schemas';
 import { Diff } from '../model';
 import {
-  RepositoryFileDocument,
+  // RepositoryFileDocument,
   PullRequestFileDocument,
   PullRequestDocument,
   DiffDocument,
 } from '../model/schemas';
+import { RepositoryFileDocument } from 'src/entities/repositoryFiles/model/schemas';
 
 interface DiffModels {
   Repo: Model<RepositoryDocument>;
@@ -28,9 +29,9 @@ export async function savePullRequestDiff(
 
   const pullRequest = await new PullRequest(pullRequestDiff.pullRequest).save();
 
-  const changedFiles = await PullFile.create(pullRequestDiff.changedFiles);
+  const changedFiles = await PullFile.create(pullRequestDiff.changedFiles); // create array with pr file documents
 
-  const repoFiles = await RepoFile.create(pullRequestDiff.repoFiles);
+  const repoFiles = await RepoFile.create(pullRequestDiff.repoFiles); // create array with repo file documents
   createdDiff.pullRequestFiles = changedFiles;
 
   createdDiff.repositoryFiles = repoFiles;

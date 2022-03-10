@@ -5,13 +5,18 @@ import {
   DiffSchema,
   PullRequestSchema,
   PullRequestFileSchema,
-  RepositoryFileSchema,
+  // RepositoryFileSchema,
   Diff,
   PullRequest,
   PullRequestFile,
-  RepositoryFile,
+  // RepositoryFile,
 } from './model/schemas';
-
+import {
+  RepositoryFileSchema,
+  RepositoryFile,
+} from '../repositoryFiles/model/schemas';
+import { RepositoryFileModule } from '../repositoryFiles/repositoryFile.module';
+import { RepositoryFileService } from '../repositoryFiles/repositoryFile.service';
 import { PullRequestService } from './pullRequest.service';
 
 @Module({
@@ -21,7 +26,30 @@ import { PullRequestService } from './pullRequest.service';
       { name: PullRequest.name, schema: PullRequestSchema },
       { name: PullRequestFile.name, schema: PullRequestFileSchema },
       { name: RepositoryFile.name, schema: RepositoryFileSchema },
+      // this has to be outsourced from the RepositoryFileService
       { name: Repository.name, schema: RepositorySchema },
+    ]),
+    MongooseModule.forFeatureAsync([
+      {
+        name: Diff.name,
+        imports: [RepositoryFileModule],
+        useFactory: (repositoryFileService: RepositoryFileService) => {
+          const schema = DiffSchema;
+          schema.pre<Diff>('validate', async function (this: Diff) {
+            if (this.repositoryFiles) {
+              for (let i = 0; i < this.repositoryFiles.length; i++) {
+                this.repositoryFiles[i] = (
+                  await repositoryFileService.readOrCreate(
+                    this.repositoryFiles[i],
+                  )
+                )._id;
+              }
+            }
+          });
+          return schema;
+        },
+        inject: [RepositoryFileService],
+      },
     ]),
   ],
   providers: [PullRequestService],

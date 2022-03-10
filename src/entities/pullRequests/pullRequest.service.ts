@@ -7,15 +7,17 @@ import { getMergeTargetAndFeatureFiles, queryPullRequests } from './lib';
 import { savePullRequestDiff } from './lib/updateRepo';
 import { PullRequest } from './model';
 import {
-  RepositoryFileDocument,
   PullRequestFileDocument,
   PullRequestDocument,
   DiffDocument,
-  RepositoryFile,
   PullRequestFile,
   PullRequest as PullRequestM,
   Diff,
 } from './model/schemas';
+import {
+  RepositoryFileDocument,
+  RepositoryFile,
+} from '../repositoryFiles/model/schemas';
 
 export interface Tree {
   path?: string;

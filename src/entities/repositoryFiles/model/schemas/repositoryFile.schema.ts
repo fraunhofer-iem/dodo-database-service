@@ -1,26 +1,24 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
-export type RepositoryFileDocument = RepositoryFile & Document;
-
 /**
  * For further information, see: https://docs.github.com/en/rest/reference/repos#get-repository-content
  */
 @Schema()
 export class RepositoryFile {
   @Prop()
-  mode?: string;
+  mode: string;
   @Prop()
-  path?: string;
+  path: string;
   @Prop()
-  type?: string;
+  type: string;
   @Prop()
-  sha?: string;
+  sha: string;
   @Prop()
-  size?: number;
+  size: number;
   @Prop()
-  url?: string;
+  url: string;
 }
-
+export type RepositoryFileDocument = RepositoryFile & Document;
 export const RepositoryFileSchema =
   SchemaFactory.createForClass(RepositoryFile);

@@ -33,9 +33,9 @@ export async function getMergeTargetAndFeatureFiles(
   featFiles: PullRequestFile[];
   mergeTargetFiles: RepositoryFile[];
 }> {
-  const featFiles = await getFeatureFiles(repoIdent, pullRequestNumber);
+  const featFiles = await getFeatureFiles(repoIdent, pullRequestNumber); // pr files
 
-  const mergeTargetFiles = await getAllFilesFromTree(repoIdent, mergeTargetSha);
+  const mergeTargetFiles = await getAllFilesFromTree(repoIdent, mergeTargetSha); // repo files
   return { featFiles, mergeTargetFiles };
 }
 
