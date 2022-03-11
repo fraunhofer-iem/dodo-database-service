@@ -18,6 +18,15 @@ export class PullRequest {
   @Prop()
   title: string;
 
+  @Prop({ type: Object })
+  base: {
+    sha: string;
+    ref: string;
+    repo: {
+      default_branch: string;
+    };
+  };
+
   @Prop()
   url: string;
 

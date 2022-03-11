@@ -30,7 +30,18 @@ import { Diff, DiffSchema } from './model/schemas';
         ) => {
           const schema = DiffSchema;
           schema.pre<Diff>('validate', async function (this: Diff) {
-            //TODO: validate pullRequestFiles and set their pullRequest attribute
+            this.pullRequest = (
+              await pullRequestService.readOrCreate(this.pullRequest)
+            )._id;
+            if (this.pullRequestFiles) {
+              for (let i = 0; i < this.pullRequestFiles.length; i++) {
+                this.pullRequestFiles[i] = await (
+                  await pullRequestFileService.readOrCreate(
+                    this.pullRequestFiles[i],
+                  )
+                )._id;
+              }
+            }
             if (this.repositoryFiles) {
               for (let i = 0; i < this.repositoryFiles.length; i++) {
                 this.repositoryFiles[i] = (
