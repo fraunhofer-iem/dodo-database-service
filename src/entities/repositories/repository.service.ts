@@ -24,6 +24,7 @@ import {
   diffsPullRequestFilesLookup,
   diffsRepositoryFilesLookup,
 } from './lib';
+import { DiffService } from '../diffs/diff.service';
 
 @Injectable()
 export class RepositoryService {
@@ -35,7 +36,7 @@ export class RepositoryService {
     private issueService: IssueService,
     private commitService: CommitService,
     private releaseService: ReleaseService,
-    private pullRequestService: PullRequestService,
+    private diffService: DiffService,
   ) {}
 
   public async initializeRepository(createRepoDto: CreateRepositoryDto) {
@@ -43,10 +44,7 @@ export class RepositoryService {
     await this.issueService.storeIssues(createRepoDto, repo._id);
     await this.commitService.storeCommits(createRepoDto, repo._id);
     await this.releaseService.storeReleases(createRepoDto, repo._id);
-    await this.pullRequestService.storePullRequestDiffsForRepo(
-      createRepoDto,
-      repo._id,
-    );
+    await this.diffService.storeDiffs(createRepoDto, repo._id);
     return repo;
   }
 

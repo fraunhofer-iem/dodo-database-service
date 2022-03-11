@@ -3,7 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { CommitModule } from '../commits/commit.module';
 import { IssueModule } from '../issues/issue.module';
 import { Repository, RepositorySchema } from './model/schemas';
-import { PullRequestModule } from '../pullRequests/pullRequest.module';
+import { DiffModule } from '../diffs/diff.module';
 import { ReleaseModule } from '../releases/release.module';
 import { RepositoryController } from './repository.controller';
 import { RepositoryService } from './repository.service';
@@ -13,7 +13,7 @@ import { RepositoryService } from './repository.service';
     MongooseModule.forFeature([
       { name: Repository.name, schema: RepositorySchema },
     ]),
-    PullRequestModule,
+    DiffModule,
     ReleaseModule,
     IssueModule,
     CommitModule,

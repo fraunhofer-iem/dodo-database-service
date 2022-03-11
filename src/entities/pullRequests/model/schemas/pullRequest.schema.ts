@@ -7,6 +7,12 @@ import { Document } from 'mongoose';
 @Schema()
 export class PullRequest {
   @Prop()
+  id: number;
+
+  @Prop()
+  node_id: string;
+
+  @Prop()
   number: number;
 
   @Prop()
