@@ -1,5 +1,7 @@
 import { ObjectId } from 'mongoose';
-import { coupling } from '../model/coupling';
+import { PullRequestDocument } from '../../../../entities/pullRequests/model/schemas';
+import { KpiWithIntervalData, transformMapToObject } from '../../lib';
+import { CombinationMap } from '../model/CombinationMap';
 
 /**
  * It computes the coupling over all PRs and their changed files
@@ -8,79 +10,110 @@ import { coupling } from '../model/coupling';
  * @returns an array with all couplings, occurences and related PRs.
  */
 export function getCoupling(
-  prFiles: { _id: ObjectId; changedFiles: string[] }[],
+  intervals: {
+    _id: {
+      year: number;
+      month: number | null;
+      week: number | null;
+      day: number | null;
+    };
+    pullRequests: {
+      _id: ObjectId;
+      pullRequest: PullRequestDocument;
+      changedFiles: string[];
+    }[];
+  }[],
   couplingSize: number = 3,
-  occs: number = 3,
-): coupling[] {
-  const combinationMap = new Map<
-    string,
-    { occs: number; pullrequests: string[] }
-  >();
-
-  prFiles.forEach((diff) => {
-    const combinations = binomialSubsets(diff.changedFiles, couplingSize);
-    const pr = diff._id.toString();
-    combinations.forEach((combo) => {
-      const key: string = combo.sort().join(' ');
-      if (combinationMap.has(key)) {
-        increaseCounterAndAddPR(key, pr);
-      } else {
-        addFileCombinationToMap(key, pr);
-      }
-    });
-  });
-
-  deleteOccurences(occs);
-
-  // sorting map entries descending by occurences
-  const res = [...combinationMap.entries()].sort(
-    (a, b) => b[1]['occs'] - a[1]['occs'],
-  );
-
-  return res;
-
-  function increaseCounterAndAddPR(key: string, prId: string) {
-    const currEntry = combinationMap.get(key);
-    currEntry.occs += 1;
-    currEntry.pullrequests.push(prId);
+  minOccurences: number = 3,
+) {
+  if (!intervals) {
+    return undefined;
   }
+  const result: KpiWithIntervalData = { avg: 0, data: [] };
 
-  function addFileCombinationToMap(key: string, pr: string) {
-    combinationMap.set(key, { occs: 1, pullrequests: [pr] });
-  }
-
-  function deleteOccurences(occs: number) {
-    for (let [key, val] of combinationMap.entries()) {
-      if (val.occs < occs) {
-        combinationMap.delete(key);
+  let couplingTotal = 0;
+  let subsetTotal = 0;
+  for (const interval of intervals) {
+    const combinationMap: CombinationMap = new Map<
+      string,
+      { occurences: number; pullRequests: string[] }
+    >();
+    for (const pullRequest of interval.pullRequests) {
+      for (const subset of subsets(
+        pullRequest.changedFiles.sort(),
+        couplingSize,
+      )) {
+        const key = subset.join(' ');
+        if (!combinationMap.has(key)) {
+          registerSubset(combinationMap, key);
+        }
+        countOccurence(combinationMap, key, pullRequest.pullRequest);
       }
+    }
+    filterIrrelevantSubsets(combinationMap, minOccurences);
+
+    if (combinationMap.size) {
+      const avgCoupling = calculateAverage(combinationMap);
+      result.data.push({
+        _id: interval._id,
+        avg: avgCoupling,
+        data: [...Object.entries(transformMapToObject(combinationMap))],
+      });
+
+      couplingTotal += avgCoupling * combinationMap.size;
+      subsetTotal += combinationMap.size;
+    }
+  }
+  result.avg = couplingTotal / subsetTotal;
+  return result;
+}
+
+function registerSubset(map: CombinationMap, subset: string) {
+  map.set(subset, { occurences: 0, pullRequests: [] });
+}
+
+function countOccurence(
+  map: CombinationMap,
+  subset: string,
+  pullRequest: PullRequestDocument,
+) {
+  const entry = map.get(subset);
+  entry.occurences += 1;
+  entry.pullRequests.push(pullRequest._id.toString());
+}
+
+function filterIrrelevantSubsets(map: CombinationMap, minOccurences: number) {
+  for (const [key, entry] of map.entries()) {
+    if (entry.occurences < minOccurences) {
+      map.delete(key);
     }
   }
 }
 
-/**
- * Computes all binomial subsets of @param arr with @param size.
- * I.e. all combinations without order and without repetition.
- * @returns an array with all combination arrays, if input array
- * is greater than size. If same size, it returns the input array,
- * else it returns an empty erray.
- */
-function binomialSubsets(arr: string[], size: number): string[][] {
-  function combinations(part: string[], start: number) {
-    let result = [];
-
-    for (let i = start; i < arr.length; i++) {
-      let p = [...part]; // get a copy of part
-      p.push(arr[i]); // add the iterated element to p
-      if (p.length < size) {
-        // test if recursion can go on
-        result = result.concat(combinations(p, i + 1)); // call combinations again & concat result
-      } else {
-        result.push(p); // push p to result, stop recursion
-      }
-    }
-    return result;
+function calculateAverage(map: CombinationMap) {
+  let sum = 0;
+  for (const [key, entry] of map.entries()) {
+    sum += entry.occurences;
   }
+  return sum / map.size;
+}
 
-  return combinations([], 0); // start with empty part and index 0 always
+function* subsets(set: string[], size: number = 1) {
+  for (let i = 0; i < set.length; i++) {
+    const subset = [set[i]];
+    if (subset.length == size) {
+      yield subset;
+    }
+    for (let j = i; j < set.length; j++) {
+      if (subset.length == size) {
+        break;
+      }
+      for (let k = j + 1; k < set.length; k++) {
+        if (subset.length + 1 == size) {
+          yield [...subset, set[k]];
+        }
+      }
+      subset.push(set[j + 1]);
+    }
+  }
 }

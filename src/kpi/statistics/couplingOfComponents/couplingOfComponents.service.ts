@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { RepositoryService } from 'src/entities/repositories/repository.service';
+import { Intervals, serialize } from '../lib';
 import { getPrFilesQuery } from './lib/prFilesQuery';
 import { getCoupling } from './lib/prFilesUtil';
-import { coupling } from './model/coupling';
 
 @Injectable()
 export class CouplingOfComponentsService {
@@ -18,6 +18,7 @@ export class CouplingOfComponentsService {
    * @returns all couplings sorted descending.
    */
   async couplingOfComponents(
+    interval: Intervals = Intervals.MONTH,
     owner: string,
     repo: string,
     fileFilter?: string[],
@@ -36,14 +37,17 @@ export class CouplingOfComponentsService {
       },
     );
 
-    const prFilesQuery = getPrFilesQuery(lookUpQuery, fileFilter);
+    const prFilesQuery = getPrFilesQuery(lookUpQuery, fileFilter, interval);
 
     const prFiles = await prFilesQuery.exec();
 
-    const prAmount = prFiles.length;
+    const result = getCoupling(prFiles, couplingSize, occs);
 
-    const coupling: coupling[] = getCoupling(prFiles, couplingSize, occs);
-
-    return { coupling: coupling, prAmount: prAmount };
+    try {
+      return serialize(result, interval, 'coupling');
+    } catch (err) {
+      this.logger.error(err);
+      return { data: [] };
+    }
   }
 }
