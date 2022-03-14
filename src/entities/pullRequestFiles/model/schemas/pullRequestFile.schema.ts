@@ -7,8 +7,6 @@ import { PullRequest } from '../../../pullRequests/model/schemas';
  */
 @Schema()
 export class PullRequestFile {
-  @Prop({ type: mSchema.Types.ObjectId, ref: 'PullRequest' })
-  pullRequest: PullRequest;
   @Prop()
   sha: string;
   @Prop()
