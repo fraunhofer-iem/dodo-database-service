@@ -7,12 +7,15 @@ import { PullRequestModule } from '../pullRequests/pullRequest.module';
 import { ReleaseModule } from '../releases/release.module';
 import { RepositoryController } from './repository.controller';
 import { RepositoryService } from './repository.service';
+import { KpiModule } from '../kpis/kpi.module';
+import { KpiModule as KpiCalculationModule } from '../../kpi/kpi.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Repository.name, schema: RepositorySchema },
     ]),
+    KpiModule,
     PullRequestModule,
     ReleaseModule,
     IssueModule,

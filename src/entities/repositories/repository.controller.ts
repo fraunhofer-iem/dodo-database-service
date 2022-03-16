@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Logger, Param, Post } from '@nestjs/common';
-import { KpiController } from 'src/kpi/kpi.controller';
+import { KpiService } from '../kpis/kpi.service';
 import { repoExists } from './lib';
 import { CreateRepositoryDto } from './model';
 import { RepositoryService } from './repository.service';
@@ -8,7 +8,10 @@ import { RepositoryService } from './repository.service';
 export class RepositoryController {
   private readonly logger = new Logger(RepositoryController.name);
 
-  constructor(private repoService: RepositoryService) {}
+  constructor(
+    private repoService: RepositoryService,
+    private kpiService: KpiService,
+  ) {}
 
   @Get()
   async getRepos() {
@@ -60,19 +63,16 @@ export class RepositoryController {
     @Param('owner') owner: string,
     @Param('repo') repo: string,
   ) {
-    //TODO: extract dynamically
-    return [
-      {
-        id: 'releaseCycle',
-        name: 'Release Cycle',
-        rating: 50,
-      },
-      {
-        id: 'devSpread',
-        name: 'Developer Spread',
-        rating: 50,
-      },
-    ];
+    return this.kpiService.readAll();
+  }
+
+  @Get(':owner/:repo/kpis/:kpi')
+  async getRepoKpi(
+    @Param('owner') owner: string,
+    @Param('repo') repo: string,
+    @Param('kpi') kpi: string,
+  ) {
+    return this.kpiService.read({ id: kpi });
   }
 
   @Get(':id/trends')
