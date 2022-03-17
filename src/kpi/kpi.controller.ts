@@ -5,6 +5,7 @@ import { IssueTrackingService } from './statistics/issueTracking/issueTracking.s
 import { MeanTimeToResolutionService } from './statistics/meanTimeToResolution/meanTimeToResolution.service';
 import { ReleaseCycleService } from './statistics/releaseCycles/releaseCycle.service';
 import { CouplingOfComponentsService } from './statistics/couplingOfComponents/couplingOfComponents.service';
+import { PullRequestComplexityService } from './statistics/pullRequestComplexity/pullRequestComponents.service';
 
 @Controller('api/kpis')
 export class KpiController {
@@ -13,8 +14,9 @@ export class KpiController {
     private readonly issueTrackingService: IssueTrackingService,
     private readonly meanTimeToResolutionService: MeanTimeToResolutionService,
     private readonly releaseCycleService: ReleaseCycleService,
-    private readonly couplingOfComponents: CouplingOfComponentsService,
+    private readonly couplingOfComponentsService: CouplingOfComponentsService,
     private readonly developerSpreadService: DeveloperSpreadService,
+    private readonly pullRequestComplexityService: PullRequestComplexityService,
   ) {}
 
   @Get(':id')
@@ -89,7 +91,7 @@ export class KpiController {
         this.logger.log(
           `Calculating coupling of components for ${owner}/${repo}`,
         );
-        return this.couplingOfComponents.couplingOfComponents(
+        return this.couplingOfComponentsService.couplingOfComponents(
           owner,
           repo,
           fileFilter,
@@ -114,6 +116,17 @@ export class KpiController {
           to,
         );
 
+      case 'prComplexity':
+        this.logger.log(
+          `Calculating the complexity of pull requests for ${owner}/${repo}`,
+        );
+        return this.pullRequestComplexityService.pullRequestComplexity(
+          owner,
+          repo,
+          interval,
+          since,
+          to,
+        );
       default:
         return 'No such KPI';
     }
