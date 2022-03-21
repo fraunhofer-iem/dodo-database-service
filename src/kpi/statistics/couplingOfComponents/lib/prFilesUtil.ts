@@ -99,21 +99,33 @@ function calculateAverage(map: CombinationMap) {
 }
 
 function* subsets(set: string[], size: number = 1) {
-  for (let i = 0; i < set.length; i++) {
-    const subset = [set[i]];
-    if (subset.length == size) {
-      yield subset;
+  if (size > set.length) {
+    return [];
+  }
+  const subset: number[] = [];
+  for (let i = 0; i < size; i++) {
+    // the first subset is the combination of
+    // the elements [0, 1, 2, 3]
+    subset.push(i);
+  }
+  while (true) {
+    yield subset.map((i) => set[i]);
+
+    if (subset[0] == set.length - size) {
+      // the last subset is always the combination [set.length-size : set.length-1]
+      break;
     }
-    for (let j = i; j < set.length; j++) {
-      if (subset.length == size) {
+
+    for (let j = subset.length - 1; j >= 0; j--) {
+      if (subset[j] < set.length - size + j) {
+        // find the first element in the combination, that can be increased by one
+        subset[j] += 1;
+        for (let k = 1; j + k < subset.length; k++) {
+          // set the successors to subset[j]'s direct successors in set
+          subset[j + k] = subset[j] + k;
+        }
         break;
       }
-      for (let k = j + 1; k < set.length; k++) {
-        if (subset.length + 1 == size) {
-          yield [...subset, set[k]];
-        }
-      }
-      subset.push(set[j + 1]);
     }
   }
 }
