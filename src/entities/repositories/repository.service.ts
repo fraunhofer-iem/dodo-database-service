@@ -7,7 +7,6 @@ import { retrieveDocument } from '../../lib';
 import { IssueService } from '../issues/issue.service';
 import { CommitService } from '../commits/commit.service';
 import { ReleaseService } from '../releases/release.service';
-import { PullRequestService } from '../pullRequests/pullRequest.service';
 import {
   commitsAuthorLookup,
   commitsLookup,
@@ -57,7 +56,7 @@ export class RepositoryService {
     project?: { [P in keyof RepositoryDocument]?: boolean },
   ): Promise<RepositoryDocument> {
     try {
-      return retrieveDocument(this.repoModel, filter, project);
+      return await retrieveDocument(this.repoModel, filter, project);
     } catch (e) {
       throw e;
     }
