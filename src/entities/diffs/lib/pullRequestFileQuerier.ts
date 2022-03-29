@@ -7,7 +7,7 @@ export async function getPullRequestFiles(
   repoIdent: RepositoryIdentifier,
   pullRequest: PullRequest,
 ) {
-  let pullRequestFiles: PullRequestFile[] = [];
+  const pullRequestFiles: PullRequestFile[] = [];
   let page: PullRequestFile[] = [];
   let pageNumber = 1;
 
