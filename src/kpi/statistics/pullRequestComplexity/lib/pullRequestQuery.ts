@@ -17,21 +17,27 @@ export function pullRequestQuery(
       _id: ObjectId;
       pullRequest: PullRequestDocument;
       changedFiles: string[];
-      loc: number;
+      locChanged: number;
       repoFiles: string[];
     }[];
   }[]
 > {
   return query
     .unwind('diffs')
-    .unwind('diffs.pullRequestFiles')
     .unwind('diffs.repositoryFiles')
+    .unwind('diffs.pullRequestFiles')
     .group({
       _id: '$diffs.pullRequest._id',
       pullRequest: { $first: '$diffs.pullRequest.number' },
-      changedFiles: { $push: '$diffs.pullRequestFiles.filename' },
-      loc: { $sum: '$diffs.pullRequestFiles.changes' },
-      repoFiles: { $push: '$diffs.repositoryFiles.path' },
+      changedFiles: { $addToSet: '$diffs.pullRequestFiles' },
+      repoFiles: { $addToSet: '$diffs.repositoryFiles.path' },
+    })
+    .project({
+      _id: 0,
+      pullRequest: '$pullRequest',
+      locChanged: { $sum: '$changedFiles.changes' },
+      changedFiles: '$changedFiles.filename',
+      repoFiles: '$repoFiles',
     })
     .group({
       _id: groupByIntervalSelector('$pullRequest.created_at', interval),
