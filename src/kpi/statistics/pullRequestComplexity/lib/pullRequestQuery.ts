@@ -28,16 +28,31 @@ export function pullRequestQuery(
     .unwind('diffs.pullRequestFiles')
     .group({
       _id: '$diffs.pullRequest._id',
-      pullRequest: { $first: '$diffs.pullRequest.number' },
+      pullRequestNumber: { $first: '$diffs.pullRequest.number' },
+      comments: { $first: '$diffs.pullRequest.comments' },
       changedFiles: { $addToSet: '$diffs.pullRequestFiles' },
       repoFiles: { $addToSet: '$diffs.repositoryFiles.path' },
     })
     .project({
       _id: 0,
-      pullRequest: '$pullRequest',
+      pullRequestNumber: '$pullRequest',
+      comments: '$comments',
       locChanged: { $sum: '$changedFiles.changes' },
-      changedFiles: '$changedFiles.filename',
-      repoFiles: '$repoFiles',
+      changedFiles: { $size: '$changedFiles.filename' },
+      repoFiles: { $size: '$repoFiles' },
+      percentageFileChanges: {
+        $ceil: {
+          $multiply: [
+            {
+              $divide: [
+                { $size: '$changedFiles.filename' },
+                { $size: '$repoFiles' },
+              ],
+            },
+            100,
+          ],
+        },
+      },
     })
     .group({
       _id: groupByIntervalSelector('$pullRequest.created_at', interval),

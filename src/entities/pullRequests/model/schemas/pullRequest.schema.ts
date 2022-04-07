@@ -41,6 +41,9 @@ export class PullRequest {
 
   @Prop()
   merged_at: string;
+
+  @Prop()
+  comments?: number;
 }
 
 export type PullRequestDocument = PullRequest & Document;

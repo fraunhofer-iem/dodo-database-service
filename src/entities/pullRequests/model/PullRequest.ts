@@ -15,4 +15,5 @@ export interface PullRequest {
   updated_at: string;
   closed_at: string;
   merged_at: string;
+  comments?: number;
 }
