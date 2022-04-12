@@ -33,7 +33,7 @@ export class RepositoryFileService {
     filter: FilterQuery<RepositoryFileDocument>,
   ): Promise<RepositoryFileDocument> {
     try {
-      return retrieveDocument(this.repoFileModel, filter);
+      return await retrieveDocument(this.repoFileModel, filter);
     } catch (e) {
       throw e;
     }

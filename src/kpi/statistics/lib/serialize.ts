@@ -1,19 +1,21 @@
 import { Intervals } from '.';
 
-export function serialize(
-  result: {
+export type KpiWithIntervalData = {
+  avg: number;
+  data: {
+    _id: {
+      year: number | undefined;
+      month: number | undefined;
+      week: number | undefined;
+      day: number | undefined;
+    };
     avg: number;
-    data: {
-      _id: {
-        year: number | undefined;
-        month: number | undefined;
-        week: number | undefined;
-        day: number | undefined;
-      };
-      avg: number;
-      data: any[];
-    }[];
-  },
+    data: any[];
+  }[];
+};
+
+export function serialize(
+  result: KpiWithIntervalData,
   interval: Intervals,
   dataName?: string,
 ) {
