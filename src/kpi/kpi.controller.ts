@@ -92,6 +92,7 @@ export class KpiController {
           `Calculating coupling of components for ${owner}/${repo}`,
         );
         return this.couplingOfComponentsService.couplingOfComponents(
+          interval,
           owner,
           repo,
           fileFilter,
