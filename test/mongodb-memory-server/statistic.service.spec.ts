@@ -4,12 +4,10 @@ import { UserSchema } from '../../src/entities/users/model/schemas';
 import { CommitSchema } from '../../src/entities/commits/model/schemas';
 import { IssueSchema } from '../../src/entities/issues/model/schemas';
 import { RepositorySchema } from '../../src/entities/repositories/model/schemas';
-import {
-  DiffSchema,
-  PullRequestSchema,
-  PullRequestFileSchema,
-  RepositoryFileSchema,
-} from '../../src/entities/pullRequests/model/schemas';
+import { DiffSchema } from '../../src/entities/diffs/model/schemas';
+import { PullRequestSchema } from '../../src/entities/pullRequests/model/schemas';
+import { PullRequestFileSchema } from '../../src/entities/pullRequestFiles/model/schemas';
+import { RepositoryFileSchema } from '../../src/entities/repositoryFiles/model/schemas';
 import { ReleaseSchema } from '../../src/entities/releases/model/schemas';
 // import { TestData } from './sampleData';
 import { TestDbHelper } from './testDbHelper';

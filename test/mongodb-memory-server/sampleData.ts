@@ -4,12 +4,10 @@ import {
   CreateRepositoryDto,
   RepositoryIdentifier,
 } from '../../src/entities/repositories/model';
-import {
-  Diff,
-  PullRequest,
-  RepositoryFile,
-  PullRequestFile,
-} from '../../src/entities/pullRequests/model';
+import { Diff } from '../../src/entities/diffs/model';
+import { PullRequest } from '../../src/entities/pullRequests/model';
+import { PullRequestFile } from '../../src/entities/pullRequestFiles/model';
+import { RepositoryFile } from '../../src/entities/repositoryFiles/model';
 import { Release } from '../../src/entities/releases/model';
 
 /**
@@ -50,6 +48,8 @@ export class TestData {
   getDiffs1(): Diff[] {
     // first pull request
     const pullReq1: PullRequest = {
+      id: 339200866,
+      node_id: 'MDExOlB1bGxSZXF1ZXN0MzM5MjAwODY2',
       url: 'https://api.github.com/repos/octokit/action.js/pulls/5',
       title: 'init version',
       base: {
@@ -59,6 +59,10 @@ export class TestData {
           default_branch: 'main',
         },
       },
+      created_at: '2019-11-10T22:52:35Z',
+      updated_at: '2019-11-10T22:55:43Z',
+      closed_at: '2019-11-10T22:54:45Z',
+      merged_at: '2019-11-10T22:54:45Z',
       number: 5,
     };
     const repoFile1: RepositoryFile = {
@@ -127,12 +131,14 @@ export class TestData {
     };
     const pullReqDiff1: Diff = {
       pullRequest: pullReq1,
-      repoFiles: [repoFile1, repoFile1_1],
-      changedFiles: [pullReqFile1, pullReqFile1_1, pullReqFile1_2],
+      repositoryFiles: [repoFile1, repoFile1_1],
+      pullRequestFiles: [pullReqFile1, pullReqFile1_1, pullReqFile1_2],
     };
 
     // second pull request
     const pullReq2: PullRequest = {
+      id: 463157452,
+      node_id: 'MDExOlB1bGxSZXF1ZXN0NDYzMTU3NDUy',
       url: 'https://api.github.com/repos/octokit/action.js/pulls/133',
       title: 'second version',
       base: {
@@ -143,6 +149,10 @@ export class TestData {
         },
       },
       number: 133,
+      created_at: '2020-08-05T05:39:43Z',
+      updated_at: '2020-08-26T17:06:15Z',
+      closed_at: '2020-08-05T05:45:13Z',
+      merged_at: '2020-08-05T05:45:13Z',
     };
     const repoFile2: RepositoryFile = {
       path: '.github/workflows/release.yml',
@@ -202,8 +212,8 @@ export class TestData {
     };
     const pullReqDiff2: Diff = {
       pullRequest: pullReq2,
-      repoFiles: [repoFile2, repoFile2_1, repoFile2_2],
-      changedFiles: [pullReqFile2, pullReqFile2_1],
+      repositoryFiles: [repoFile2, repoFile2_1, repoFile2_2],
+      pullRequestFiles: [pullReqFile2, pullReqFile2_1],
     };
 
     // store all pullReqDiffs in array and return them
@@ -225,6 +235,8 @@ export class TestData {
   getDiffs2(): Diff[] {
     // first pull request
     const pullReq1: PullRequest = {
+      id: 325438701,
+      node_id: 'MDExOlB1bGxSZXF1ZXN0MzI1NDM4NzAx',
       url: 'https://api.github.com/repos/octokit/action.js/pulls/1',
       title: 'init version',
       base: {
@@ -235,6 +247,10 @@ export class TestData {
         },
       },
       number: 1,
+      created_at: '2019-10-07T18:40:21Z',
+      updated_at: '2022-01-28T10:58:08Z',
+      closed_at: '2019-10-07T20:15:05Z',
+      merged_at: '2019-10-07T20:15:04Z',
     };
     const repoFile1: RepositoryFile = {
       path: 'README.md',
@@ -312,8 +328,8 @@ export class TestData {
     };
     const pullReqDiff1: Diff = {
       pullRequest: pullReq1,
-      repoFiles: [repoFile1, repoFile1_1],
-      changedFiles: [
+      repositoryFiles: [repoFile1, repoFile1_1],
+      pullRequestFiles: [
         pullReqFile1,
         pullReqFile1_1,
         pullReqFile1_2,
@@ -323,6 +339,8 @@ export class TestData {
 
     // / second pull request
     const pullReq2: PullRequest = {
+      id: 336064308,
+      node_id: 'MDExOlB1bGxSZXF1ZXN0MzM2MDY0MzA4',
       url: 'https://api.github.com/repos/octokit/action.js/pulls/2',
       title: 'second version',
       base: {
@@ -332,6 +350,10 @@ export class TestData {
           default_branch: 'main',
         },
       },
+      created_at: '2019-11-03T20:16:58Z',
+      updated_at: '2019-11-03T20:57:29Z',
+      closed_at: '2019-11-03T20:56:31Z',
+      merged_at: '2019-11-03T20:56:31Z',
       number: 2,
     };
     const repoFile2: RepositoryFile = {
@@ -392,12 +414,14 @@ export class TestData {
     };
     const pullReqDiff2: Diff = {
       pullRequest: pullReq2,
-      repoFiles: [repoFile2, repoFile2_1, repoFile2_2],
-      changedFiles: [pullReqFile2, pullReqFile2_1],
+      repositoryFiles: [repoFile2, repoFile2_1, repoFile2_2],
+      pullRequestFiles: [pullReqFile2, pullReqFile2_1],
     };
 
     // third pull request
     const pullReq3: PullRequest = {
+      id: 336046137,
+      node_id: 'MDExOlB1bGxSZXF1ZXN0MzM2MDQ2MTM3',
       url: 'https://api.github.com/repos/octokit/action.js/pulls/3',
       title: 'third version',
       base: {
@@ -408,6 +432,10 @@ export class TestData {
         },
       },
       number: 3,
+      created_at: '2019-11-03T16:52:00Z',
+      updated_at: '2019-11-03T19:10:04Z',
+      closed_at: '2019-11-03T16:53:49Z',
+      merged_at: '2019-11-03T16:53:49Z',
     };
     const repoFile3: RepositoryFile = {
       path: '.github/workflows/update-prettier.yml',
@@ -483,8 +511,8 @@ export class TestData {
     };
     const pullReqDiff3: Diff = {
       pullRequest: pullReq3,
-      repoFiles: [repoFile3, repoFile3_1, repoFile3_2],
-      changedFiles: [pullReqFile3, pullReqFile3_1, pullReqFile3_2],
+      repositoryFiles: [repoFile3, repoFile3_1, repoFile3_2],
+      pullRequestFiles: [pullReqFile3, pullReqFile3_1, pullReqFile3_2],
     };
 
     // store all pullReqDiffs in array and return them

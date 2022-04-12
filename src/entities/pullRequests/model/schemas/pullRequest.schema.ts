@@ -7,10 +7,25 @@ import { Document } from 'mongoose';
 @Schema()
 export class PullRequest {
   @Prop()
+  id: number;
+
+  @Prop()
+  node_id: string;
+
+  @Prop()
   number: number;
 
   @Prop()
   title: string;
+
+  @Prop({ type: Object })
+  base: {
+    sha: string;
+    ref: string;
+    repo: {
+      default_branch: string;
+    };
+  };
 
   @Prop()
   url: string;

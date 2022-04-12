@@ -1,4 +1,6 @@
 export interface PullRequest {
+  id: number;
+  node_id: string;
   title: string;
   base: {
     sha: string;
