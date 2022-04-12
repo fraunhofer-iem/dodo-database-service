@@ -8,7 +8,6 @@ import { ReleaseModule } from '../releases/release.module';
 import { RepositoryController } from './repository.controller';
 import { RepositoryService } from './repository.service';
 import { KpiModule } from '../kpis/kpi.module';
-import { KpiModule as KpiCalculationModule } from '../../kpi/kpi.module';
 
 @Module({
   imports: [
@@ -16,7 +15,7 @@ import { KpiModule as KpiCalculationModule } from '../../kpi/kpi.module';
       { name: Repository.name, schema: RepositorySchema },
     ]),
     KpiModule,
-    PullRequestModule,
+    DiffModule,
     ReleaseModule,
     IssueModule,
     CommitModule,
