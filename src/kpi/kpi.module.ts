@@ -6,6 +6,7 @@ import { MeanTimeToResolutionModule } from './statistics/meanTimeToResolution/me
 import { CouplingOfComponentsModule } from './statistics/couplingOfComponents/couplingOfComponents.module';
 import { ReleaseCycleModule } from './statistics/releaseCycles/releaseCycle.module';
 import { DeveloperSpreadModule } from './statistics/developerSpread/developerSpread.module';
+import { PullRequestComplexityModule } from './statistics/pullRequestComplexity/pullRequestComplexity.module';
 
 @Module({
   providers: [],
@@ -17,6 +18,7 @@ import { DeveloperSpreadModule } from './statistics/developerSpread/developerSpr
     CouplingOfComponentsModule,
     ReleaseCycleModule,
     DeveloperSpreadModule,
+    PullRequestComplexityModule,
   ],
   controllers: [KpiController],
 })
