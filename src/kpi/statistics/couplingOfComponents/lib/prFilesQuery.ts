@@ -1,4 +1,6 @@
 import { Aggregate, ObjectId } from 'mongoose';
+import { PullRequestDocument } from '../../../../entities/pullRequests/model/schemas';
+import { groupByIntervalSelector, Intervals } from '../../lib';
 
 /**
  * Extends preaggregated query @param lookUpQuery and
@@ -8,7 +10,22 @@ import { Aggregate, ObjectId } from 'mongoose';
 export function getPrFilesQuery(
   lookUpQuery: Aggregate<any[]>,
   fileFilter: string[] = [],
-): Aggregate<{ _id: ObjectId; changedFiles: string[] }[]> {
+  interval: Intervals = Intervals.MONTH,
+): Aggregate<
+  {
+    _id: {
+      year: number;
+      month: number | null;
+      week: number | null;
+      day: number | null;
+    };
+    pullRequests: {
+      _id: ObjectId;
+      pullRequest: PullRequestDocument;
+      changedFiles: string[];
+    }[];
+  }[]
+> {
   return lookUpQuery
     .unwind('diffs')
     .unwind('diffs.pullRequestFiles')
@@ -18,6 +35,13 @@ export function getPrFilesQuery(
     })
     .group({
       _id: '$diffs.pullRequest._id',
+      pullRequest: { $first: '$diffs.pullRequest' },
       changedFiles: { $push: '$diffs.pullRequestFiles.filename' },
+    })
+    .group({
+      _id: groupByIntervalSelector('$pullRequest.created_at', interval),
+      pullRequests: {
+        $push: '$$ROOT',
+      },
     });
 }

@@ -7,13 +7,16 @@ import { DiffModule } from '../diffs/diff.module';
 import { ReleaseModule } from '../releases/release.module';
 import { RepositoryController } from './repository.controller';
 import { RepositoryService } from './repository.service';
+import { KpiModule } from '../kpis/kpi.module';
+import { KpiModule as KpiCalculationModule } from '../../kpi/kpi.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Repository.name, schema: RepositorySchema },
     ]),
-    DiffModule,
+    KpiModule,
+    PullRequestModule,
     ReleaseModule,
     IssueModule,
     CommitModule,
