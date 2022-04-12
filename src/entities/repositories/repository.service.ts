@@ -7,7 +7,6 @@ import { retrieveDocument } from '../../lib';
 import { IssueService } from '../issues/issue.service';
 import { CommitService } from '../commits/commit.service';
 import { ReleaseService } from '../releases/release.service';
-import { PullRequestService } from '../pullRequests/pullRequest.service';
 import {
   commitsAuthorLookup,
   commitsLookup,
@@ -24,6 +23,7 @@ import {
   diffsPullRequestFilesLookup,
   diffsRepositoryFilesLookup,
 } from './lib';
+import { DiffService } from '../diffs/diff.service';
 
 @Injectable()
 export class RepositoryService {
@@ -35,7 +35,7 @@ export class RepositoryService {
     private issueService: IssueService,
     private commitService: CommitService,
     private releaseService: ReleaseService,
-    private pullRequestService: PullRequestService,
+    private diffService: DiffService,
   ) {}
 
   public async initializeRepository(createRepoDto: CreateRepositoryDto) {
@@ -43,10 +43,7 @@ export class RepositoryService {
     await this.issueService.storeIssues(createRepoDto, repo._id);
     await this.commitService.storeCommits(createRepoDto, repo._id);
     await this.releaseService.storeReleases(createRepoDto, repo._id);
-    await this.pullRequestService.storePullRequestDiffsForRepo(
-      createRepoDto,
-      repo._id,
-    );
+    await this.diffService.storeDiffs(createRepoDto, repo._id);
     return repo;
   }
 
@@ -59,7 +56,7 @@ export class RepositoryService {
     project?: { [P in keyof RepositoryDocument]?: boolean },
   ): Promise<RepositoryDocument> {
     try {
-      return retrieveDocument(this.repoModel, filter, project);
+      return await retrieveDocument(this.repoModel, filter, project);
     } catch (e) {
       throw e;
     }

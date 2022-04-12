@@ -1,14 +1,12 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as mSchema } from 'mongoose';
-import { PullRequest } from './';
+import { PullRequest } from '../../../pullRequests/model/schemas';
 
 /**
  * For further information, see: https://docs.github.com/en/rest/reference/pulls#list-pull-requests-files
  */
 @Schema()
 export class PullRequestFile {
-  @Prop({ type: mSchema.Types.ObjectId, ref: 'PullRequest' })
-  pullRequest: PullRequest;
   @Prop()
   sha: string;
   @Prop()

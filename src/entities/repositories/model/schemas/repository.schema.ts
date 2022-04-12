@@ -2,7 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as mSchema } from 'mongoose';
 import { Commit } from '../../../commits/model/schemas';
 import { Issue } from '../../../issues/model/schemas';
-import { Diff } from '../../../pullRequests/model/schemas';
+import { Diff } from '../../../diffs/model/schemas';
 import { Release } from '../../../releases/model/schemas';
 
 /**
