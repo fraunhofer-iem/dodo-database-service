@@ -9,9 +9,8 @@ export class RepositoryController {
   private readonly logger = new Logger(RepositoryController.name);
 
   constructor(
-    private repoService: RepositoryService,
-  ) // private kpiService: KpiService,
-  {}
+    private repoService: RepositoryService, // private kpiService: KpiService,
+  ) {}
 
   @Get()
   async getRepos() {
