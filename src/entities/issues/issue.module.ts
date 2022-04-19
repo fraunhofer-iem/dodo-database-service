@@ -14,71 +14,75 @@ import { IssueSchema, Issue } from './model/schemas';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: Repository.name, schema: RepositorySchema },
-    ]),
-    MongooseModule.forFeatureAsync([
-      {
-        name: Issue.name,
-        imports: [UserModule, IssueEventModule, LabelModule, MilestoneModule],
-        useFactory: (
-          userService: UserService,
-          issueEventService: IssueEventService,
-          labelService: LabelService,
-          milestoneService: MilestoneService,
-        ) => {
-          const schema = IssueSchema;
-          schema.pre<Issue>('validate', async function (this: Issue) {
-            this.user = (await userService.readOrCreate(this.user))._id;
-            if (this.assignee) {
-              this.assignee = (
-                await userService.readOrCreate(this.assignee)
-              )._id;
-            }
-            if (this.assignees) {
-              for (let i = 0; i < this.assignees.length; i++) {
-                this.assignees[i] = (
-                  await userService.readOrCreate(this.assignees[i])
+    MongooseModule.forFeature(
+      [{ name: Repository.name, schema: RepositorySchema }],
+      'data',
+    ),
+    MongooseModule.forFeatureAsync(
+      [
+        {
+          name: Issue.name,
+          imports: [UserModule, IssueEventModule, LabelModule, MilestoneModule],
+          useFactory: (
+            userService: UserService,
+            issueEventService: IssueEventService,
+            labelService: LabelService,
+            milestoneService: MilestoneService,
+          ) => {
+            const schema = IssueSchema;
+            schema.pre<Issue>('validate', async function (this: Issue) {
+              this.user = (await userService.readOrCreate(this.user))._id;
+              if (this.assignee) {
+                this.assignee = (
+                  await userService.readOrCreate(this.assignee)
                 )._id;
               }
-            }
-            if (this.closed_by) {
-              this.closed_by = (
-                await userService.readOrCreate(this.closed_by)
-              )._id;
-            }
-          });
-          schema.pre<Issue>('validate', async function (this: Issue) {
-            for (let i = 0; i < this.events.length; i++) {
-              this.events[i] = (
-                await issueEventService.create(this.events[i])
-              )._id;
-            }
-          });
-          schema.pre<Issue>('validate', async function (this: Issue) {
-            for (let i = 0; i < this.labels.length; i++) {
-              this.labels[i] = (
-                await labelService.readOrCreate(this.labels[i])
-              )._id;
-            }
-          });
-          schema.pre<Issue>('validate', async function (this: Issue) {
-            if (this.milestone) {
-              this.milestone = (
-                await milestoneService.readOrCreate(this.milestone)
-              )._id;
-            }
-          });
-          return schema;
+              if (this.assignees) {
+                for (let i = 0; i < this.assignees.length; i++) {
+                  this.assignees[i] = (
+                    await userService.readOrCreate(this.assignees[i])
+                  )._id;
+                }
+              }
+              if (this.closed_by) {
+                this.closed_by = (
+                  await userService.readOrCreate(this.closed_by)
+                )._id;
+              }
+            });
+            schema.pre<Issue>('validate', async function (this: Issue) {
+              for (let i = 0; i < this.events.length; i++) {
+                this.events[i] = (
+                  await issueEventService.create(this.events[i])
+                )._id;
+              }
+            });
+            schema.pre<Issue>('validate', async function (this: Issue) {
+              for (let i = 0; i < this.labels.length; i++) {
+                this.labels[i] = (
+                  await labelService.readOrCreate(this.labels[i])
+                )._id;
+              }
+            });
+            schema.pre<Issue>('validate', async function (this: Issue) {
+              if (this.milestone) {
+                this.milestone = (
+                  await milestoneService.readOrCreate(this.milestone)
+                )._id;
+              }
+            });
+            return schema;
+          },
+          inject: [
+            UserService,
+            IssueEventService,
+            LabelService,
+            MilestoneService,
+          ],
         },
-        inject: [
-          UserService,
-          IssueEventService,
-          LabelService,
-          MilestoneService,
-        ],
-      },
-    ]),
+      ],
+      'data',
+    ),
   ],
   providers: [IssueService],
   exports: [IssueService],

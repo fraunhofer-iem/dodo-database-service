@@ -11,10 +11,11 @@ import { KpiModule } from '../kpis/kpi.module';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: Repository.name, schema: RepositorySchema },
-    ]),
-    KpiModule,
+    MongooseModule.forFeature(
+      [{ name: Repository.name, schema: RepositorySchema }],
+      'data',
+    ),
+    // KpiModule,
     DiffModule,
     ReleaseModule,
     IssueModule,

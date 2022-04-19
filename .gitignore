@@ -38,6 +38,7 @@ lerna-debug.log*
 
 # env
 .env.local
+.env
 
 # default database location
 /data/

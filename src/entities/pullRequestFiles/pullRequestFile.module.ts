@@ -5,9 +5,10 @@ import { PullRequestFileService } from './pullRequestFile.service';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: PullRequestFile.name, schema: PullRequestFileSchema },
-    ]),
+    MongooseModule.forFeature(
+      [{ name: PullRequestFile.name, schema: PullRequestFileSchema }],
+      'data',
+    ),
   ],
   providers: [PullRequestFileService],
   exports: [PullRequestFileService],

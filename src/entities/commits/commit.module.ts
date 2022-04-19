@@ -8,23 +8,27 @@ import { UserService } from '../users/user.service';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: Repository.name, schema: RepositorySchema },
-    ]),
-    MongooseModule.forFeatureAsync([
-      {
-        name: Commit.name,
-        imports: [UserModule],
-        useFactory: (userService: UserService) => {
-          const schema = CommitSchema;
-          schema.pre<Commit>('validate', async function (this: Commit) {
-            this.author = (await userService.readOrCreate(this.author))._id;
-          });
-          return schema;
+    MongooseModule.forFeature(
+      [{ name: Repository.name, schema: RepositorySchema }],
+      'data',
+    ),
+    MongooseModule.forFeatureAsync(
+      [
+        {
+          name: Commit.name,
+          imports: [UserModule],
+          useFactory: (userService: UserService) => {
+            const schema = CommitSchema;
+            schema.pre<Commit>('validate', async function (this: Commit) {
+              this.author = (await userService.readOrCreate(this.author))._id;
+            });
+            return schema;
+          },
+          inject: [UserService],
         },
-        inject: [UserService],
-      },
-    ]),
+      ],
+      'data',
+    ),
   ],
   providers: [CommitService],
   controllers: [],

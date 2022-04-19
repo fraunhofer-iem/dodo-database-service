@@ -10,8 +10,8 @@ export class RepositoryController {
 
   constructor(
     private repoService: RepositoryService,
-    private kpiService: KpiService,
-  ) {}
+  ) // private kpiService: KpiService,
+  {}
 
   @Get()
   async getRepos() {
@@ -63,7 +63,7 @@ export class RepositoryController {
     @Param('owner') owner: string,
     @Param('repo') repo: string,
   ) {
-    return this.kpiService.readAll();
+    // return this.kpiService.readAll();
   }
 
   @Get(':owner/:repo/kpis/:kpi')
@@ -72,7 +72,7 @@ export class RepositoryController {
     @Param('repo') repo: string,
     @Param('kpi') kpi: string,
   ) {
-    return this.kpiService.read({ id: kpi });
+    // return this.kpiService.read({ id: kpi });
   }
 
   @Get(':id/trends')

@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model } from 'mongoose';
+import { InjectConnection } from '@nestjs/mongoose';
+import { Aggregate, Connection, FilterQuery } from 'mongoose';
 import { retrieveDocument } from '../../lib';
 import { KPI, KpiDocument } from './model/schemas';
 
@@ -9,14 +9,14 @@ export class KpiService {
   private readonly logger = new Logger(KpiService.name);
 
   constructor(
-    @InjectModel(KPI.name)
-    private readonly kpiModel: Model<KpiDocument>,
+    @InjectConnection('lake')
+    private connection: Connection,
   ) {}
 
   public async readOrCreate(json: KPI): Promise<KpiDocument> {
     let kpi: KpiDocument;
     try {
-      kpi = await this.read({ id: json.id });
+      kpi = await this.read(json);
     } catch {
       kpi = await this.create(json);
     }
@@ -25,25 +25,19 @@ export class KpiService {
 
   public async read(filter: FilterQuery<KpiDocument>): Promise<KpiDocument> {
     try {
-      return retrieveDocument(this.kpiModel, filter);
+      return retrieveDocument(this.connection.models['KPI'], filter);
     } catch (e) {
       throw e;
     }
   }
 
-  public async readAll(
-    filter: FilterQuery<KpiDocument> = {},
-  ): Promise<KpiDocument[]> {
-    const pipeline = this.kpiModel.aggregate();
+  public preAggregate(filter: FilterQuery<KpiDocument> = {}): Aggregate<any[]> {
+    const pipeline = this.connection.models['KPI'].aggregate();
     pipeline.match(filter);
-    pipeline.project({
-      _id: 0,
-      __v: 0,
-    });
     return pipeline;
   }
 
   public async create(json: KPI): Promise<KpiDocument> {
-    return this.kpiModel.create(json);
+    return this.connection.models['KPI'].create(json);
   }
 }

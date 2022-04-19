@@ -12,55 +12,59 @@ import { Diff, DiffSchema } from './model/schemas';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: Repository.name, schema: RepositorySchema },
-    ]),
-    MongooseModule.forFeatureAsync([
-      {
-        name: Diff.name,
-        imports: [
-          PullRequestModule,
-          PullRequestFileModule,
-          RepositoryFileModule,
-        ],
-        useFactory: (
-          pullRequestService: PullRequestService,
-          pullRequestFileService: PullRequestFileService,
-          repositoryFileService: RepositoryFileService,
-        ) => {
-          const schema = DiffSchema;
-          schema.pre<Diff>('validate', async function (this: Diff) {
-            this.pullRequest = (
-              await pullRequestService.readOrCreate(this.pullRequest)
-            )._id;
-            if (this.pullRequestFiles) {
-              for (let i = 0; i < this.pullRequestFiles.length; i++) {
-                this.pullRequestFiles[i] = await (
-                  await pullRequestFileService.readOrCreate(
-                    this.pullRequestFiles[i],
-                  )
-                )._id;
+    MongooseModule.forFeature(
+      [{ name: Repository.name, schema: RepositorySchema }],
+      'data',
+    ),
+    MongooseModule.forFeatureAsync(
+      [
+        {
+          name: Diff.name,
+          imports: [
+            PullRequestModule,
+            PullRequestFileModule,
+            RepositoryFileModule,
+          ],
+          useFactory: (
+            pullRequestService: PullRequestService,
+            pullRequestFileService: PullRequestFileService,
+            repositoryFileService: RepositoryFileService,
+          ) => {
+            const schema = DiffSchema;
+            schema.pre<Diff>('validate', async function (this: Diff) {
+              this.pullRequest = (
+                await pullRequestService.readOrCreate(this.pullRequest)
+              )._id;
+              if (this.pullRequestFiles) {
+                for (let i = 0; i < this.pullRequestFiles.length; i++) {
+                  this.pullRequestFiles[i] = await (
+                    await pullRequestFileService.readOrCreate(
+                      this.pullRequestFiles[i],
+                    )
+                  )._id;
+                }
               }
-            }
-            if (this.repositoryFiles) {
-              for (let i = 0; i < this.repositoryFiles.length; i++) {
-                this.repositoryFiles[i] = (
-                  await repositoryFileService.readOrCreate(
-                    this.repositoryFiles[i],
-                  )
-                )._id;
+              if (this.repositoryFiles) {
+                for (let i = 0; i < this.repositoryFiles.length; i++) {
+                  this.repositoryFiles[i] = (
+                    await repositoryFileService.readOrCreate(
+                      this.repositoryFiles[i],
+                    )
+                  )._id;
+                }
               }
-            }
-          });
-          return schema;
+            });
+            return schema;
+          },
+          inject: [
+            PullRequestService,
+            PullRequestFileService,
+            RepositoryFileService,
+          ],
         },
-        inject: [
-          PullRequestService,
-          PullRequestFileService,
-          RepositoryFileService,
-        ],
-      },
-    ]),
+      ],
+      'data',
+    ),
   ],
   providers: [DiffService],
   exports: [DiffService],

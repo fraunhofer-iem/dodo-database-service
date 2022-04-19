@@ -7,10 +7,13 @@ import { ReleaseService } from './release.service';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: Release.name, schema: ReleaseSchema },
-      { name: Repository.name, schema: RepositorySchema },
-    ]),
+    MongooseModule.forFeature(
+      [
+        { name: Release.name, schema: ReleaseSchema },
+        { name: Repository.name, schema: RepositorySchema },
+      ],
+      'data',
+    ),
   ],
   providers: [ReleaseService],
   exports: [ReleaseService],

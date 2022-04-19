@@ -7,9 +7,10 @@ import { OrganizationService } from './organization.service';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: Organization.name, schema: OrganizationSchema },
-    ]),
+    MongooseModule.forFeature(
+      [{ name: Organization.name, schema: OrganizationSchema }],
+      'data',
+    ),
     RepositoryModule,
   ],
   providers: [OrganizationService],

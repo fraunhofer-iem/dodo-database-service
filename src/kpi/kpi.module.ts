@@ -7,10 +7,13 @@ import { CouplingOfComponentsModule } from './statistics/couplingOfComponents/co
 import { ReleaseCycleModule } from './statistics/releaseCycles/releaseCycle.module';
 import { DeveloperSpreadModule } from './statistics/developerSpread/developerSpread.module';
 import { PullRequestComplexityModule } from './statistics/pullRequestComplexity/pullRequestComplexity.module';
+import { KpiService } from './kpi.service';
+import { KpiModule as KpiRunModule } from '../entities/kpis/kpi.module';
 
 @Module({
-  providers: [],
+  providers: [KpiService],
   imports: [
+    KpiRunModule,
     IssueModule,
     IssueTrackingModule,
     MeanTimeToResolutionModule,

@@ -6,26 +6,23 @@ import { MeanTimeToResolutionService } from './statistics/meanTimeToResolution/m
 import { ReleaseCycleService } from './statistics/releaseCycles/releaseCycle.service';
 import { CouplingOfComponentsService } from './statistics/couplingOfComponents/couplingOfComponents.service';
 import { PullRequestComplexityService } from './statistics/pullRequestComplexity/pullRequestComponents.service';
+import { KpiService } from './kpi.service';
 
 @Controller('api/kpis')
 export class KpiController {
   private readonly logger = new Logger(KpiController.name);
-  constructor(
-    private readonly issueTrackingService: IssueTrackingService,
-    private readonly meanTimeToResolutionService: MeanTimeToResolutionService,
-    private readonly releaseCycleService: ReleaseCycleService,
-    private readonly couplingOfComponentsService: CouplingOfComponentsService,
-    private readonly developerSpreadService: DeveloperSpreadService,
-    private readonly pullRequestComplexityService: PullRequestComplexityService,
-  ) {}
+  constructor(private kpiService: KpiService) {}
 
   @Get(':id')
   async getKpi(
     @Param('id') id: string,
     @Query('owner') owner: string,
+    @Query('to')
+    to: string = `${new Date().getUTCFullYear()}-${
+      new Date().getUTCMonth() + 1
+    }-${new Date().getUTCDate()}`,
     @Query('repo') repo?: string,
     @Query('since') since?: string,
-    @Query('to') to?: string,
     @Query('interval') interval: Intervals = Intervals.MONTH,
     @Query('labelFilter') labelFilter?: string[],
     @Query('fileFilter') fileFilter?: string[],
@@ -34,103 +31,19 @@ export class KpiController {
     @Query('timeToComplete') timeToComplete?: number,
   ) {
     this.logger.log(`Received query for KPI with id ${id}`);
-    switch (id) {
-      case 'icr':
-        this.logger.log(
-          `Calculating issue completion rate for ${owner}/${repo}`,
-        );
-        return this.issueTrackingService.issueCompletionRate(
-          owner,
-          repo,
-          labelFilter,
-        );
-
-      case 'icc':
-        this.logger.log(
-          `Calculating issue completion capability for ${owner}/${repo}`,
-        );
-        return this.issueTrackingService.issueCompletionCapability(
-          owner,
-          repo,
-          labelFilter,
-          timeToComplete,
-        );
-
-      case 'ice':
-        this.logger.log(
-          `Calculating issue completion efficiency for ${owner}/${repo}`,
-        );
-        return this.issueTrackingService.issueCompletionEfficiency(
-          owner,
-          repo,
-          labelFilter,
-          timeToComplete,
-        );
-
-      case 'devSpread':
-        this.logger.log(`Calculating developer spread for ${owner}/${repo}`);
-        return this.developerSpreadService.developerSpread(
-          interval,
-          owner,
-          repo,
-          since,
-          to,
-        );
-
-      case 'releaseCycle':
-        this.logger.log(`Calculating the release cycle for ${owner}/${repo}`);
-        return this.releaseCycleService.releaseCycle(
-          interval,
-          owner,
-          repo,
-          since,
-          to,
-        );
-
-      case 'coc':
-        this.logger.log(
-          `Calculating coupling of components for ${owner}/${repo}`,
-        );
-        return this.couplingOfComponentsService.couplingOfComponents(
-          interval,
-          owner,
-          repo,
-          fileFilter,
-          couplingSize,
-          occurences,
-          since,
-          to,
-        );
-
-      case 'mttr':
-        this.logger.log(
-          `Calculating the mean time to resolution for ${owner}/${repo}`,
-        );
-        return this.meanTimeToResolutionService.meanTimeToResolution(
-          {
-            owner: owner,
-            repo: repo,
-          },
-          interval,
-          labelFilter,
-          since,
-          to,
-        );
-
-      case 'prComplexity':
-        this.logger.log(
-          `Calculating the complexity of pull requests for ${owner}/${repo}`,
-        );
-        return this.pullRequestComplexityService.pullRequestComplexity(
-          owner,
-          repo,
-          interval,
-          since,
-          to,
-        );
-      default:
-        return 'No such KPI';
-    }
+    return this.kpiService.getKpi({
+      id,
+      owner,
+      repo,
+      since,
+      to,
+      interval,
+      labelFilter,
+      fileFilter,
+      couplingSize,
+      occurences,
+      timeToComplete,
+    });
   }
 
   // @Get(':id/data')

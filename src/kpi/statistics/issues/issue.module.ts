@@ -6,9 +6,10 @@ import { IssueService } from './issue.service';
 @Module({
   providers: [IssueService],
   imports: [
-    MongooseModule.forFeature([
-      { name: 'Repository', schema: RepositorySchema },
-    ]),
+    MongooseModule.forFeature(
+      [{ name: 'Repository', schema: RepositorySchema }],
+      'data',
+    ),
   ],
   controllers: [],
 })

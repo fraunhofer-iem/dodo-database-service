@@ -7,21 +7,26 @@ import { Milestone, MilestoneSchema } from './model/schemas';
 
 @Module({
   imports: [
-    MongooseModule.forFeatureAsync([
-      {
-        name: Milestone.name,
-        imports: [UserModule],
-        useFactory: (userService: UserService) => {
-          return MilestoneSchema.pre<Milestone>(
-            'validate',
-            async function (this: Milestone) {
-              this.creator = (await userService.readOrCreate(this.creator))._id;
-            },
-          );
+    MongooseModule.forFeatureAsync(
+      [
+        {
+          name: Milestone.name,
+          imports: [UserModule],
+          useFactory: (userService: UserService) => {
+            return MilestoneSchema.pre<Milestone>(
+              'validate',
+              async function (this: Milestone) {
+                this.creator = (
+                  await userService.readOrCreate(this.creator)
+                )._id;
+              },
+            );
+          },
+          inject: [UserService],
         },
-        inject: [UserService],
-      },
-    ]),
+      ],
+      'data',
+    ),
   ],
   providers: [MilestoneService],
   exports: [MilestoneService],

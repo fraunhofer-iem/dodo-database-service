@@ -7,23 +7,26 @@ import { IssueEvent, IssueEventSchema } from './model/schemas';
 
 @Module({
   imports: [
-    MongooseModule.forFeatureAsync([
-      {
-        name: IssueEvent.name,
-        imports: [UserModule],
-        useFactory: (userService: UserService) => {
-          return IssueEventSchema.pre<IssueEvent>(
-            'validate',
-            async function (this: IssueEvent) {
-              if (this.actor) {
-                this.actor = (await userService.readOrCreate(this.actor))._id;
-              }
-            },
-          );
+    MongooseModule.forFeatureAsync(
+      [
+        {
+          name: IssueEvent.name,
+          imports: [UserModule],
+          useFactory: (userService: UserService) => {
+            return IssueEventSchema.pre<IssueEvent>(
+              'validate',
+              async function (this: IssueEvent) {
+                if (this.actor) {
+                  this.actor = (await userService.readOrCreate(this.actor))._id;
+                }
+              },
+            );
+          },
+          inject: [UserService],
         },
-        inject: [UserService],
-      },
-    ]),
+      ],
+      'data',
+    ),
   ],
   providers: [IssueEventService],
   exports: [IssueEventService],

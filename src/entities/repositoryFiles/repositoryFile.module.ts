@@ -8,9 +8,10 @@ import { RepositoryFileService } from './repositoryFile.service';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: RepositoryFile.name, schema: RepositoryFileSchema },
-    ]),
+    MongooseModule.forFeature(
+      [{ name: RepositoryFile.name, schema: RepositoryFileSchema }],
+      'data',
+    ),
   ],
   providers: [RepositoryFileService],
   exports: [RepositoryFileService],
