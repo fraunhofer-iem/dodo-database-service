@@ -24,5 +24,6 @@ import { KpiModule as KpiRunModule } from '../entities/kpis/kpi.module';
     PullRequestComplexityModule,
   ],
   controllers: [KpiController],
+  exports: [KpiService],
 })
 export class KpiModule {}

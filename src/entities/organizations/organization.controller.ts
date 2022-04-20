@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Logger, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Logger,
+  Param,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { CreateOrgDto } from './model';
 import { OrganizationService } from './organization.service';
 
@@ -24,6 +32,16 @@ export class OrganizationController {
   @Get(':id')
   async getOrg(@Param('id') id: string) {
     this.logger.log(`Received query for org with id ${id}`);
+  }
+
+  @Get(':id/repositories')
+  async getRepos(
+    @Param('id') id: string,
+    @Query('since') since?: string,
+    @Query('to') to?: string,
+  ) {
+    this.logger.log(`Received query for repos of org ${id}`);
+    return this.orgService.getRepos(id, since, to);
   }
 
   @Get(':id/trends')

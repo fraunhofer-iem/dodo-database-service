@@ -6,6 +6,8 @@ import { updateArray, documentExists } from '../../lib';
 import { User } from '../users/model';
 import { Organization, OrganizationDocument } from './model/schemas';
 import { queryMembers, queryRepos } from './lib';
+import { KpiService } from 'src/kpi/kpi.service';
+import { Intervals } from 'src/kpi/statistics/lib';
 
 @Injectable()
 export class OrganizationService {
@@ -15,6 +17,7 @@ export class OrganizationService {
     @InjectModel(Organization.name)
     private readonly orgModel: Model<OrganizationDocument>,
     private repoService: RepositoryService,
+    private kpiService: KpiService,
   ) {}
 
   public async initializeOrga(owner: string, repoNames?: string[]) {
@@ -25,6 +28,49 @@ export class OrganizationService {
     // more stability in local runs.
     await this.addRepos(owner, id, repoNames);
     await this.addOrgaMembers(id, owner);
+  }
+
+  public async getRepos(owner: string, since?: string, to?: string) {
+    const pipeline = this.repoService.preAggregate({ owner: owner }, {});
+    pipeline.addFields({
+      id: { $concat: ['$owner', '/', '$repo'] },
+      name: '$repo',
+      health: 0,
+    });
+    pipeline.project({
+      _id: 0,
+      __v: 0,
+      repo: 0,
+    });
+    pipeline.group({
+      _id: '$owner',
+      repos: { $push: '$$ROOT' },
+    });
+
+    const result = await pipeline.exec();
+    if (result.length) {
+      for (const repo of result[0].repos) {
+        const health = await this.kpiService.getKpi({
+          id: 'repoHealth',
+          owner: repo.owner,
+          repo: repo.name,
+          since:
+            since ??
+            new Date(
+              new Date().getUTCFullYear(),
+              new Date().getUTCMonth() - 3,
+              new Date().getUTCDate(),
+            )
+              .toISOString()
+              .split('T')[0],
+          to: to ?? new Date().toISOString().split('T')[0],
+          interval: Intervals.MONTH,
+        });
+        repo.health = (health as any).value;
+      }
+      return result[0].repos;
+    }
+    return [];
   }
 
   /**
