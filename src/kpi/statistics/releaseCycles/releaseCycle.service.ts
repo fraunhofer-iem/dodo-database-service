@@ -107,7 +107,8 @@ export class ReleaseCycleService {
       return serialize(result, interval, 'numberOfReleases');
     } catch (err) {
       this.logger.error(err);
-      return { data: [] };
+      // return { data: [] };
+      throw err;
     }
   }
 }

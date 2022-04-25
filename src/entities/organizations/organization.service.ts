@@ -30,13 +30,26 @@ export class OrganizationService {
     await this.addOrgaMembers(id, owner);
   }
 
-  public async getRepos(owner: string, since?: string, to?: string) {
+  public async getRepos(
+    owner: string,
+    since?: string,
+    to?: string,
+    repos: string[] = [],
+  ) {
     const pipeline = this.repoService.preAggregate({ owner: owner }, {});
+    console.log(repos);
     pipeline.addFields({
       id: { $concat: ['$owner', '/', '$repo'] },
       name: '$repo',
       health: 0,
     });
+    if (repos.length) {
+      pipeline.match({
+        repo: {
+          $in: repos,
+        },
+      });
+    }
     pipeline.project({
       _id: 0,
       __v: 0,
@@ -71,6 +84,70 @@ export class OrganizationService {
       return result[0].repos;
     }
     return [];
+  }
+
+  public async getKpis(
+    owner: string,
+    since?: string,
+    to?: string,
+    repoNames?: string[],
+    kpiIds?: string[],
+    includeData?: boolean,
+  ) {
+    const repos = await this.getRepos(owner, since, to, repoNames);
+
+    const kpiConfig: { id: string; params: { [key: string]: any } }[] = [
+      { id: 'mttr', params: { interval: Intervals.WEEK } },
+      { id: 'devSpread', params: { interval: Intervals.WEEK } },
+      {
+        id: 'coc',
+        params: {
+          interval: Intervals.WEEK,
+          fileFilter: ['README.md', 'package.json', 'package-lock.json'],
+          couplingSize: 3,
+          occurences: 3,
+        },
+      },
+      { id: 'releaseCycle', params: { interval: Intervals.WEEK } },
+    ];
+    if (repoNames.length) {
+      kpiConfig.push({
+        id: 'repoHealth',
+        params: { interval: Intervals.MONTH, since: since, to: to },
+      });
+    }
+
+    const kpis = [];
+    for (const repo of repos) {
+      for (const { id, params } of kpiConfig) {
+        if (kpiIds.length && !kpiIds.includes(id)) {
+          continue;
+        }
+        try {
+          kpis.push(
+            //@ts-ignore
+            await this.kpiService.getKpi({
+              id,
+              owner,
+              repo: repo.name,
+              since:
+                since ??
+                new Date(
+                  new Date().getUTCFullYear(),
+                  new Date().getUTCMonth() - 3,
+                  new Date().getUTCDate(),
+                )
+                  .toISOString()
+                  .split('T')[0],
+              to: to ?? new Date().toISOString().split('T')[0],
+              includeData: includeData,
+              ...params,
+            }),
+          );
+        } catch {}
+      }
+    }
+    return kpis;
   }
 
   /**

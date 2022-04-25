@@ -82,6 +82,7 @@ export class MeanTimeToResolutionService {
       return serialize(result, interval, 'resolutionTimes');
     } catch (err) {
       this.logger.error(err);
+      throw err;
     }
   }
 }

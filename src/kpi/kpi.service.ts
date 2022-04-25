@@ -35,6 +35,7 @@ export class KpiService {
     couplingSize?: number;
     occurences?: number;
     timeToComplete?: number;
+    includeData?: boolean;
   }) {
     Object.keys(params).forEach(
       (key) => params[key] === undefined && delete params[key],
@@ -48,14 +49,20 @@ export class KpiService {
         kpi = await this.kpiRunService.create({
           ...params,
           value: result['avg'],
-          // data: result.data,
+          data: result.data,
           updatedAt: new Date().toISOString(),
         });
-      } catch {
-        return 'No such KPI';
+      } catch (err) {
+        throw err;
       }
     }
-    return { value: kpi.value, data: {} };
+    return {
+      owner: kpi.owner,
+      repo: kpi.repo,
+      id: kpi.id,
+      value: kpi.value,
+      data: params.includeData ? kpi.data : undefined,
+    };
   }
 
   public async calculateKpi(params: {
@@ -84,15 +91,36 @@ export class KpiService {
       occurences,
       timeToComplete,
     } = params;
+    const data = {};
+    const d1 = new Date(since);
+    const d2 = new Date(to);
     switch (id) {
       case 'orgHealth':
         this.logger.log(
           `Generating a dummy health value for organization ${owner}`,
         );
-        return { avg: Math.ceil(Math.random() * 100) };
+        while (d1 < d2) {
+          if (!Object.keys(data).includes('' + d1.getUTCFullYear())) {
+            data[d1.getUTCFullYear()] = {};
+          }
+          data[d1.getUTCFullYear()][d1.getUTCMonth()] = Math.round(
+            Math.random() * 100,
+          );
+          d1.setUTCMonth(d1.getUTCMonth() + 1);
+        }
+        return { avg: Math.round(Math.random() * 100), data };
       case 'repoHealth':
         this.logger.log(`Generating a dummy health value for ${owner}/${repo}`);
-        return { avg: Math.ceil(Math.random() * 100) };
+        while (d1 < d2) {
+          if (!Object.keys(data).includes('' + d1.getUTCFullYear())) {
+            data[d1.getUTCFullYear()] = {};
+          }
+          data[d1.getUTCFullYear()][d1.getUTCMonth()] = {
+            avg: Math.round(Math.random() * 100),
+          };
+          d1.setUTCMonth(d1.getUTCMonth() + 1);
+        }
+        return { avg: Math.round(Math.random() * 100), data: data };
 
       // case 'icr':
       //   this.logger.log(

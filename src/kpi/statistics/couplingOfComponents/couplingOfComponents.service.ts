@@ -47,7 +47,7 @@ export class CouplingOfComponentsService {
       return serialize(result, interval, 'coupling');
     } catch (err) {
       this.logger.error(err);
-      return { data: [] };
+      throw err;
     }
   }
 }

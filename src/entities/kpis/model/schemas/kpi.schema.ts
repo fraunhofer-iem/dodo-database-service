@@ -1,9 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
-// type Data = {
-//   [year: number]: { [interval: number]: { [key: string]: any[] } };
-// };
+type Data = {
+  [year: number]: { [interval: number]: { avg: number; [key: string]: any } };
+};
 
 @Schema()
 export class KPI {
@@ -13,8 +13,8 @@ export class KPI {
   @Prop()
   value: number;
 
-  // @Prop({type: () => Data})
-  // data: Data;
+  @Prop({ type: Object })
+  data: Data;
 
   @Prop()
   owner: string;

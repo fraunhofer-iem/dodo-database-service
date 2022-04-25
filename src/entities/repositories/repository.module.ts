@@ -7,7 +7,6 @@ import { DiffModule } from '../diffs/diff.module';
 import { ReleaseModule } from '../releases/release.module';
 import { RepositoryController } from './repository.controller';
 import { RepositoryService } from './repository.service';
-import { KpiModule } from '../kpis/kpi.module';
 
 @Module({
   imports: [
@@ -15,7 +14,6 @@ import { KpiModule } from '../kpis/kpi.module';
       [{ name: Repository.name, schema: RepositorySchema }],
       'data',
     ),
-    // KpiModule,
     DiffModule,
     ReleaseModule,
     IssueModule,

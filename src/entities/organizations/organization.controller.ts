@@ -44,6 +44,19 @@ export class OrganizationController {
     return this.orgService.getRepos(id, since, to);
   }
 
+  @Get(':id/kpis')
+  async getKpis(
+    @Param('id') id: string,
+    @Query('since') since?: string,
+    @Query('to') to?: string,
+    @Query('repos') repos: string[] = [],
+    @Query('kpis') kpis: string[] = [],
+    @Query('data') data: boolean = false,
+  ) {
+    this.logger.log(`Received query for KPIs of repositories of org ${id}`);
+    return this.orgService.getKpis(id, since, to, repos, kpis, data);
+  }
+
   @Get(':id/trends')
   async getOrgTrend(@Param('id') id: string) {
     this.logger.log(`Received query for org trend with id ${id}`);
