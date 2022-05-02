@@ -5,6 +5,7 @@ import { RepositoryModule } from './entities/repositories/repository.module';
 import { OrganizationModule } from './entities/organizations/organization.module';
 import { KPI, KpiSchema } from './entities/kpis/model/schemas';
 import { KpiModule } from './kpi/kpi.module';
+import { DodoConfigModule } from './config/dodoConfig.module';
 
 @Module({
   imports: [
@@ -14,7 +15,20 @@ import { KpiModule } from './kpi/kpi.module';
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
-        uri: configService.get<string>('DB_URI'),
+        uri: configService.get<string>('CONFIG_URI'),
+        auth: {
+          username: configService.get<string>('DB_USER'),
+          password: configService.get<string>('DB_USER_PASSWORD'),
+        },
+        useNewUrlParser: true,
+      }),
+      connectionName: 'config',
+      inject: [ConfigService],
+    }),
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        uri: configService.get<string>('DATA_URI'),
         auth: {
           username: configService.get<string>('DB_USER'),
           password: configService.get<string>('DB_USER_PASSWORD'),
@@ -37,9 +51,10 @@ import { KpiModule } from './kpi/kpi.module';
       connectionName: 'lake',
       inject: [ConfigService],
     }),
-    RepositoryModule,
-    KpiModule,
-    OrganizationModule,
+    DodoConfigModule,
+    // RepositoryModule,
+    // KpiModule,
+    // OrganizationModule,
   ],
   controllers: [],
   providers: [],
