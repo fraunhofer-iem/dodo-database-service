@@ -8,16 +8,11 @@ import { MilestoneModule } from '../milestones/milestone.module';
 import { MilestoneService } from '../milestones/milestone.service';
 import { UserModule } from '../users/user.module';
 import { UserService } from '../users/user.service';
-import { Repository, RepositorySchema } from '../repositories/model/schemas';
 import { IssueService } from './issue.service';
 import { IssueSchema, Issue } from './model/schemas';
 
 @Module({
   imports: [
-    MongooseModule.forFeature(
-      [{ name: Repository.name, schema: RepositorySchema }],
-      'data',
-    ),
     MongooseModule.forFeatureAsync(
       [
         {

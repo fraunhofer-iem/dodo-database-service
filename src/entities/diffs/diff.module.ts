@@ -4,7 +4,6 @@ import { PullRequestFileModule } from '../pullRequestFiles/pullRequestFile.modul
 import { PullRequestFileService } from '../pullRequestFiles/pullRequestFile.service';
 import { PullRequestModule } from '../pullRequests/pullRequest.module';
 import { PullRequestService } from '../pullRequests/pullRequest.service';
-import { Repository, RepositorySchema } from '../repositories/model/schemas';
 import { RepositoryFileModule } from '../repositoryFiles/repositoryFile.module';
 import { RepositoryFileService } from '../repositoryFiles/repositoryFile.service';
 import { DiffService } from './diff.service';
@@ -12,10 +11,6 @@ import { Diff, DiffSchema } from './model/schemas';
 
 @Module({
   imports: [
-    MongooseModule.forFeature(
-      [{ name: Repository.name, schema: RepositorySchema }],
-      'data',
-    ),
     MongooseModule.forFeatureAsync(
       [
         {

@@ -8,10 +8,6 @@ import { UserService } from '../users/user.service';
 
 @Module({
   imports: [
-    MongooseModule.forFeature(
-      [{ name: Repository.name, schema: RepositorySchema }],
-      'data',
-    ),
     MongooseModule.forFeatureAsync(
       [
         {

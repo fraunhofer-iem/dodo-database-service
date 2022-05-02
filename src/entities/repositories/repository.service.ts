@@ -4,9 +4,6 @@ import { Aggregate, FilterQuery, Model } from 'mongoose';
 import { Repository, RepositoryDocument } from './model/schemas';
 import { CreateRepositoryDto } from './model';
 import { retrieveDocument } from '../../lib';
-import { IssueService } from '../issues/issue.service';
-import { CommitService } from '../commits/commit.service';
-import { ReleaseService } from '../releases/release.service';
 import {
   commitsAuthorLookup,
   commitsLookup,
@@ -23,7 +20,6 @@ import {
   diffsPullRequestFilesLookup,
   diffsRepositoryFilesLookup,
 } from './lib';
-import { DiffService } from '../diffs/diff.service';
 
 @Injectable()
 export class RepositoryService {
@@ -32,20 +28,7 @@ export class RepositoryService {
   constructor(
     @InjectModel(Repository.name)
     private readonly repoModel: Model<RepositoryDocument>,
-    private issueService: IssueService,
-    private commitService: CommitService,
-    private releaseService: ReleaseService,
-    private diffService: DiffService,
   ) {}
-
-  public async initializeRepository(createRepoDto: CreateRepositoryDto) {
-    const repo = await this.readOrCreate(createRepoDto);
-    await this.issueService.storeIssues(createRepoDto, repo._id);
-    await this.commitService.storeCommits(createRepoDto, repo._id);
-    await this.releaseService.storeReleases(createRepoDto, repo._id);
-    await this.diffService.storeDiffs(createRepoDto, repo._id);
-    return repo;
-  }
 
   public async getRepositoryById(id: string) {
     return this.repoModel.findById(id).exec();

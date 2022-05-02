@@ -1,7 +1,7 @@
-import { PullRequestFile } from '../../pullRequestFiles/model';
-import { PullRequest } from '../../pullRequests/model/schemas';
+import { PullRequestFile } from 'src/entities/pullRequestFiles/model';
+import { PullRequest } from 'src/entities/pullRequests/model/schemas';
+import { RepositoryIdentifier } from 'src/entities/repositories/model';
 import { OCTOKIT } from '../../../lib';
-import { RepositoryIdentifier } from '../../repositories/model';
 
 export async function getPullRequestFiles(
   repoIdent: RepositoryIdentifier,

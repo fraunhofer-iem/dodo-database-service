@@ -1,17 +1,17 @@
+import { PullRequest } from 'src/entities/pullRequests/model';
+import { RepositoryIdentifier } from 'src/entities/repositories/model';
 import { OCTOKIT } from '../../../lib';
-import { PullRequest } from '../../pullRequests/model';
-import { RepositoryIdentifier } from '../../repositories/model';
+import { querier } from './querier';
 
 export async function* pullRequestQuerier(repoIdent: RepositoryIdentifier) {
-  let page: PullRequest[] = [];
-  let pageNumber = 1;
-
-  do {
-    page = await queryPullRequestPage(repoIdent, pageNumber);
-    page = await queryPullRequestComments(repoIdent, page);
-    yield* page.filter((issue) => !('pull_request' in issue));
-    pageNumber += 1;
-  } while (page.length == 100);
+  yield* querier<PullRequest>(
+    repoIdent,
+    async (repoIdent, pageNumber) => {
+      let page = await queryPullRequestPage(repoIdent, pageNumber);
+      return queryPullRequestComments(repoIdent, page);
+    },
+    (pr) => !('pull_request' in pr),
+  );
 }
 
 async function queryPullRequestPage(

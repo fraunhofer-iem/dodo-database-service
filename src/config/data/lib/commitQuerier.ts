@@ -1,11 +1,20 @@
-import { OCTOKIT } from '../../../lib';
-import { RepositoryIdentifier } from '../../repositories/model';
-import { Commit } from '../model';
+import { Commit } from 'src/entities/commits/model';
+import { RepositoryIdentifier } from 'src/entities/repositories/model';
+import { OCTOKIT } from 'src/lib';
+import { querier } from './querier';
 
-export async function queryCommits(
+export async function* commitQuerier(repoIdent: RepositoryIdentifier) {
+  yield* querier<Commit>(
+    repoIdent,
+    queryCommitPage,
+    (commit) => 'author' in commit,
+  );
+}
+
+async function queryCommitPage(
   repoIdent: RepositoryIdentifier,
   pageNumber: number,
-): Promise<Commit[]> {
+) {
   const { owner, repo } = repoIdent;
   return OCTOKIT.rest.repos
     .listCommits({

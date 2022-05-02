@@ -19,4 +19,5 @@ export interface Issue {
   node_id: string;
   events: IssueEvent[];
   closed_by?: User;
+  author_association: string;
 }

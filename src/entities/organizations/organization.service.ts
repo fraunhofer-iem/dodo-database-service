@@ -26,7 +26,7 @@ export class OrganizationService {
     // TODO: this can be done in parallel and there should be no awaits
     // necessary. will keep them for now for better testability and
     // more stability in local runs.
-    await this.addRepos(owner, id, repoNames);
+    // await this.addRepos(owner, id, repoNames);
     await this.addOrgaMembers(id, owner);
   }
 
@@ -168,27 +168,27 @@ export class OrganizationService {
     }
   }
 
-  private async addRepos(
-    owner: string,
-    id: string,
-    repoNames?: string[],
-    pageNumber = 1,
-  ) {
-    const repos = await queryRepos(owner, pageNumber, repoNames);
+  // private async addRepos(
+  //   owner: string,
+  //   id: string,
+  //   repoNames?: string[],
+  //   pageNumber = 1,
+  // ) {
+  //   const repos = await queryRepos(owner, pageNumber, repoNames);
 
-    for (const repo of repos) {
-      this.logger.log(`initializing repo ${repo.name}`);
-      const currRepos = await this.repoService.initializeRepository({
-        owner: owner,
-        repo: repo.name,
-      });
-      updateArray(this.orgModel, id, { repositories: currRepos });
-    }
+  //   for (const repo of repos) {
+  //     this.logger.log(`initializing repo ${repo.name}`);
+  //     const currRepos = await this.repoService.initializeRepository({
+  //       owner: owner,
+  //       repo: repo.name,
+  //     });
+  //     updateArray(this.orgModel, id, { repositories: currRepos });
+  //   }
 
-    if (repos.length == 100) {
-      this.addRepos(owner, id, repoNames, pageNumber + 1);
-    }
-  }
+  //   if (repos.length == 100) {
+  //     this.addRepos(owner, id, repoNames, pageNumber + 1);
+  //   }
+  // }
 
   private async addOrgaMembers(id: string, owner: string, pageNumber = 1) {
     const orgMembers: User[] = await queryMembers(owner, pageNumber);

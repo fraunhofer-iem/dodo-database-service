@@ -1,20 +1,18 @@
 import { OCTOKIT } from '../../../lib';
-import { RepositoryIdentifier } from '../../repositories/model';
-import { Issue } from '../model';
-import { Label } from '../../labels/model';
+import { RepositoryIdentifier } from '../../../entities/repositories/model';
+import { Issue } from '../../../entities/issues/model';
+import { Label } from '../../../entities/labels/model';
+import { querier } from './querier';
 
 export async function* issueQuerier(repoIdent: RepositoryIdentifier) {
-  let page: Issue[] = [];
-  let pageNumber = 1;
-
-  do {
-    page = await queryIssuePage(repoIdent, pageNumber);
-    yield* page.filter((issue) => !('pull_request' in issue));
-    pageNumber += 1;
-  } while (page.length == 100);
+  yield* querier<Issue>(
+    repoIdent,
+    queryIssuePage,
+    (issue) => !('pull_request' in issue),
+  );
 }
 
-async function queryIssuePage(
+export async function queryIssuePage(
   repoIdent: RepositoryIdentifier,
   pageNumber: number,
 ) {
