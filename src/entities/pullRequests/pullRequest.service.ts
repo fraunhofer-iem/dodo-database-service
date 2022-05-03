@@ -1,11 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model } from 'mongoose';
-import { retrieveDocument } from 'src/lib';
+import { AnyKeys, FilterQuery, Model } from 'mongoose';
+import { documentExists, retrieveDocument } from 'src/lib';
 import { PullRequest } from './model';
 import {
   PullRequestDocument,
-  PullRequest as PullRequestM,
+  PullRequest as PullRequestModel,
 } from './model/schemas';
 
 @Injectable()
@@ -13,7 +13,7 @@ export class PullRequestService {
   private readonly logger = new Logger(PullRequestService.name);
 
   constructor(
-    @InjectModel(PullRequestM.name)
+    @InjectModel(PullRequestModel.name)
     private readonly pullRequestModel: Model<PullRequestDocument>,
   ) {}
 
@@ -37,7 +37,14 @@ export class PullRequestService {
     }
   }
 
-  public async create(json: PullRequest): Promise<PullRequestDocument> {
+  public async create(
+    json: AnyKeys<PullRequest>,
+  ): Promise<PullRequestDocument> {
+    if (
+      await documentExists(this.pullRequestModel, { node_id: json.node_id })
+    ) {
+      throw new Error('PullRequest does already exist');
+    }
     return this.pullRequestModel.create(json);
   }
 }

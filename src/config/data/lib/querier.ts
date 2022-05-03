@@ -14,5 +14,6 @@ export async function* querier<T>(
   do {
     page = await queryPage(repoIdent, pageNumber);
     yield* page.filter(predicate);
+    pageNumber += 1;
   } while (page.length == 100);
 }

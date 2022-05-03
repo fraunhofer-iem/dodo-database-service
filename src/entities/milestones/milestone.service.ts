@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model } from 'mongoose';
-import { retrieveDocument } from '../../lib';
+import { AnyKeys, FilterQuery, Model } from 'mongoose';
+import { documentExists, retrieveDocument } from '../../lib';
 import { Milestone, MilestoneDocument } from './model/schemas';
 
 @Injectable()
@@ -33,7 +33,10 @@ export class MilestoneService {
     }
   }
 
-  public async create(json: Milestone): Promise<MilestoneDocument> {
+  public async create(json: AnyKeys<Milestone>): Promise<MilestoneDocument> {
+    if (await documentExists(this.milestoneModel, { node_id: json.node_id })) {
+      throw new Error('Milestone does already exist');
+    }
     return this.milestoneModel.create(json);
   }
 }

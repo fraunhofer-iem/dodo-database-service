@@ -51,7 +51,7 @@ export class OrganizationController {
     @Query('to') to?: string,
     @Query('repos') repos: string[] = [],
     @Query('kpis') kpis: string[] = [],
-    @Query('data') data: boolean = false,
+    @Query('data') data = false,
   ) {
     this.logger.log(`Received query for KPIs of repositories of org ${id}`);
     return this.orgService.getKpis(id, since, to, repos, kpis, data);

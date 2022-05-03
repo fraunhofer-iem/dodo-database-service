@@ -1,9 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
-import { RepositoryModule } from './entities/repositories/repository.module';
-import { OrganizationModule } from './entities/organizations/organization.module';
-import { KPI, KpiSchema } from './entities/kpis/model/schemas';
 import { KpiModule } from './kpi/kpi.module';
 import { DodoConfigModule } from './config/dodoConfig.module';
 
@@ -52,9 +49,7 @@ import { DodoConfigModule } from './config/dodoConfig.module';
       inject: [ConfigService],
     }),
     DodoConfigModule,
-    // RepositoryModule,
     // KpiModule,
-    // OrganizationModule,
   ],
   controllers: [],
   providers: [],

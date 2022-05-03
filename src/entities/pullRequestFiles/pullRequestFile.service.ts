@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model } from 'mongoose';
+import { AnyKeys, FilterQuery, Model } from 'mongoose';
 import { documentExists, retrieveDocument } from 'src/lib';
 import { PullRequestFileDocument, PullRequestFile } from './model/schemas';
 
@@ -35,7 +35,9 @@ export class PullRequestFileService {
     }
   }
 
-  public async create(json: PullRequestFile): Promise<PullRequestFileDocument> {
+  public async create(
+    json: AnyKeys<PullRequestFile>,
+  ): Promise<PullRequestFileDocument> {
     if (await documentExists(this.repoFileModel, { sha: json.sha })) {
       throw new Error('PullRequestFile does already exist');
     }

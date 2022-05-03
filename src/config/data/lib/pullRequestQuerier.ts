@@ -7,7 +7,7 @@ export async function* pullRequestQuerier(repoIdent: RepositoryIdentifier) {
   yield* querier<PullRequest>(
     repoIdent,
     async (repoIdent, pageNumber) => {
-      let page = await queryPullRequestPage(repoIdent, pageNumber);
+      const page = await queryPullRequestPage(repoIdent, pageNumber);
       return queryPullRequestComments(repoIdent, page);
     },
     (pr) => !('pull_request' in pr),

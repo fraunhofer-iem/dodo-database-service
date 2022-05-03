@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model } from 'mongoose';
-import { retrieveDocument } from '../../lib';
+import { AnyKeys, FilterQuery, Model } from 'mongoose';
+import { documentExists, retrieveDocument } from '../../lib';
 import { Label, LabelDocument } from './model/schemas';
 
 @Injectable()
@@ -33,7 +33,10 @@ export class LabelService {
     }
   }
 
-  public async create(json: Label): Promise<LabelDocument> {
+  public async create(json: AnyKeys<Label>): Promise<LabelDocument> {
+    if (await documentExists(this.labelModel, { node_id: json.node_id })) {
+      throw new Error('Label does already exist');
+    }
     return this.labelModel.create(json);
   }
 }

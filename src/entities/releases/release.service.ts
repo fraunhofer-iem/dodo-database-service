@@ -2,16 +2,26 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { AnyKeys, FilterQuery, Model } from 'mongoose';
 import { documentExists, retrieveDocument } from '../../lib';
-import { Release as ReleaseModel, ReleaseDocument } from './model/schemas';
+import { Release, ReleaseDocument } from './model/schemas';
 
 @Injectable()
 export class ReleaseService {
   private readonly logger = new Logger(ReleaseService.name);
 
   constructor(
-    @InjectModel(ReleaseModel.name)
+    @InjectModel(Release.name)
     private readonly releaseModel: Model<ReleaseDocument>,
   ) {}
+
+  public async readOrCreate(json: Release): Promise<ReleaseDocument> {
+    let release: ReleaseDocument;
+    try {
+      release = await this.read({ node_id: json.node_id });
+    } catch {
+      release = await this.create(json);
+    }
+    return release;
+  }
 
   public async read(
     filter: FilterQuery<ReleaseDocument>,
@@ -25,7 +35,7 @@ export class ReleaseService {
     return release;
   }
 
-  public async create(json: AnyKeys<ReleaseDocument>) {
+  public async create(json: AnyKeys<Release>) {
     if (await documentExists(this.releaseModel, { node_id: json.node_id })) {
       throw new Error('Release does already exist');
     }

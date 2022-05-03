@@ -23,8 +23,8 @@ export function getCoupling(
       changedFiles: string[];
     }[];
   }[],
-  couplingSize: number = 3,
-  minOccurences: number = 3,
+  couplingSize = 3,
+  minOccurences = 3,
 ) {
   if (!intervals) {
     return undefined;
@@ -98,7 +98,7 @@ function calculateAverage(map: CombinationMap) {
   return sum / map.size;
 }
 
-function* subsets(set: string[], size: number = 1) {
+function* subsets(set: string[], size = 1) {
   if (size > set.length) {
     return [];
   }

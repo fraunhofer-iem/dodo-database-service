@@ -18,7 +18,7 @@ export class KpiController {
     @Param('id') id: string,
     @Query('owner') owner: string,
     @Query('to')
-    to: string = `${new Date().getUTCFullYear()}-${
+    to = `${new Date().getUTCFullYear()}-${
       new Date().getUTCMonth() + 1
     }-${new Date().getUTCDate()}`,
     @Query('repo') repo?: string,

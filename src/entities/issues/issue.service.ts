@@ -12,6 +12,16 @@ export class IssueService {
     private readonly issueModel: Model<IssueDocument>,
   ) {}
 
+  public async readOrCreate(json: Issue): Promise<IssueDocument> {
+    let issue: IssueDocument;
+    try {
+      issue = await this.read({ node_id: json.node_id });
+    } catch {
+      issue = await this.create(json);
+    }
+    return issue;
+  }
+
   public async read(
     filter: FilterQuery<IssueDocument>,
   ): Promise<IssueDocument> {

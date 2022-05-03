@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Repository, RepositorySchema } from '../repositories/model/schemas';
 import { CommitService } from './commit.service';
 import { Commit, CommitSchema } from './model/schemas';
 import { UserModule } from '../users/user.module';

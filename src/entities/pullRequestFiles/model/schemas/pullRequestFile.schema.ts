@@ -1,6 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Schema as mSchema } from 'mongoose';
-import { PullRequest } from '../../../pullRequests/model/schemas';
+import { Document } from 'mongoose';
 
 /**
  * For further information, see: https://docs.github.com/en/rest/reference/pulls#list-pull-requests-files

@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model } from 'mongoose';
+import { AnyKeys, FilterQuery, Model } from 'mongoose';
 import { documentExists, retrieveDocument } from 'src/lib';
 import {
-  RepositoryFile as RepositoryFileSchema,
+  RepositoryFile as RepositoryFileModel,
   RepositoryFileDocument,
 } from './model/schemas/repositoryFile.schema';
 import { RepositoryFile } from './model/RepositoryFile';
@@ -13,7 +13,7 @@ export class RepositoryFileService {
   private readonly logger = new Logger(RepositoryFileService.name);
 
   constructor(
-    @InjectModel(RepositoryFileSchema.name)
+    @InjectModel(RepositoryFileModel.name)
     private readonly repoFileModel: Model<RepositoryFileDocument>,
   ) {}
 
@@ -39,7 +39,9 @@ export class RepositoryFileService {
     }
   }
 
-  public async create(json: RepositoryFile): Promise<RepositoryFileDocument> {
+  public async create(
+    json: AnyKeys<RepositoryFile>,
+  ): Promise<RepositoryFileDocument> {
     if (await documentExists(this.repoFileModel, { path: json.path })) {
       throw new Error('RepositoryFile does already exist');
     }

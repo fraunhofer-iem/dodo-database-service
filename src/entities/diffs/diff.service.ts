@@ -13,6 +13,16 @@ export class DiffService {
     private readonly diffModel: Model<DiffDocument>,
   ) {}
 
+  public async readOrCreate(json: Diff): Promise<DiffDocument> {
+    let diff: DiffDocument;
+    try {
+      diff = await this.read({ pullRequest: json.pullRequest });
+    } catch {
+      diff = await this.create(json);
+    }
+    return diff;
+  }
+
   public async read(filter: FilterQuery<DiffDocument>): Promise<DiffDocument> {
     let diff: DiffDocument;
     try {
@@ -23,7 +33,7 @@ export class DiffService {
     return diff;
   }
 
-  public async create(json: AnyKeys<DiffDocument>) {
+  public async create(json: AnyKeys<Diff>) {
     if (
       await documentExists(this.diffModel, { pullRequest: json.pullRequest })
     ) {

@@ -5,7 +5,7 @@ import { RepositoryService } from '../repositories/repository.service';
 import { updateArray, documentExists } from '../../lib';
 import { User } from '../users/model';
 import { Organization, OrganizationDocument } from './model/schemas';
-import { queryMembers, queryRepos } from './lib';
+import { queryMembers } from './lib';
 import { KpiService } from 'src/kpi/kpi.service';
 import { Intervals } from 'src/kpi/statistics/lib';
 
