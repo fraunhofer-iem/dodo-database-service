@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model } from 'mongoose';
+import { Aggregate, FilterQuery, Model } from 'mongoose';
 import { documentExists, retrieveDocument } from 'src/lib';
 import { DodoTarget, DodoTargetDocument } from './model/schemas';
 
@@ -23,12 +23,6 @@ export class DodoTargetService {
     return target;
   }
 
-  public async readAll(
-    filter: FilterQuery<DodoTargetDocument> = {},
-  ): Promise<DodoTargetDocument[]> {
-    return this.targetModel.aggregate().match(filter).exec();
-  }
-
   public async read(
     filter: FilterQuery<DodoTargetDocument>,
   ): Promise<DodoTargetDocument> {
@@ -45,5 +39,11 @@ export class DodoTargetService {
       throw new Error('Target does already exist');
     }
     return this.targetModel.create(json);
+  }
+
+  public preAggregate(
+    filter: FilterQuery<DodoTargetDocument> = {},
+  ): Aggregate<any[]> {
+    return this.targetModel.aggregate().match(filter);
   }
 }

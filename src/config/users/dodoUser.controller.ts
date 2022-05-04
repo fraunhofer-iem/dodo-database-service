@@ -7,12 +7,12 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
-import { DodoUser } from './users/model';
-import { DodoUserService } from './users/dodoUser.service';
+import { DodoUser } from './model';
+import { DodoUserService } from './dodoUser.service';
 
 @Controller('api/users')
-export class DodoConfigController {
-  private readonly logger = new Logger(DodoConfigController.name);
+export class DodoUserController {
+  private readonly logger = new Logger(DodoUserController.name);
 
   constructor(private userService: DodoUserService) {}
 

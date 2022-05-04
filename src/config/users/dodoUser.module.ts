@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { DodoTargetModule } from '../targets/dodoTarget.module';
 import { DodoTargetService } from '../targets/dodoTarget.service';
+import { DodoUserController } from './dodoUser.controller';
 import { DodoUserService } from './dodoUser.service';
 import { DodoUser, DodoUserSchema } from './model/schemas';
 
@@ -31,6 +32,7 @@ import { DodoUser, DodoUserSchema } from './model/schemas';
     ),
   ],
   providers: [DodoUserService],
+  controllers: [DodoUserController],
   exports: [DodoUserService],
 })
 export class DodoUserModule {}
