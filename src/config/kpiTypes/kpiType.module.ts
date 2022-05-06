@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { KpiTypeController } from './kpiType.controller';
 import { KpiTypeService } from './kpiType.service';
 import { KpiType, KpiTypeSchema } from './model/schemas';
 
@@ -11,6 +12,7 @@ import { KpiType, KpiTypeSchema } from './model/schemas';
     ),
   ],
   providers: [KpiTypeService],
+  controllers: [KpiTypeController],
   exports: [KpiTypeService],
 })
 export class KpiTypeModule {}

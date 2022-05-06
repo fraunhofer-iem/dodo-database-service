@@ -1,7 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model } from 'mongoose';
+import { Aggregate, FilterQuery, Model } from 'mongoose';
 import { documentExists, retrieveDocument } from 'src/lib';
+import { childrenLookup } from './lib';
 import { KpiType, KpiTypeDocument } from './model/schemas';
 
 @Injectable()
@@ -30,6 +31,7 @@ export class KpiTypeService {
   }
 
   public async create(json: KpiType): Promise<KpiTypeDocument> {
+    this.logger.debug('Storing in DB');
     if (
       await documentExists(this.kpiTypeModel, {
         id: json.id,
@@ -40,9 +42,30 @@ export class KpiTypeService {
     return this.kpiTypeModel.create(json);
   }
 
-  public async preAggregate(
-    filter: FilterQuery<KpiTypeDocument> = {},
-  ): Promise<KpiTypeDocument[]> {
-    return this.kpiTypeModel.aggregate().match(filter);
+  public preAggregate(
+    filter: FilterQuery<KpiTypeDocument> = undefined,
+  ): Aggregate<any[]> {
+    const pipeline = this.kpiTypeModel.aggregate();
+    if (filter) {
+      pipeline.match(filter);
+    }
+    pipeline.lookup(childrenLookup);
+    pipeline.unwind({ path: '$children', preserveNullAndEmptyArrays: true });
+    pipeline.group({
+      _id: '$_id',
+      data: { $first: '$$ROOT' },
+      children: {
+        $push: '$children.id',
+      },
+    });
+    pipeline.addFields({
+      'data.children': '$children',
+    });
+    pipeline.replaceRoot('$data');
+    pipeline.project({
+      _id: 0,
+      __v: 0,
+    });
+    return pipeline;
   }
 }

@@ -18,20 +18,14 @@ import { Kpi, KpiSchema } from './model/schemas';
           useFactory: (
             targetService: DodoTargetService,
             kpiTypeService: KpiTypeService,
-            // kpiService: KpiService,
           ) => {
             const schema = KpiSchema;
             schema.pre<Kpi>('validate', async function (this: Kpi) {
               this.id = `${this.kpiType.id}@${this.target.owner}/${this.target.repo}`;
               this.target = (await targetService.readOrCreate(this.target))._id;
               this.kpiType = (
-                await kpiTypeService.readOrCreate(this.kpiType)
+                await kpiTypeService.read({ id: this.kpiType.id })
               )._id;
-              // for (let i = 0; i < this.children.length; i++) {
-              //   this.children[i] = (
-              //     await kpiService.readOrCreate(this.children[i])
-              //   )._id;
-              // }
             });
             return schema;
           },
@@ -41,6 +35,7 @@ import { Kpi, KpiSchema } from './model/schemas';
       'config',
     ),
     DodoTargetModule,
+    KpiTypeModule,
   ],
   providers: [KpiService],
   controllers: [KpiController],

@@ -41,7 +41,7 @@ export class KpiService {
   }
 
   public preAggregate(
-    filter: FilterQuery<KpiDocument> = {},
+    filter: FilterQuery<KpiDocument> = undefined,
     options: { target?: boolean; children?: boolean },
   ): Aggregate<any[]> {
     const pipeline = this.kpiModel.aggregate();
@@ -50,10 +50,10 @@ export class KpiService {
     }
     pipeline.lookup(kpiTypeLookup);
     pipeline.addFields({
-      id: { $arrayElemAt: ['$kpiType.id', 0] },
+      type: { $arrayElemAt: ['$kpiType.id', 0] },
       name: { $arrayElemAt: ['$kpiType.name', 0] },
     });
-    if (options.target) {
+    if (options.target === true) {
       pipeline.lookup(targetLookup);
       pipeline.addFields({
         owner: { $arrayElemAt: ['$target.owner', 0] },
@@ -64,7 +64,7 @@ export class KpiService {
     }
     if (options.children) {
       pipeline.lookup(childrenLookup);
-      pipeline.unwind('$children');
+      pipeline.unwind({ path: '$children', preserveNullAndEmptyArrays: true });
       pipeline.group({
         _id: '$_id',
         data: { $first: '$$ROOT' },

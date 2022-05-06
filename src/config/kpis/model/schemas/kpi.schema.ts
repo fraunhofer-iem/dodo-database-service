@@ -18,7 +18,7 @@ export class Kpi {
   children: Kpi[];
 
   @Prop({ type: Object })
-  params?: { [key: string]: any[] };
+  params?: { [key: string]: any[] | any };
 }
 
 export type KpiDocument = Kpi & Document;

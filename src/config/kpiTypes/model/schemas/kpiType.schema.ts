@@ -8,6 +8,9 @@ export class KpiType {
 
   @Prop()
   name: string;
+
+  @Prop([{ type: mSchema.Types.Mixed }])
+  children: KpiType[];
 }
 
 export type KpiTypeDocument = KpiType & Document;
