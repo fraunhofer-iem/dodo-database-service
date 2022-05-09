@@ -1,7 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { AnyKeys, FilterQuery, Model } from 'mongoose';
+import { AnyKeys, FilterQuery, Model, Aggregate } from 'mongoose';
 import { documentExists, retrieveDocument } from '../../lib';
+import { authorLookup, filesLookup, repoLookup } from './lib';
 import { Commit, CommitDocument } from './model/schemas';
 
 @Injectable()
@@ -40,5 +41,54 @@ export class CommitService {
       throw new Error('Commit does already exist');
     }
     return this.commitModel.create(json);
+  }
+
+  public preAggregate(
+    filter: FilterQuery<Commit> = undefined,
+    options: {
+      author?: boolean;
+      repo?: boolean;
+      files?: boolean;
+      since?: Date | string;
+      to?: Date | string;
+    },
+  ): Aggregate<any> {
+    const pipeline = this.commitModel.aggregate();
+    if (filter) {
+      pipeline.match(filter);
+    }
+    pipeline.addFields({
+      timestamp: {
+        $dateFromString: {
+          dateString: '$timestamp',
+        },
+      },
+    });
+    if (options.since) {
+      pipeline.match({
+        timestamp: { $gte: new Date(options.since) },
+      });
+    }
+    if (options.to) {
+      pipeline.match({
+        timestamp: { $lte: new Date(options.to) },
+      });
+    }
+    if (options.author) {
+      pipeline.lookup(authorLookup);
+    } else {
+      pipeline.project({ author: 0 });
+    }
+    if (options.files) {
+      pipeline.lookup(filesLookup);
+    } else {
+      pipeline.project({ files: 0 });
+    }
+    if (options.repo) {
+      pipeline.lookup(repoLookup);
+    } else {
+      pipeline.project({ repo: 0 });
+    }
+    return pipeline;
   }
 }

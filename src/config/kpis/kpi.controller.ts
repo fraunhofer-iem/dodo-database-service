@@ -13,6 +13,7 @@ import { DodoTargetDocument } from '../targets/model/schemas';
 import { FilterQuery } from 'mongoose';
 import { KpiCreate } from './model';
 import { KpiTypeService } from '../kpiTypes/kpiType.service';
+import { KpiRunService } from '../kpiRuns/kpiRun.service';
 
 @Controller('api/kpis')
 export class KpiController {
@@ -22,6 +23,7 @@ export class KpiController {
     private kpiService: KpiService,
     private kpiTypeService: KpiTypeService,
     private targetService: DodoTargetService,
+    private kpiRunService: KpiRunService,
   ) {}
 
   @Get()
@@ -75,16 +77,25 @@ export class KpiController {
       const kpiType = await this.kpiTypeService.read({ id: kpi.type });
       const children = [];
       for (const child of kpiType.children) {
-        const instance = await this.kpiService.read({ kpiType: child });
-        children.push(instance._id);
+        const instance = await this.kpiService.read({
+          kpiType: child,
+          target: target._id,
+        });
+        children.push(instance);
       }
       const currentKpi = await this.kpiService.create({
         kpiType: kpiType,
         target: target,
-        children: children,
+        children: children.map((child) => child._id),
+      });
+      this.kpiRunService.calculate({
+        _id: currentKpi._id,
+        target,
+        kpiType,
+        children,
+        id: currentKpi.id,
       });
       return await this.readKpi(currentKpi.id);
-      // after registration, calculate the KPI (do not wait for the result though)
     } catch (err) {
       this.logger.debug(err.message);
       return 'Requirements not fulfilled';

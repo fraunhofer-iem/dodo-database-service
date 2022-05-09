@@ -2,8 +2,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Aggregate, FilterQuery, Model } from 'mongoose';
 import { ReleaseService } from 'src/entities/releases/release.service';
+import { ActiveCodeService } from 'src/kpi/statistics/activeCode/activeCode.service';
 import { documentExists, retrieveDocument } from 'src/lib';
-import { Kpi } from '../kpis/model';
+import { Kpi, KpiDocument } from '../kpis/model/schemas';
 import { KpiRun, KpiRunDocument } from './model/schemas';
 
 @Injectable()
@@ -13,17 +14,60 @@ export class KpiRunService {
   constructor(
     @InjectModel(KpiRun.name) private kpiRunModel: Model<KpiRunDocument>,
     private releaseService: ReleaseService,
+    private activeCodeService: ActiveCodeService,
   ) {}
 
-  public async calculate(kpi?: Kpi) {
-    const pipeline = this.releaseService.preAggregate();
+  public async calculate(kpi?: Kpi & { _id?: any }) {
+    const pipeline = this.releaseService.preAggregate(undefined, {
+      files: true,
+    });
     pipeline.sort({ published_at: 1 });
     const releases = await pipeline.exec();
 
     let since = undefined;
     for (const release of releases) {
-      // get children and their runs
-      //calculationService(since, release.published_at)
+      const data: any = {};
+      for (const child of kpi.children) {
+        data[child.id.split('@')[0]] = (
+          await this.read({
+            release: release._id,
+            //@ts-ignore
+            kpi: child._id,
+          })
+        ).value;
+      }
+      let value: any[] | any;
+      switch (kpi.kpiType.id) {
+        case 'changesPerFile':
+          value = this.activeCodeService.changesPerFile(
+            release.repo,
+            since,
+            release.published_at,
+            release.files,
+          );
+          break;
+        case 'changesPerRepo':
+          value = this.activeCodeService.changesPerRepo(data);
+          break;
+        case 'avgChangesPerFile':
+          value = this.activeCodeService.avgChangesPerFile(data);
+          break;
+        case 'stdChangesPerFile':
+          value = this.activeCodeService.stdChangesPerFile(data);
+          break;
+        case 'activeCode':
+          value = this.activeCodeService.activeCode(data);
+          break;
+        default:
+          break;
+      }
+      this.create({
+        kpi: kpi._id,
+        release,
+        since,
+        to: release.published_at,
+        value: await value,
+      });
       since = release.published_at;
     }
   }

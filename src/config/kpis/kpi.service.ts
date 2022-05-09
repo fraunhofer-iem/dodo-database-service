@@ -28,6 +28,11 @@ export class KpiService {
     return retrieveDocument(this.kpiModel, filter);
   }
 
+  public async *readAll(filter: FilterQuery<KpiDocument>) {
+    const kpis = await this.kpiModel.aggregate().match(filter).exec();
+    yield* kpis;
+  }
+
   public async create(json: Omit<Kpi, 'id'>): Promise<KpiDocument> {
     if (
       await documentExists(this.kpiModel, {
@@ -42,7 +47,7 @@ export class KpiService {
 
   public preAggregate(
     filter: FilterQuery<KpiDocument> = undefined,
-    options: { target?: boolean; children?: boolean },
+    options: { _id?: boolean; target?: boolean; children?: boolean },
   ): Aggregate<any[]> {
     const pipeline = this.kpiModel.aggregate();
     if (filter) {
@@ -82,7 +87,7 @@ export class KpiService {
     pipeline.project({
       target: 0,
       kpiType: 0,
-      _id: 0,
+      _id: options._id ? 1 : 0,
       __v: 0,
     });
 

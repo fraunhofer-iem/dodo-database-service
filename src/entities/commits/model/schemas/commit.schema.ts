@@ -24,7 +24,7 @@ export class Commit {
   @Prop()
   message: string;
 
-  @Prop({ type: mSchema.Types.Mixed, ref: 'Repo' })
+  @Prop({ type: mSchema.Types.Mixed, ref: 'Repository' })
   repo: Repository;
 
   @Prop([{ type: mSchema.Types.Mixed, ref: 'DiffFile' }])

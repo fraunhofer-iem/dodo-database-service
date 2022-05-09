@@ -26,7 +26,7 @@ export class Release {
   @Prop()
   published_at: string;
 
-  @Prop({ type: mSchema.Types.Mixed, ref: 'Repo' })
+  @Prop({ type: mSchema.Types.Mixed, ref: 'Repository' })
   repo: Repository;
 
   @Prop({ type: mSchema.Types.Mixed, ref: 'RepositoryFiles' })

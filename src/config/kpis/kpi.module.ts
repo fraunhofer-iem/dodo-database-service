@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { KpiRunModule } from '../kpiRuns/kpiRun.module';
 import { KpiTypeModule } from '../kpiTypes/kpiType.module';
 import { KpiTypeService } from '../kpiTypes/kpiType.service';
 import { DodoTargetModule } from '../targets/dodoTarget.module';
@@ -36,6 +37,7 @@ import { Kpi, KpiSchema } from './model/schemas';
     ),
     DodoTargetModule,
     KpiTypeModule,
+    KpiRunModule,
   ],
   providers: [KpiService],
   controllers: [KpiController],
