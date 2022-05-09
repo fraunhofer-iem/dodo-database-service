@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { CommitService } from 'src/entities/commits/commit.service';
+import { DiffFile } from 'src/entities/diffFiles/model/schemas';
 import { DiffService } from 'src/entities/diffs/diff.service';
 import { Diff } from 'src/entities/diffs/model';
 import { IssueService } from 'src/entities/issues/issue.service';
@@ -16,6 +17,7 @@ import {
   getRepoFiles,
   getTag,
 } from './lib';
+import { commitFileQuerier } from './lib/commitFileQuerier';
 
 @Injectable()
 export class DataExtractionService {
@@ -44,9 +46,14 @@ export class DataExtractionService {
   public async extractCommits(repo: RepositoryDocument, target: DodoTarget) {
     for await (const commit of commitQuerier(target)) {
       this.logger.log(`Commit ${commit.url}`);
+      let files: DiffFile[] = [];
+      for await (const file of commitFileQuerier(target, commit)) {
+        files.push(file);
+      }
       const commitDocument = await this.commitService.create({
         ...commit,
         repo,
+        files,
       });
       repo.commits.push(commitDocument);
       await repo.save();
