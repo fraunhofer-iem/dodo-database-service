@@ -73,7 +73,7 @@ export class DataExtractionService {
       this.logger.log(`Pull request ${pullRequest.number}`);
       const diff: Diff = {
         pullRequest: pullRequest,
-        pullRequestFiles: await getPullRequestFiles(target, pullRequest),
+        files: await getPullRequestFiles(target, pullRequest),
         repositoryFiles: await getRepoFiles(target, pullRequest.base.sha),
       };
       const diffDocument = await this.diffService.create(diff);

@@ -17,7 +17,7 @@ import {
   issuesUserLookup,
   releasesLookup,
   diffsPullRequestLookup,
-  diffsPullRequestFilesLookup,
+  diffsDiffFilesLookup,
   diffsRepositoryFilesLookup,
 } from './lib';
 
@@ -85,7 +85,7 @@ export class RepositoryService {
         to?: string;
       };
       diffs?: {
-        pullRequestFiles?: boolean;
+        diffFiles?: boolean;
         repositoryFiles?: boolean;
         pullRequest?: {
           since?: string;
@@ -334,8 +334,8 @@ export class RepositoryService {
           });
         }
       }
-      if (options.diffs.pullRequestFiles) {
-        pipeline.lookup(diffsPullRequestFilesLookup);
+      if (options.diffs.diffFiles) {
+        pipeline.lookup(diffsDiffFilesLookup);
       }
       if (options.diffs.repositoryFiles) {
         pipeline.lookup(diffsRepositoryFilesLookup);

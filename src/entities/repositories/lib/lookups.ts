@@ -82,11 +82,11 @@ export const diffsPullRequestLookup = {
   as: 'diffs.pullRequest',
 };
 
-export const diffsPullRequestFilesLookup = {
-  from: 'pullrequestfiles',
-  localField: 'diffs.pullRequestFiles',
+export const diffsDiffFilesLookup = {
+  from: 'difffiles',
+  localField: 'diffs.files',
   foreignField: '_id',
-  as: 'diffs.pullRequestFiles',
+  as: 'diffs.files',
 };
 
 export const diffsRepositoryFilesLookup = {

@@ -21,7 +21,7 @@ export class PullRequestComplexityService {
       {
         diffs: {
           repositoryFiles: true,
-          pullRequestFiles: true,
+          diffFiles: true,
           pullRequest: { since: since, to: to },
         },
       },

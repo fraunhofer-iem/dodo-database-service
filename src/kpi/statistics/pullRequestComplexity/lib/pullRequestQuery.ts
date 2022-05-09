@@ -25,12 +25,12 @@ export function pullRequestQuery(
   return query
     .unwind('diffs')
     .unwind('diffs.repositoryFiles')
-    .unwind('diffs.pullRequestFiles')
+    .unwind('diffs.files')
     .group({
       _id: '$diffs.pullRequest._id',
       pullRequestNumber: { $first: '$diffs.pullRequest.number' },
       comments: { $first: '$diffs.pullRequest.comments' },
-      changedFiles: { $addToSet: '$diffs.pullRequestFiles' },
+      changedFiles: { $addToSet: '$diffs.files' },
       repoFiles: { $addToSet: '$diffs.repositoryFiles.path' },
     })
     .project({

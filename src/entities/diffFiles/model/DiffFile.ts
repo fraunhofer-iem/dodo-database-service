@@ -1,4 +1,4 @@
-export interface PullRequestFile {
+export interface DiffFile {
   sha: string;
   filename: string;
   status: string;

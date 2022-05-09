@@ -1,4 +1,4 @@
-import { PullRequestFile } from 'src/entities/pullRequestFiles/model';
+import { DiffFile } from 'src/entities/diffFiles/model';
 import { PullRequest } from 'src/entities/pullRequests/model/schemas';
 import { RepositoryIdentifier } from 'src/entities/repositories/model';
 import { OCTOKIT } from '../../../lib';
@@ -7,8 +7,8 @@ export async function getPullRequestFiles(
   repoIdent: RepositoryIdentifier,
   pullRequest: PullRequest,
 ) {
-  const pullRequestFiles: PullRequestFile[] = [];
-  let page: PullRequestFile[] = [];
+  const pullRequestFiles: DiffFile[] = [];
+  let page: DiffFile[] = [];
   let pageNumber = 1;
 
   do {

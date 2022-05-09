@@ -6,7 +6,7 @@ import {
 } from '../../src/entities/repositories/model';
 import { Diff } from '../../src/entities/diffs/model';
 import { PullRequest } from '../../src/entities/pullRequests/model';
-import { PullRequestFile } from '../../src/entities/pullRequestFiles/model';
+import { DiffFile } from '../../src/entities/diffFiles/model';
 import { RepositoryFile } from '../../src/entities/repositoryFiles/model';
 import { Release } from '../../src/entities/releases/model';
 
@@ -81,7 +81,7 @@ export class TestData {
       size: 1728,
       url: 'https://api.github.com/repos/octokit/rest.js/git/blobs/d2db58e4e9671ea66202334d586625b54b81ef6e',
     };
-    const pullReqFile1: PullRequestFile = {
+    const pullReqFile1: DiffFile = {
       sha: '5c6e897f38971591c0bfa1b32695dd924c638f07',
       filename: 'package-lock.json',
       status: 'added',
@@ -97,7 +97,7 @@ export class TestData {
       patch:
         '@@ -1797,12 +1797,22 @@\n       "integrity": "sha512-4RFU4li238jMJAzLgAwkBAw+4Loile5haQMQr+uhFq27BmyJXcXSKvoQKqh0agsZEiUlW6iSv3FAgvmGkur7OQ=="\n     },\n     "@octokit/plugin-rest-endpoint-methods": {\n-      "version": "5.0.0",\n-      "resolved": "https://registry.npmjs.org/@octokit/plugin-rest-endpoint-methods/-/plugin-rest-endpoint-methods-5.0.0.tgz",\n-      "integrity": "sha512-Jc7CLNUueIshXT+HWt6T+M0sySPjF32mSFQAK7UfAg8qGeRI6OM1GSBxDLwbXjkqy2NVdnqCedJcP1nC785JYg==",\n+      "version": "5.0.1",\n+      "resolved": "https://registry.npmjs.org/@octokit/plugin-rest-endpoint-methods/-/plugin-rest-endpoint-methods-5.0.1.tgz",\n+      "integrity": "sha512-vvWbPtPqLyIzJ7A4IPdTl+8IeuKAwMJ4LjvmqWOOdfSuqWQYZXq2CEd0hsnkidff2YfKlguzujHs/reBdAx8Sg==",\n       "requires": {\n-        "@octokit/types": "^6.13.0",\n+        "@octokit/types": "^6.13.1",\n         "deprecation": "^2.3.1"\n+      },\n+      "dependencies": {\n+        "@octokit/types": {\n+          "version": "6.13.1",\n+          "resolved": "https://registry.npmjs.org/@octokit/types/-/types-6.13.1.tgz",\n+          "integrity": "sha512-UF/PL0y4SKGx/p1azFf7e6j9lB78tVwAFvnHtslzOJ6VipshYks74qm9jjTEDlCyaTmbhbk2h3Run5l0CtCF6A==",\n+          "requires": {\n+            "@octokit/openapi-types": "^6.0.0"\n+          }\n+        }\n       }\n     },\n     "@octokit/request": {\n@@ -1840,6 +1850,18 @@\n         "@octokit/plugin-paginate-rest": "^2.6.2",\n         "@octokit/plugin-request-log": "^1.0.2",\n         "@octokit/plugin-rest-endpoint-methods": "5.0.0"\n+      },\n+      "dependencies": {\n+        "@octokit/plugin-rest-endpoint-methods": {\n+          "version": "5.0.0",\n+          "resolved": "https://registry.npmjs.org/@octokit/plugin-rest-endpoint-methods/-/plugin-rest-endpoint-methods-5.0.0.tgz",\n+          "integrity": "sha512-Jc7CLNUueIshXT+HWt6T+M0sySPjF32mSFQAK7UfAg8qGeRI6OM1GSBxDLwbXjkqy2NVdnqCedJcP1nC785JYg==",\n+          "dev": true,\n+          "requires": {\n+            "@octokit/types": "^6.13.0",\n+            "deprecation": "^2.3.1"\n+          }\n+        }\n       }\n     },\n     "@octokit/types": {',
     };
-    const pullReqFile1_1: PullRequestFile = {
+    const pullReqFile1_1: DiffFile = {
       sha: 'b418caa06a8fb646e16052520292e81a455199e1',
       filename: 'package.json',
       status: 'added',
@@ -113,7 +113,7 @@ export class TestData {
       patch:
         '@@ -35,7 +35,7 @@\n     "@octokit/core": "^3.2.3",\n     "@octokit/plugin-paginate-rest": "^2.6.2",\n     "@octokit/plugin-request-log": "^1.0.2",\n-    "@octokit/plugin-rest-endpoint-methods": "5.0.0"\n+    "@octokit/plugin-rest-endpoint-methods": "5.0.1"\n   },\n   "devDependencies": {\n     "@octokit/auth": "^3.0.1",',
     };
-    const pullReqFile1_2: PullRequestFile = {
+    const pullReqFile1_2: DiffFile = {
       sha: '4b5c6e08f39ff8bfd088d8462cf5ee91c25f4588',
       filename: 'test/smoke.test.ts',
       status: 'added',
@@ -132,7 +132,7 @@ export class TestData {
     const pullReqDiff1: Diff = {
       pullRequest: pullReq1,
       repositoryFiles: [repoFile1, repoFile1_1],
-      pullRequestFiles: [pullReqFile1, pullReqFile1_1, pullReqFile1_2],
+      files: [pullReqFile1, pullReqFile1_1, pullReqFile1_2],
     };
 
     // second pull request
@@ -178,7 +178,7 @@ export class TestData {
       size: 260,
       url: 'https://api.github.com/repos/octokit/action.js/git/blobs/6c8f804c41fe9b33d80f21117524543645a90f11',
     };
-    const pullReqFile2: PullRequestFile = {
+    const pullReqFile2: DiffFile = {
       sha: '6b370c52746a8b6b5653cbd183b6f19289da83e0',
       filename: 'package-lock.json',
       status: 'added',
@@ -194,7 +194,7 @@ export class TestData {
       patch:
         '@@ -1,6 +1,6 @@\n {\n   "name": "@octokit/action",\n-  "version": "0.0.0-semantically-released",\n+  "version": "0.0.0-development",\n   "lockfileVersion": 1,\n   "requires": true,\n   "dependencies": {\n@@ -1110,14 +1110,64 @@\n       }\n     },\n     "@octokit/core": {\n-      "version": "1.2.0",\n-      "resolved": "https://registry.npmjs.org/@octokit/core/-/core-1.2.0.tgz",\n-      "integrity": "sha512-Yr1wfnN/BBNiMw8Zajc2Z2+h9PQ05D5R/fyKVKDWoFvJNVR9SB5lefQYNPbVowNznCSv3ZEE9V/MdDR3YrmqBQ==",\n+      "version": "2.0.0",\n+      "resolved": "https://registry.npmjs.org/@octokit/core/-/core-2.0.0.tgz",\n+      "integrity": "sha512-FLeqvRomhlcHFw53lpAYp26K5sRdXGRcN8V6zWSxVMzEdASP+ryA6iPjPCH7ylZvJxK2US90iLCH4IV+XmgJcQ==",\n       "requires": {\n-        "@octokit/graphql": "^4.2.0",\n-        "@octokit/request": "^5.1.0",\n+        "@octokit/auth-token": "^2.4.0",\n+        "@octokit/graphql": "^4.3.1",\n+        "@octokit/request": "^5.3.1",\n+        "@octokit/types": "^2.0.0",\n         "before-after-hook": "^2.1.0",\n         "universal-user-agent": "^4.0.0"\n+      },\n+      "dependencies": {\n+        "@octokit/auth-token": {\n+          "version": "2.4.0",\n+          "resolved": "https://registry.npmjs.org/@octokit/auth-token/-/auth-token-2.4.0.tgz",\n+          "integrity": "sha512-eoOVMjILna7FVQf96iWc3+ZtE/ZT6y8ob8ZzcqKY1ibSQCnu4O/B7pJvzMx5cyZ/RjAff6DAdEb0O0Cjcxidkg==",\n+          "requires": {\n+            "@octokit/types": "^2.0.0"\n+          }\n+        },\n+        "@octokit/endpoint": {\n+          "version": "5.5.1",\n+          "resolved": "https://registry.npmjs.org/@octokit/endpoint/-/endpoint-5.5.1.tgz",\n+          "integrity": "sha512-nBFhRUb5YzVTCX/iAK1MgQ4uWo89Gu0TH00qQHoYRCsE12dWcG1OiLd7v2EIo2+tpUKPMOQ62QFy9hy9Vg2ULg==",\n+          "requires": {\n+            "@octokit/types": "^2.0.0",\n+            "is-plain-object": "^3.0.0",\n+            "universal-user-agent": "^4.0.0"\n+          }\n+        },\n+        "@octokit/request": {\n+          "version": "5.3.1",\n+          "resolved": "https://registry.npmjs.org/@octokit/request/-/request-5.3.1.tgz",\n+          "integrity": "sha512-5/X0AL1ZgoU32fAepTfEoggFinO3rxsMLtzhlUX+RctLrusn/CApJuGFCd0v7GMFhF+8UiCsTTfsu7Fh1HnEJg==",\n+          "requires": {\n+            "@octokit/endpoint": "^5.5.0",\n+            "@octokit/request-error": "^1.0.1",\n+            "@octokit/types": "^2.0.0",\n+            "deprecation": "^2.0.0",\n+            "is-plain-object": "^3.0.0",\n+            "node-fetch": "^2.3.0",\n+            "once": "^1.4.0",\n+            "universal-user-agent": "^4.0.0"\n+          }\n+        },\n+        "is-plain-object": {\n+          "version": "3.0.0",\n+          "resolved": "https://registry.npmjs.org/is-plain-object/-/is-plain-object-3.0.0.tgz",\n+          "integrity": "sha512-tZIpofR+P05k8Aocp7UI/2UTa9lTJSebCXpFFoR9aibpokDj/uXBsJ8luUu0tTVYKkMU6URDUuOfJZ7koewXvg==",\n+          "requires": {\n+            "isobject": "^4.0.0"\n+          }\n+        },\n+        "isobject": {\n+          "version": "4.0.0",\n+          "resolved": "https://registry.npmjs.org/isobject/-/isobject-4.0.0.tgz",\n+          "integrity": "sha512-S/2fF5wH8SJA/kmwr6HYhK/RI/OkhD84k8ntalo0iJjZikgq1XFvR5M8NPT1x5F7fBwCG3qHfnzeP/Vh/ZxCUA=="\n+        }\n       }\n     },\n     "@octokit/endpoint": {\n@@ -1145,12 +1195,53 @@\n       }\n     },\n     "@octokit/graphql": {\n-      "version": "4.2.0",\n-      "resolved": "https://registry.npmjs.org/@octokit/graphql/-/graphql-4.2.0.tgz",\n-      "integrity": "sha512-6JKVE2cJPZVIM1LLsy7M4rKcaE3r6dbP7o895FLEpClHeMDv1a+k3yANue0ycMhM1Es9/WEy8hjBaBpOBETw6A==",\n+      "version": "4.3.1",\n+      "resolved": "https://registry.npmjs.org/@octokit/graphql/-/graphql-4.3.1.tgz",\n+      "integrity": "sha512-hCdTjfvrK+ilU2keAdqNBWOk+gm1kai1ZcdjRfB30oA3/T6n53UVJb7w0L5cR3/rhU91xT3HSqCd+qbvH06yxA==",\n       "requires": {\n-        "@octokit/request": "^5.0.0",\n+        "@octokit/request": "^5.3.0",\n+        "@octokit/types": "^2.0.0",\n         "universal-user-agent": "^4.0.0"\n+      },\n+      "dependencies": {\n+        "@octokit/endpoint": {\n+          "version": "5.5.1",\n+          "resolved": "https://registry.npmjs.org/@octokit/endpoint/-/endpoint-5.5.1.tgz",\n+          "integrity": "sha512-nBFhRUb5YzVTCX/iAK1MgQ4uWo89Gu0TH00qQHoYRCsE12dWcG1OiLd7v2EIo2+tpUKPMOQ62QFy9hy9Vg2ULg==",\n+          "requires": {\n+            "@octokit/types": "^2.0.0",\n+            "is-plain-object": "^3.0.0",\n+            "universal-user-agent": "^4.0.0"\n+          }\n+        },\n+        "@octokit/request": {\n+          "version": "5.3.1",\n+          "resolved": "https://registry.npmjs.org/@octokit/request/-/request-5.3.1.tgz",\n+          "integrity": "sha512-5/X0AL1ZgoU32fAepTfEoggFinO3rxsMLtzhlUX+RctLrusn/CApJuGFCd0v7GMFhF+8UiCsTTfsu7Fh1HnEJg==",\n+          "requires": {\n+            "@octokit/endpoint": "^5.5.0",\n+            "@octokit/request-error": "^1.0.1",\n+            "@octokit/types": "^2.0.0",\n+            "deprecation": "^2.0.0",\n+            "is-plain-object": "^3.0.0",\n+            "node-fetch": "^2.3.0",\n+            "once": "^1.4.0",\n+            "universal-user-agent": "^4.0.0"\n+          }\n+        },\n+        "is-plain-object": {\n+          "version": "3.0.0",\n+          "resolved": "https://registry.npmjs.org/is-plain-object/-/is-plain-object-3.0.0.tgz",\n+          "integrity": "sha512-tZIpofR+P05k8Aocp7UI/2UTa9lTJSebCXpFFoR9aibpokDj/uXBsJ8luUu0tTVYKkMU6URDUuOfJZ7koewXvg==",\n+          "requires": {\n+            "isobject": "^4.0.0"\n+          }\n+        },\n+        "isobject": {\n+          "version": "4.0.0",\n+          "resolved": "https://registry.npmjs.org/isobject/-/isobject-4.0.0.tgz",\n+          "integrity": "sha512-S/2fF5wH8SJA/kmwr6HYhK/RI/OkhD84k8ntalo0iJjZikgq1XFvR5M8NPT1x5F7fBwCG3qHfnzeP/Vh/ZxCUA=="\n+        }\n       }\n     },\n     "@octokit/request": {\n@@ -1211,6 +1302,21 @@\n         "universal-user-agent": "^4.0.0"\n       }\n     },\n+    "@octokit/types": {\n+      "version": "2.0.0",\n+      "resolved": "https://registry.npmjs.org/@octokit/types/-/types-2.0.0.tgz",\n+      "integrity": "sha512-467rp1g6YuxuNbu1m3A5BuGWxtzyVE8sAyN9+k3kb2LdnpmLPTiPsywbYmcckgfGZ+/AGpAaNrVx7131iSUXbQ==",\n+      "requires": {\n+        "@types/node": "^12.11.1"\n+      },\n+      "dependencies": {\n+        "@types/node": {\n+          "version": "12.12.5",\n+          "resolved": "https://registry.npmjs.org/@types/node/-/node-12.12.5.tgz",\n+          "integrity": "sha512-KEjODidV4XYUlJBF3XdjSH5FWoMCtO0utnhtdLf1AgeuZLOrRbvmU/gaRCVg7ZaQDjVf3l84egiY0mRNe5xE4A=="\n+        }\n+      }\n+    },\n     "@pika/babel-plugin-esm-import-rewrite": {\n       "version": "0.3.16",\n       "resolved": "https://registry.npmjs.org/@pika/babel-plugin-esm-import-rewrite/-/babel-plugin-esm-import-rewrite-0.3.16.tgz",',
     };
-    const pullReqFile2_1: PullRequestFile = {
+    const pullReqFile2_1: DiffFile = {
       sha: '7657210636cfad9c79bf6963fd0875b0063daa18',
       filename: 'src/index.ts',
       status: 'modified',
@@ -213,7 +213,7 @@ export class TestData {
     const pullReqDiff2: Diff = {
       pullRequest: pullReq2,
       repositoryFiles: [repoFile2, repoFile2_1, repoFile2_2],
-      pullRequestFiles: [pullReqFile2, pullReqFile2_1],
+      files: [pullReqFile2, pullReqFile2_1],
     };
 
     // store all pullReqDiffs in array and return them
@@ -264,7 +264,7 @@ export class TestData {
       url: 'https://api.github.com/repos/octokit/action.js/git/blobs/c60e3f61b83bf65854d597104d4b42630110bffb',
       type: 'blob',
     };
-    const pullReqFile1: PullRequestFile = {
+    const pullReqFile1: DiffFile = {
       sha: 'f754749a9ce2581c3c460c95b92d41e08d6b79dc',
       filename: '.github/workflows/release.yml',
       status: 'added',
@@ -280,7 +280,7 @@ export class TestData {
       patch:
         '@@ -0,0 +1,21 @@\n+name: Release\n+on:\n+  push:\n+    branches:\n+      - master\n+\n+jobs:\n+  release:\n+    name: release\n+    runs-on: ubuntu-latest\n+    steps:\n+      - uses: actions/checkout@master\n+      - uses: actions/setup-node@v1\n+        with:\n+          node-version: "12.x"\n+      - run: npm ci\n+      - run: npm run build\n+      - run: npx semantic-release\n+        env:\n+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}\n+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}',
     };
-    const pullReqFile1_1: PullRequestFile = {
+    const pullReqFile1_1: DiffFile = {
       sha: 'a1ef5563a64f35a213a65e70e05253a20711be1e',
       filename: 'README.md',
       status: 'modified',
@@ -296,7 +296,7 @@ export class TestData {
       patch:
         '@@ -1,5 +1,86 @@\n-# 🚧 WORK IN PROGRESS. See [#1](https://github.com/octokit/action.js/pull/1)\n-\n # action.js\n \n > GitHub API client for GitHub Actions\n+\n+[![@latest](https://img.shields.io/npm/v/@octokit/action.svg)](https://www.npmjs.com/package/@octokit/action)\n+[![Build Status](https://github.com/octokit/action.js/workflows/Test/badge.svg)](https://github.com/octokit/action.js/actions)\n+[![Greenkeeper](https://badges.greenkeeper.io/octokit/action.js.svg)](https://greenkeeper.io/)\n+\n+## Usage\n+\n+<table>\n+<tbody valign=top align=left>\n+<tr><th>\n+Browsers\n+</th><td width=100%>\n+\n+`@octokit/action` is not meant for browser usage.\n+\n+</td></tr>\n+<tr><th>\n+Node\n+</th><td>\n+\n+Install with `npm install @octokit/action`\n+\n+```js\n+const { Octokit } = require("@octokit/action");\n+// or: import { Octokit } from "@octokit/action";\n+```\n+\n+</td></tr>\n+</tbody>\n+</table>\n+\n+### Create an issue using REST API\n+\n+```js\n+const octokit = new Octokit();\n+const [owner, repo] = process.env.GITHUB_REPOSITORY.split("/");\n+\n+// See https://developer.github.com/v3/issues/#create-an-issue\n+const { data } = await octokit.request("POST /repos/:owner/:repo/issues", {\n+  owner,\n+  repo,\n+  title: "My test issue"\n+});\n+console.log("Issue created: %d", data.html_url);\n+```\n+\n+### Create an issue using GraphQL\n+\n+```js\n+const octokit = new Octokit();\n+const eventPayload = require(process.env.GITHUB_EVENT_PATH);\n+const repositoryId = eventPayload.repository.node_id;\n+\n+const response = await octokit.graphql(\n+  `\n+  mutation($repositoryId:ID!, $title:String!) {\n+    createIssue(input:{repositoryId: $repositoryId, title: $title}) {\n+      issue {\n+        number\n+      }\n+    }\n+  }\n+  `,\n+  {\n+    repositoryId,\n+    title: "My test issue"\n+  }\n+);\n+```\n+\n+### Hooks, plugins, and more\n+\n+`@octokit/action` is build upon `@octokit/core`. Refer to [its README](https://github.com/octokit/core.js#readme) for the full API documentation.\n+\n+## How it works\n+\n+`@octokit/action` is simply a [`@octokit/core`](https://github.com/octokit/core.js#readme) constructor, pre-authenticate using [`@octokit/auth-action](https://github.com/octokit/auth-action.js#readme).\n+\n+The source code is … simple: [`src/index.ts`](src/index.ts).\n+\n+## License\n+\n+[MIT](LICENSE)',
     };
-    const pullReqFile1_2: PullRequestFile = {
+    const pullReqFile1_2: DiffFile = {
       sha: '889f0691af807664b882af6887f7c4a209c7bef4',
       filename: 'package-lock.json',
       status: 'added',
@@ -310,7 +310,7 @@ export class TestData {
       contents_url:
         'https://api.github.com/repos/octokit/action.js/contents/package-lock.json?ref=0587c3a7b7357b51ff75c237013f7492f7a164d4',
     };
-    const pullReqFile1_3: PullRequestFile = {
+    const pullReqFile1_3: DiffFile = {
       sha: '4b5c6e08f39ff8bfd088d8462cf5ee91c25f4588',
       filename: 'test/smoke.test.ts',
       status: 'added',
@@ -329,12 +329,7 @@ export class TestData {
     const pullReqDiff1: Diff = {
       pullRequest: pullReq1,
       repositoryFiles: [repoFile1, repoFile1_1],
-      pullRequestFiles: [
-        pullReqFile1,
-        pullReqFile1_1,
-        pullReqFile1_2,
-        pullReqFile1_3,
-      ],
+      files: [pullReqFile1, pullReqFile1_1, pullReqFile1_2, pullReqFile1_3],
     };
 
     // / second pull request
@@ -380,7 +375,7 @@ export class TestData {
       size: 260,
       url: 'https://api.github.com/repos/octokit/action.js/git/blobs/6c8f804c41fe9b33d80f21117524543645a90f11',
     };
-    const pullReqFile2: PullRequestFile = {
+    const pullReqFile2: DiffFile = {
       sha: '6b370c52746a8b6b5653cbd183b6f19289da83e0',
       filename: 'package-lock.json',
       status: 'added',
@@ -396,7 +391,7 @@ export class TestData {
       patch:
         '@@ -1,6 +1,6 @@\n {\n   "name": "@octokit/action",\n-  "version": "0.0.0-semantically-released",\n+  "version": "0.0.0-development",\n   "lockfileVersion": 1,\n   "requires": true,\n   "dependencies": {\n@@ -1110,14 +1110,64 @@\n       }\n     },\n     "@octokit/core": {\n-      "version": "1.2.0",\n-      "resolved": "https://registry.npmjs.org/@octokit/core/-/core-1.2.0.tgz",\n-      "integrity": "sha512-Yr1wfnN/BBNiMw8Zajc2Z2+h9PQ05D5R/fyKVKDWoFvJNVR9SB5lefQYNPbVowNznCSv3ZEE9V/MdDR3YrmqBQ==",\n+      "version": "2.0.0",\n+      "resolved": "https://registry.npmjs.org/@octokit/core/-/core-2.0.0.tgz",\n+      "integrity": "sha512-FLeqvRomhlcHFw53lpAYp26K5sRdXGRcN8V6zWSxVMzEdASP+ryA6iPjPCH7ylZvJxK2US90iLCH4IV+XmgJcQ==",\n       "requires": {\n-        "@octokit/graphql": "^4.2.0",\n-        "@octokit/request": "^5.1.0",\n+        "@octokit/auth-token": "^2.4.0",\n+        "@octokit/graphql": "^4.3.1",\n+        "@octokit/request": "^5.3.1",\n+        "@octokit/types": "^2.0.0",\n         "before-after-hook": "^2.1.0",\n         "universal-user-agent": "^4.0.0"\n+      },\n+      "dependencies": {\n+        "@octokit/auth-token": {\n+          "version": "2.4.0",\n+          "resolved": "https://registry.npmjs.org/@octokit/auth-token/-/auth-token-2.4.0.tgz",\n+          "integrity": "sha512-eoOVMjILna7FVQf96iWc3+ZtE/ZT6y8ob8ZzcqKY1ibSQCnu4O/B7pJvzMx5cyZ/RjAff6DAdEb0O0Cjcxidkg==",\n+          "requires": {\n+            "@octokit/types": "^2.0.0"\n+          }\n+        },\n+        "@octokit/endpoint": {\n+          "version": "5.5.1",\n+          "resolved": "https://registry.npmjs.org/@octokit/endpoint/-/endpoint-5.5.1.tgz",\n+          "integrity": "sha512-nBFhRUb5YzVTCX/iAK1MgQ4uWo89Gu0TH00qQHoYRCsE12dWcG1OiLd7v2EIo2+tpUKPMOQ62QFy9hy9Vg2ULg==",\n+          "requires": {\n+            "@octokit/types": "^2.0.0",\n+            "is-plain-object": "^3.0.0",\n+            "universal-user-agent": "^4.0.0"\n+          }\n+        },\n+        "@octokit/request": {\n+          "version": "5.3.1",\n+          "resolved": "https://registry.npmjs.org/@octokit/request/-/request-5.3.1.tgz",\n+          "integrity": "sha512-5/X0AL1ZgoU32fAepTfEoggFinO3rxsMLtzhlUX+RctLrusn/CApJuGFCd0v7GMFhF+8UiCsTTfsu7Fh1HnEJg==",\n+          "requires": {\n+            "@octokit/endpoint": "^5.5.0",\n+            "@octokit/request-error": "^1.0.1",\n+            "@octokit/types": "^2.0.0",\n+            "deprecation": "^2.0.0",\n+            "is-plain-object": "^3.0.0",\n+            "node-fetch": "^2.3.0",\n+            "once": "^1.4.0",\n+            "universal-user-agent": "^4.0.0"\n+          }\n+        },\n+        "is-plain-object": {\n+          "version": "3.0.0",\n+          "resolved": "https://registry.npmjs.org/is-plain-object/-/is-plain-object-3.0.0.tgz",\n+          "integrity": "sha512-tZIpofR+P05k8Aocp7UI/2UTa9lTJSebCXpFFoR9aibpokDj/uXBsJ8luUu0tTVYKkMU6URDUuOfJZ7koewXvg==",\n+          "requires": {\n+            "isobject": "^4.0.0"\n+          }\n+        },\n+        "isobject": {\n+          "version": "4.0.0",\n+          "resolved": "https://registry.npmjs.org/isobject/-/isobject-4.0.0.tgz",\n+          "integrity": "sha512-S/2fF5wH8SJA/kmwr6HYhK/RI/OkhD84k8ntalo0iJjZikgq1XFvR5M8NPT1x5F7fBwCG3qHfnzeP/Vh/ZxCUA=="\n+        }\n       }\n     },\n     "@octokit/endpoint": {\n@@ -1145,12 +1195,53 @@\n       }\n     },\n     "@octokit/graphql": {\n-      "version": "4.2.0",\n-      "resolved": "https://registry.npmjs.org/@octokit/graphql/-/graphql-4.2.0.tgz",\n-      "integrity": "sha512-6JKVE2cJPZVIM1LLsy7M4rKcaE3r6dbP7o895FLEpClHeMDv1a+k3yANue0ycMhM1Es9/WEy8hjBaBpOBETw6A==",\n+      "version": "4.3.1",\n+      "resolved": "https://registry.npmjs.org/@octokit/graphql/-/graphql-4.3.1.tgz",\n+      "integrity": "sha512-hCdTjfvrK+ilU2keAdqNBWOk+gm1kai1ZcdjRfB30oA3/T6n53UVJb7w0L5cR3/rhU91xT3HSqCd+qbvH06yxA==",\n       "requires": {\n-        "@octokit/request": "^5.0.0",\n+        "@octokit/request": "^5.3.0",\n+        "@octokit/types": "^2.0.0",\n         "universal-user-agent": "^4.0.0"\n+      },\n+      "dependencies": {\n+        "@octokit/endpoint": {\n+          "version": "5.5.1",\n+          "resolved": "https://registry.npmjs.org/@octokit/endpoint/-/endpoint-5.5.1.tgz",\n+          "integrity": "sha512-nBFhRUb5YzVTCX/iAK1MgQ4uWo89Gu0TH00qQHoYRCsE12dWcG1OiLd7v2EIo2+tpUKPMOQ62QFy9hy9Vg2ULg==",\n+          "requires": {\n+            "@octokit/types": "^2.0.0",\n+            "is-plain-object": "^3.0.0",\n+            "universal-user-agent": "^4.0.0"\n+          }\n+        },\n+        "@octokit/request": {\n+          "version": "5.3.1",\n+          "resolved": "https://registry.npmjs.org/@octokit/request/-/request-5.3.1.tgz",\n+          "integrity": "sha512-5/X0AL1ZgoU32fAepTfEoggFinO3rxsMLtzhlUX+RctLrusn/CApJuGFCd0v7GMFhF+8UiCsTTfsu7Fh1HnEJg==",\n+          "requires": {\n+            "@octokit/endpoint": "^5.5.0",\n+            "@octokit/request-error": "^1.0.1",\n+            "@octokit/types": "^2.0.0",\n+            "deprecation": "^2.0.0",\n+            "is-plain-object": "^3.0.0",\n+            "node-fetch": "^2.3.0",\n+            "once": "^1.4.0",\n+            "universal-user-agent": "^4.0.0"\n+          }\n+        },\n+        "is-plain-object": {\n+          "version": "3.0.0",\n+          "resolved": "https://registry.npmjs.org/is-plain-object/-/is-plain-object-3.0.0.tgz",\n+          "integrity": "sha512-tZIpofR+P05k8Aocp7UI/2UTa9lTJSebCXpFFoR9aibpokDj/uXBsJ8luUu0tTVYKkMU6URDUuOfJZ7koewXvg==",\n+          "requires": {\n+            "isobject": "^4.0.0"\n+          }\n+        },\n+        "isobject": {\n+          "version": "4.0.0",\n+          "resolved": "https://registry.npmjs.org/isobject/-/isobject-4.0.0.tgz",\n+          "integrity": "sha512-S/2fF5wH8SJA/kmwr6HYhK/RI/OkhD84k8ntalo0iJjZikgq1XFvR5M8NPT1x5F7fBwCG3qHfnzeP/Vh/ZxCUA=="\n+        }\n       }\n     },\n     "@octokit/request": {\n@@ -1211,6 +1302,21 @@\n         "universal-user-agent": "^4.0.0"\n       }\n     },\n+    "@octokit/types": {\n+      "version": "2.0.0",\n+      "resolved": "https://registry.npmjs.org/@octokit/types/-/types-2.0.0.tgz",\n+      "integrity": "sha512-467rp1g6YuxuNbu1m3A5BuGWxtzyVE8sAyN9+k3kb2LdnpmLPTiPsywbYmcckgfGZ+/AGpAaNrVx7131iSUXbQ==",\n+      "requires": {\n+        "@types/node": "^12.11.1"\n+      },\n+      "dependencies": {\n+        "@types/node": {\n+          "version": "12.12.5",\n+          "resolved": "https://registry.npmjs.org/@types/node/-/node-12.12.5.tgz",\n+          "integrity": "sha512-KEjODidV4XYUlJBF3XdjSH5FWoMCtO0utnhtdLf1AgeuZLOrRbvmU/gaRCVg7ZaQDjVf3l84egiY0mRNe5xE4A=="\n+        }\n+      }\n+    },\n     "@pika/babel-plugin-esm-import-rewrite": {\n       "version": "0.3.16",\n       "resolved": "https://registry.npmjs.org/@pika/babel-plugin-esm-import-rewrite/-/babel-plugin-esm-import-rewrite-0.3.16.tgz",',
     };
-    const pullReqFile2_1: PullRequestFile = {
+    const pullReqFile2_1: DiffFile = {
       sha: '7657210636cfad9c79bf6963fd0875b0063daa18',
       filename: 'src/index.ts',
       status: 'modified',
@@ -415,7 +410,7 @@ export class TestData {
     const pullReqDiff2: Diff = {
       pullRequest: pullReq2,
       repositoryFiles: [repoFile2, repoFile2_1, repoFile2_2],
-      pullRequestFiles: [pullReqFile2, pullReqFile2_1],
+      files: [pullReqFile2, pullReqFile2_1],
     };
 
     // third pull request
@@ -461,7 +456,7 @@ export class TestData {
       size: 260,
       url: 'https://api.github.com/repos/octokit/action.js/git/blobs/6c8f804c41fe9b33d80f21117524543645a90f11',
     };
-    const pullReqFile3: PullRequestFile = {
+    const pullReqFile3: DiffFile = {
       sha: '6b370c52746a8b6b5653cbd183b6f19289da83e0',
       filename: 'package-lock.json',
       status: 'added',
@@ -477,7 +472,7 @@ export class TestData {
       patch:
         '@@ -1,6 +1,6 @@\n {\n   "name": "@octokit/action",\n-  "version": "0.0.0-semantically-released",\n+  "version": "0.0.0-development",\n   "lockfileVersion": 1,\n   "requires": true,\n   "dependencies": {\n@@ -1110,14 +1110,64 @@\n       }\n     },\n     "@octokit/core": {\n-      "version": "1.2.0",\n-      "resolved": "https://registry.npmjs.org/@octokit/core/-/core-1.2.0.tgz",\n-      "integrity": "sha512-Yr1wfnN/BBNiMw8Zajc2Z2+h9PQ05D5R/fyKVKDWoFvJNVR9SB5lefQYNPbVowNznCSv3ZEE9V/MdDR3YrmqBQ==",\n+      "version": "2.0.0",\n+      "resolved": "https://registry.npmjs.org/@octokit/core/-/core-2.0.0.tgz",\n+      "integrity": "sha512-FLeqvRomhlcHFw53lpAYp26K5sRdXGRcN8V6zWSxVMzEdASP+ryA6iPjPCH7ylZvJxK2US90iLCH4IV+XmgJcQ==",\n       "requires": {\n-        "@octokit/graphql": "^4.2.0",\n-        "@octokit/request": "^5.1.0",\n+        "@octokit/auth-token": "^2.4.0",\n+        "@octokit/graphql": "^4.3.1",\n+        "@octokit/request": "^5.3.1",\n+        "@octokit/types": "^2.0.0",\n         "before-after-hook": "^2.1.0",\n         "universal-user-agent": "^4.0.0"\n+      },\n+      "dependencies": {\n+        "@octokit/auth-token": {\n+          "version": "2.4.0",\n+          "resolved": "https://registry.npmjs.org/@octokit/auth-token/-/auth-token-2.4.0.tgz",\n+          "integrity": "sha512-eoOVMjILna7FVQf96iWc3+ZtE/ZT6y8ob8ZzcqKY1ibSQCnu4O/B7pJvzMx5cyZ/RjAff6DAdEb0O0Cjcxidkg==",\n+          "requires": {\n+            "@octokit/types": "^2.0.0"\n+          }\n+        },\n+        "@octokit/endpoint": {\n+          "version": "5.5.1",\n+          "resolved": "https://registry.npmjs.org/@octokit/endpoint/-/endpoint-5.5.1.tgz",\n+          "integrity": "sha512-nBFhRUb5YzVTCX/iAK1MgQ4uWo89Gu0TH00qQHoYRCsE12dWcG1OiLd7v2EIo2+tpUKPMOQ62QFy9hy9Vg2ULg==",\n+          "requires": {\n+            "@octokit/types": "^2.0.0",\n+            "is-plain-object": "^3.0.0",\n+            "universal-user-agent": "^4.0.0"\n+          }\n+        },\n+        "@octokit/request": {\n+          "version": "5.3.1",\n+          "resolved": "https://registry.npmjs.org/@octokit/request/-/request-5.3.1.tgz",\n+          "integrity": "sha512-5/X0AL1ZgoU32fAepTfEoggFinO3rxsMLtzhlUX+RctLrusn/CApJuGFCd0v7GMFhF+8UiCsTTfsu7Fh1HnEJg==",\n+          "requires": {\n+            "@octokit/endpoint": "^5.5.0",\n+            "@octokit/request-error": "^1.0.1",\n+            "@octokit/types": "^2.0.0",\n+            "deprecation": "^2.0.0",\n+            "is-plain-object": "^3.0.0",\n+            "node-fetch": "^2.3.0",\n+            "once": "^1.4.0",\n+            "universal-user-agent": "^4.0.0"\n+          }\n+        },\n+        "is-plain-object": {\n+          "version": "3.0.0",\n+          "resolved": "https://registry.npmjs.org/is-plain-object/-/is-plain-object-3.0.0.tgz",\n+          "integrity": "sha512-tZIpofR+P05k8Aocp7UI/2UTa9lTJSebCXpFFoR9aibpokDj/uXBsJ8luUu0tTVYKkMU6URDUuOfJZ7koewXvg==",\n+          "requires": {\n+            "isobject": "^4.0.0"\n+          }\n+        },\n+        "isobject": {\n+          "version": "4.0.0",\n+          "resolved": "https://registry.npmjs.org/isobject/-/isobject-4.0.0.tgz",\n+          "integrity": "sha512-S/2fF5wH8SJA/kmwr6HYhK/RI/OkhD84k8ntalo0iJjZikgq1XFvR5M8NPT1x5F7fBwCG3qHfnzeP/Vh/ZxCUA=="\n+        }\n       }\n     },\n     "@octokit/endpoint": {\n@@ -1145,12 +1195,53 @@\n       }\n     },\n     "@octokit/graphql": {\n-      "version": "4.2.0",\n-      "resolved": "https://registry.npmjs.org/@octokit/graphql/-/graphql-4.2.0.tgz",\n-      "integrity": "sha512-6JKVE2cJPZVIM1LLsy7M4rKcaE3r6dbP7o895FLEpClHeMDv1a+k3yANue0ycMhM1Es9/WEy8hjBaBpOBETw6A==",\n+      "version": "4.3.1",\n+      "resolved": "https://registry.npmjs.org/@octokit/graphql/-/graphql-4.3.1.tgz",\n+      "integrity": "sha512-hCdTjfvrK+ilU2keAdqNBWOk+gm1kai1ZcdjRfB30oA3/T6n53UVJb7w0L5cR3/rhU91xT3HSqCd+qbvH06yxA==",\n       "requires": {\n-        "@octokit/request": "^5.0.0",\n+        "@octokit/request": "^5.3.0",\n+        "@octokit/types": "^2.0.0",\n         "universal-user-agent": "^4.0.0"\n+      },\n+      "dependencies": {\n+        "@octokit/endpoint": {\n+          "version": "5.5.1",\n+          "resolved": "https://registry.npmjs.org/@octokit/endpoint/-/endpoint-5.5.1.tgz",\n+          "integrity": "sha512-nBFhRUb5YzVTCX/iAK1MgQ4uWo89Gu0TH00qQHoYRCsE12dWcG1OiLd7v2EIo2+tpUKPMOQ62QFy9hy9Vg2ULg==",\n+          "requires": {\n+            "@octokit/types": "^2.0.0",\n+            "is-plain-object": "^3.0.0",\n+            "universal-user-agent": "^4.0.0"\n+          }\n+        },\n+        "@octokit/request": {\n+          "version": "5.3.1",\n+          "resolved": "https://registry.npmjs.org/@octokit/request/-/request-5.3.1.tgz",\n+          "integrity": "sha512-5/X0AL1ZgoU32fAepTfEoggFinO3rxsMLtzhlUX+RctLrusn/CApJuGFCd0v7GMFhF+8UiCsTTfsu7Fh1HnEJg==",\n+          "requires": {\n+            "@octokit/endpoint": "^5.5.0",\n+            "@octokit/request-error": "^1.0.1",\n+            "@octokit/types": "^2.0.0",\n+            "deprecation": "^2.0.0",\n+            "is-plain-object": "^3.0.0",\n+            "node-fetch": "^2.3.0",\n+            "once": "^1.4.0",\n+            "universal-user-agent": "^4.0.0"\n+          }\n+        },\n+        "is-plain-object": {\n+          "version": "3.0.0",\n+          "resolved": "https://registry.npmjs.org/is-plain-object/-/is-plain-object-3.0.0.tgz",\n+          "integrity": "sha512-tZIpofR+P05k8Aocp7UI/2UTa9lTJSebCXpFFoR9aibpokDj/uXBsJ8luUu0tTVYKkMU6URDUuOfJZ7koewXvg==",\n+          "requires": {\n+            "isobject": "^4.0.0"\n+          }\n+        },\n+        "isobject": {\n+          "version": "4.0.0",\n+          "resolved": "https://registry.npmjs.org/isobject/-/isobject-4.0.0.tgz",\n+          "integrity": "sha512-S/2fF5wH8SJA/kmwr6HYhK/RI/OkhD84k8ntalo0iJjZikgq1XFvR5M8NPT1x5F7fBwCG3qHfnzeP/Vh/ZxCUA=="\n+        }\n       }\n     },\n     "@octokit/request": {\n@@ -1211,6 +1302,21 @@\n         "universal-user-agent": "^4.0.0"\n       }\n     },\n+    "@octokit/types": {\n+      "version": "2.0.0",\n+      "resolved": "https://registry.npmjs.org/@octokit/types/-/types-2.0.0.tgz",\n+      "integrity": "sha512-467rp1g6YuxuNbu1m3A5BuGWxtzyVE8sAyN9+k3kb2LdnpmLPTiPsywbYmcckgfGZ+/AGpAaNrVx7131iSUXbQ==",\n+      "requires": {\n+        "@types/node": "^12.11.1"\n+      },\n+      "dependencies": {\n+        "@types/node": {\n+          "version": "12.12.5",\n+          "resolved": "https://registry.npmjs.org/@types/node/-/node-12.12.5.tgz",\n+          "integrity": "sha512-KEjODidV4XYUlJBF3XdjSH5FWoMCtO0utnhtdLf1AgeuZLOrRbvmU/gaRCVg7ZaQDjVf3l84egiY0mRNe5xE4A=="\n+        }\n+      }\n+    },\n     "@pika/babel-plugin-esm-import-rewrite": {\n       "version": "0.3.16",\n       "resolved": "https://registry.npmjs.org/@pika/babel-plugin-esm-import-rewrite/-/babel-plugin-esm-import-rewrite-0.3.16.tgz",',
     };
-    const pullReqFile3_1: PullRequestFile = {
+    const pullReqFile3_1: DiffFile = {
       sha: '7657210636cfad9c79bf6963fd0875b0063daa18',
       filename: 'src/index.ts',
       status: 'modified',
@@ -493,7 +488,7 @@ export class TestData {
       patch:
         '@@ -4,6 +4,6 @@ import { createActionAuth } from "@octokit/auth-action";\n import { VERSION } from "./version";\n \n export const Octokit = Core.defaults({\n-  auth: createActionAuth(),\n+  authStrategy: createActionAuth,\n   userAgent: `octokit-action.js/${VERSION}`\n });',
     };
-    const pullReqFile3_2: PullRequestFile = {
+    const pullReqFile3_2: DiffFile = {
       sha: 'f754749a9ce2581c3c460c95b92d41e08d6b79dc',
       filename: '.github/workflows/release.yml',
       status: 'added',
@@ -512,7 +507,7 @@ export class TestData {
     const pullReqDiff3: Diff = {
       pullRequest: pullReq3,
       repositoryFiles: [repoFile3, repoFile3_1, repoFile3_2],
-      pullRequestFiles: [pullReqFile3, pullReqFile3_1, pullReqFile3_2],
+      files: [pullReqFile3, pullReqFile3_1, pullReqFile3_2],
     };
 
     // store all pullReqDiffs in array and return them

@@ -20,8 +20,8 @@ export function getMostChangedFiles(
   };
 
   const getPullFiles = {
-    from: 'pullrequestfiles',
-    localField: 'expandedDiffs.pullRequestFiles',
+    from: 'difffiles',
+    localField: 'expandedDiffs.files',
     foreignField: '_id',
     as: 'pullFiles',
   };

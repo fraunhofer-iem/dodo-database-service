@@ -6,7 +6,7 @@ import { IssueSchema } from '../../src/entities/issues/model/schemas';
 import { RepositorySchema } from '../../src/entities/repositories/model/schemas';
 import { DiffSchema } from '../../src/entities/diffs/model/schemas';
 import { PullRequestSchema } from '../../src/entities/pullRequests/model/schemas';
-import { PullRequestFileSchema } from '../../src/entities/pullRequestFiles/model/schemas';
+import { DiffFileSchema } from '../../src/entities/diffFiles/model/schemas';
 import { RepositoryFileSchema } from '../../src/entities/repositoryFiles/model/schemas';
 import { ReleaseSchema } from '../../src/entities/releases/model/schemas';
 // import { TestData } from './sampleData';
@@ -38,7 +38,7 @@ describe('StatisticService', () => {
           { name: 'IssueEventTypes', schema: IssueEventSchema },
           { name: 'Releases', schema: ReleaseSchema },
           { name: 'PullRequest', schema: PullRequestSchema },
-          { name: 'PullRequestFiles', schema: PullRequestFileSchema },
+          { name: 'DiffFiles', schema: DiffFileSchema },
           { name: 'RepositoryFiles', schema: RepositoryFileSchema },
           { name: 'Label', schema: LabelSchema },
           { name: 'User', schema: UserSchema },

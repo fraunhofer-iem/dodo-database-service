@@ -31,7 +31,7 @@ export class CouplingOfComponentsService {
       { owner: owner, repo: repo },
       {
         diffs: {
-          pullRequestFiles: true,
+          diffFiles: true,
           pullRequest: { since: since, to: to },
         },
       },

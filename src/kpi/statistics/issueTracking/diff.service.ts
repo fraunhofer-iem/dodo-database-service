@@ -63,8 +63,8 @@ export class DiffService {
     };
 
     const getPullFiles = {
-      from: 'pullrequestfiles',
-      localField: 'expandedDiffs.pullRequestFiles',
+      from: 'difffiles',
+      localField: 'expandedDiffs.files',
       foreignField: '_id',
       as: 'pullFiles',
     };
@@ -137,7 +137,7 @@ export class DiffService {
       .unwind('$expandedDiffs')
       .unwind('$expandedPullRequest')
       .project({
-        changedFiles: '$expandedDiffs.pullRequestFiles',
+        changedFiles: '$expandedDiffs.files',
         pullRequestNumber: '$expandedPullRequest.number',
       })
       .sort({ pullRequestNumber: 1 })

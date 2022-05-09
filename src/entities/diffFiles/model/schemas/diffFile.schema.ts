@@ -5,7 +5,7 @@ import { Document } from 'mongoose';
  * For further information, see: https://docs.github.com/en/rest/reference/pulls#list-pull-requests-files
  */
 @Schema()
-export class PullRequestFile {
+export class DiffFile {
   @Prop()
   sha: string;
   @Prop()
@@ -30,7 +30,6 @@ export class PullRequestFile {
   previous_filename?: string;
 }
 
-export type PullRequestFileDocument = PullRequestFile & Document;
+export type DiffFileDocument = DiffFile & Document;
 
-export const PullRequestFileSchema =
-  SchemaFactory.createForClass(PullRequestFile);
+export const DiffFileSchema = SchemaFactory.createForClass(DiffFile);

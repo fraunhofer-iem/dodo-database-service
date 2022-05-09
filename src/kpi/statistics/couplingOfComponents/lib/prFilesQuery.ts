@@ -28,15 +28,15 @@ export function getPrFilesQuery(
 > {
   return lookUpQuery
     .unwind('diffs')
-    .unwind('diffs.pullRequestFiles')
+    .unwind('diffs.files')
     .match({
-      'diffs.pullRequestFiles.status': 'modified',
-      'diffs.pullRequestFiles.filename': { $not: { $in: fileFilter } },
+      'diffs.files.status': 'modified',
+      'diffs.files.filename': { $not: { $in: fileFilter } },
     })
     .group({
       _id: '$diffs.pullRequest._id',
       pullRequest: { $first: '$diffs.pullRequest' },
-      changedFiles: { $push: '$diffs.pullRequestFiles.filename' },
+      changedFiles: { $push: '$diffs.files.filename' },
     })
     .group({
       _id: groupByIntervalSelector('$pullRequest.created_at', interval),

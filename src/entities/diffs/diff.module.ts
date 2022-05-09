@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { PullRequestFileModule } from '../pullRequestFiles/pullRequestFile.module';
-import { PullRequestFileService } from '../pullRequestFiles/pullRequestFile.service';
+import { DiffFileModule } from '../diffFiles/diffFile.module';
+import { DiffFileService } from '../diffFiles/diffFile.service';
 import { PullRequestModule } from '../pullRequests/pullRequest.module';
 import { PullRequestService } from '../pullRequests/pullRequest.service';
 import { RepositoryFileModule } from '../repositoryFiles/repositoryFile.module';
@@ -15,14 +15,10 @@ import { Diff, DiffSchema } from './model/schemas';
       [
         {
           name: Diff.name,
-          imports: [
-            PullRequestModule,
-            PullRequestFileModule,
-            RepositoryFileModule,
-          ],
+          imports: [PullRequestModule, DiffFileModule, RepositoryFileModule],
           useFactory: (
             pullRequestService: PullRequestService,
-            pullRequestFileService: PullRequestFileService,
+            diffFileService: DiffFileService,
             repositoryFileService: RepositoryFileService,
           ) => {
             const schema = DiffSchema;
@@ -30,12 +26,10 @@ import { Diff, DiffSchema } from './model/schemas';
               this.pullRequest = (
                 await pullRequestService.readOrCreate(this.pullRequest)
               )._id;
-              if (this.pullRequestFiles) {
-                for (let i = 0; i < this.pullRequestFiles.length; i++) {
-                  this.pullRequestFiles[i] = await (
-                    await pullRequestFileService.readOrCreate(
-                      this.pullRequestFiles[i],
-                    )
+              if (this.files) {
+                for (let i = 0; i < this.files.length; i++) {
+                  this.files[i] = await (
+                    await diffFileService.readOrCreate(this.files[i])
                   )._id;
                 }
               }
@@ -51,11 +45,7 @@ import { Diff, DiffSchema } from './model/schemas';
             });
             return schema;
           },
-          inject: [
-            PullRequestService,
-            PullRequestFileService,
-            RepositoryFileService,
-          ],
+          inject: [PullRequestService, DiffFileService, RepositoryFileService],
         },
       ],
       'data',
