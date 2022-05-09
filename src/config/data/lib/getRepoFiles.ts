@@ -9,12 +9,12 @@ enum FileType {
 
 export async function getRepoFiles(
   repoIdent: RepositoryIdentifier,
-  pullRequest: PullRequest,
+  sha: string,
 ) {
   const { owner, repo } = repoIdent;
 
   const baseTree = await OCTOKIT.rest.git.getTree({
-    tree_sha: pullRequest.base.sha,
+    tree_sha: sha,
     owner: owner,
     repo: repo,
     recursive: 'true',

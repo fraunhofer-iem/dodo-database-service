@@ -5,4 +5,5 @@ export interface Release {
   name: string;
   created_at: string;
   published_at: string;
+  tag_name?: string;
 }

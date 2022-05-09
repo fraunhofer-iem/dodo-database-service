@@ -6,3 +6,4 @@ export * from './querier';
 export * from './pullRequestQuerier';
 export * from './getPullRequestFiles';
 export * from './getRepoFiles';
+export * from './getTag';

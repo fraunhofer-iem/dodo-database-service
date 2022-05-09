@@ -14,6 +14,7 @@ import {
   pullRequestQuerier,
   getPullRequestFiles,
   getRepoFiles,
+  getTag,
 } from './lib';
 
 @Injectable()
@@ -55,9 +56,12 @@ export class DataExtractionService {
   public async extractReleases(repo: RepositoryDocument, target: DodoTarget) {
     for await (const release of releaseQuerier(target)) {
       this.logger.log(`Release ${release.name}`);
+      const tag = await getTag(repo, release.tag_name);
+      const files = await getRepoFiles(target, tag.sha);
       const releaseDocument = await this.releaseService.create({
         ...release,
         repo,
+        files,
       });
       repo.releases.push(releaseDocument);
       await repo.save();
@@ -70,7 +74,7 @@ export class DataExtractionService {
       const diff: Diff = {
         pullRequest: pullRequest,
         pullRequestFiles: await getPullRequestFiles(target, pullRequest),
-        repositoryFiles: await getRepoFiles(target, pullRequest),
+        repositoryFiles: await getRepoFiles(target, pullRequest.base.sha),
       };
       const diffDocument = await this.diffService.create(diff);
       repo.diffs.push(diffDocument);
