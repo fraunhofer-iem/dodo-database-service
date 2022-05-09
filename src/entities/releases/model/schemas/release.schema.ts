@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Schema as mSchema } from 'mongoose';
+import { Repository } from 'src/entities/repositories/model/schemas';
 
 /**
  * For further information, see: https://docs.github.com/en/rest/reference/releases
@@ -23,6 +24,9 @@ export class Release {
 
   @Prop()
   published_at: string;
+
+  @Prop({ type: mSchema.Types.Mixed, ref: 'Repo' })
+  repo: Repository;
 }
 
 export type ReleaseDocument = Release & Document;

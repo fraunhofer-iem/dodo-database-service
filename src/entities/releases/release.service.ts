@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { AnyKeys, FilterQuery, Model } from 'mongoose';
+import { Aggregate, AnyKeys, FilterQuery, Model } from 'mongoose';
 import { documentExists, retrieveDocument } from '../../lib';
 import { Release, ReleaseDocument } from './model/schemas';
 
@@ -40,5 +40,27 @@ export class ReleaseService {
       throw new Error('Release does already exist');
     }
     return this.releaseModel.create(json);
+  }
+
+  public preAggregate(
+    filter: FilterQuery<ReleaseDocument> = undefined,
+  ): Aggregate<any> {
+    const pipeline = this.releaseModel.aggregate();
+    if (filter) {
+      pipeline.match(filter);
+    }
+    pipeline.addFields({
+      created_at: {
+        $dateFromString: {
+          dateString: '$created_at',
+        },
+      },
+      published_at: {
+        $dateFromString: {
+          dateString: '$published_at',
+        },
+      },
+    });
+    return pipeline;
   }
 }

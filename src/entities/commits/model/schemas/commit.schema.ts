@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as mSchema } from 'mongoose';
+import { Repository } from 'src/entities/repositories/model/schemas';
 import { User } from '../../../users/model/schemas';
 
 /**
@@ -7,6 +8,9 @@ import { User } from '../../../users/model/schemas';
  */
 @Schema()
 export class Commit {
+  @Prop()
+  sha: string;
+
   @Prop()
   url: string;
 
@@ -18,6 +22,9 @@ export class Commit {
 
   @Prop()
   message: string;
+
+  @Prop({ type: mSchema.Types.Mixed, ref: 'Repo' })
+  repo: Repository;
 }
 
 export type CommitDocument = Commit & Document;

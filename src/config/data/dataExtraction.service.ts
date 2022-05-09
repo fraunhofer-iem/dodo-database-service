@@ -43,7 +43,10 @@ export class DataExtractionService {
   public async extractCommits(repo: RepositoryDocument, target: DodoTarget) {
     for await (const commit of commitQuerier(target)) {
       this.logger.log(`Commit ${commit.url}`);
-      const commitDocument = await this.commitService.create(commit);
+      const commitDocument = await this.commitService.create({
+        ...commit,
+        repo,
+      });
       repo.commits.push(commitDocument);
       await repo.save();
     }
@@ -52,7 +55,10 @@ export class DataExtractionService {
   public async extractReleases(repo: RepositoryDocument, target: DodoTarget) {
     for await (const release of releaseQuerier(target)) {
       this.logger.log(`Release ${release.name}`);
-      const releaseDocument = await this.releaseService.create(release);
+      const releaseDocument = await this.releaseService.create({
+        ...release,
+        repo,
+      });
       repo.releases.push(releaseDocument);
       await repo.save();
     }

@@ -4,6 +4,8 @@ import { CommitService } from './commit.service';
 import { Commit, CommitSchema } from './model/schemas';
 import { UserModule } from '../users/user.module';
 import { UserService } from '../users/user.service';
+import { RepositoryModule } from '../repositories/repository.module';
+import { RepositoryService } from '../repositories/repository.service';
 
 @Module({
   imports: [
@@ -11,15 +13,19 @@ import { UserService } from '../users/user.service';
       [
         {
           name: Commit.name,
-          imports: [UserModule],
-          useFactory: (userService: UserService) => {
+          imports: [UserModule, RepositoryModule],
+          useFactory: (
+            userService: UserService,
+            repoService: RepositoryService,
+          ) => {
             const schema = CommitSchema;
             schema.pre<Commit>('validate', async function (this: Commit) {
               this.author = (await userService.readOrCreate(this.author))._id;
+              this.repo = (await repoService.readOrCreate(this.repo))._id;
             });
             return schema;
           },
-          inject: [UserService],
+          inject: [UserService, RepositoryService],
         },
       ],
       'data',

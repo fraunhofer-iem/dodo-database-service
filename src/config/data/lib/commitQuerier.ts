@@ -26,9 +26,10 @@ async function queryCommitPage(
     .then((res) => {
       return res.data.map((commit) => {
         return {
+          sha: commit.sha,
           url: commit.url,
           author: commit.author,
-          timestamp: commit.commit.committer.date,
+          timestamp: commit.commit.author.date,
           message: commit.commit.message,
         };
       });
