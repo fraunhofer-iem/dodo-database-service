@@ -5,14 +5,12 @@ import {
   Logger,
   Param,
   Post,
-  Put,
   Query,
 } from '@nestjs/common';
-import { Kpi, KpiDocument } from './model/schemas';
 import { KpiService } from './kpi.service';
 import { DodoTargetService } from '../targets/dodoTarget.service';
-import { DodoTarget, DodoTargetDocument } from '../targets/model/schemas';
-import { FilterQuery, ObjectId } from 'mongoose';
+import { DodoTargetDocument } from '../targets/model/schemas';
+import { FilterQuery } from 'mongoose';
 import { KpiCreate } from './model';
 import { KpiTypeService } from '../kpiTypes/kpiType.service';
 
