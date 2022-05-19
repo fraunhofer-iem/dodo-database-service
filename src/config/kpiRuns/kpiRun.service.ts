@@ -17,12 +17,27 @@ export class KpiRunService {
     private activeCodeService: ActiveCodeService,
   ) {}
 
-  public async calculate(kpi?: Kpi & { _id?: any }) {
-    const pipeline = this.releaseService.preAggregate(undefined, {
-      files: true,
-    });
-    pipeline.sort({ published_at: 1 });
-    const releases = await pipeline.exec();
+  public async calculate(kpi: Kpi & { _id?: any }) {
+    // const data = await this.preAggregate({
+    //   kpi: { $in: kpi.children.map((child) => (child as any)._id) },
+    // })
+    //   .sort({ to: 1 })
+    //   .exec();
+
+    const releases = await this.releaseService
+      .preAggregate(
+        {},
+        {
+          repo: true,
+          files: true,
+        },
+      )
+      .match({
+        'repo.owner': kpi.target.owner,
+        'repo.repo': kpi.target.repo,
+      })
+      .sort({ published_at: 1 })
+      .exec();
 
     let since = undefined;
     for (const release of releases) {
@@ -40,7 +55,7 @@ export class KpiRunService {
       switch (kpi.kpiType.id) {
         case 'changesPerFile':
           value = this.activeCodeService.changesPerFile(
-            release.repo,
+            release.repo._id,
             since,
             release.published_at,
             release.files,
@@ -57,6 +72,9 @@ export class KpiRunService {
           break;
         case 'activeCode':
           value = this.activeCodeService.activeCode(data);
+          break;
+        case 'meanActiveCode':
+          value = this.activeCodeService.meanActiveCode(data);
           break;
         default:
           break;
@@ -98,6 +116,17 @@ export class KpiRunService {
       throw new Error('KPI has already been calculated');
     }
     return this.kpiRunModel.create(json);
+  }
+
+  public preAggregate(
+    filter: FilterQuery<KpiRunDocument> = undefined,
+  ): Aggregate<any> {
+    const pipeline = this.kpiRunModel.aggregate();
+    if (filter) {
+      pipeline.match(filter);
+    }
+
+    return pipeline;
   }
 
   // public preAggregate(

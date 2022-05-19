@@ -14,6 +14,7 @@ import { FilterQuery } from 'mongoose';
 import { KpiCreate } from './model';
 import { KpiTypeService } from '../kpiTypes/kpiType.service';
 import { KpiRunService } from '../kpiRuns/kpiRun.service';
+import { KpiDocument } from './model/schemas';
 
 @Controller('api/kpis')
 export class KpiController {
@@ -72,15 +73,28 @@ export class KpiController {
     try {
       const target = await this.targetService.read({
         owner: kpi.owner,
-        repo: kpi.repo,
+        repo: kpi.repo ? kpi.repo : null,
       });
       const kpiType = await this.kpiTypeService.read({ id: kpi.type });
+      const childTargets = await this.targetService
+        .preAggregate({ owner: kpi.owner, repo: kpi.repo })
+        .exec();
       const children = [];
       for (const child of kpiType.children) {
-        const instance = await this.kpiService.read({
-          kpiType: child,
-          target: target._id,
-        });
+        let instance: KpiDocument;
+        if (child.type === 'repo') {
+          for (const childTarget of childTargets) {
+            instance = await this.kpiService.read({
+              kpiType: child,
+              target: childTarget._id,
+            });
+          }
+        } else {
+          instance = await this.kpiService.read({
+            kpiType: child,
+            target: target._id,
+          });
+        }
         children.push(instance);
       }
       const currentKpi = await this.kpiService.create({

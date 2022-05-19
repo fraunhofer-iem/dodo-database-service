@@ -1,6 +1,6 @@
 export interface KpiCreate {
   owner: string;
-  repo: string;
+  repo?: string;
   type: string;
 }
 

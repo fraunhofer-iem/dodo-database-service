@@ -11,6 +11,9 @@ export class KpiType {
 
   @Prop([{ type: mSchema.Types.Mixed }])
   children: KpiType[];
+
+  @Prop()
+  type: 'repo' | 'orga';
 }
 
 export type KpiTypeDocument = KpiType & Document;

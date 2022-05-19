@@ -37,6 +37,9 @@ export class ActiveCodeService {
       files.map((file) => [file.path, 0]),
     );
     for (const { _id, changes } of result) {
+      if (changes > 0) {
+        this.logger.debug('' + _id + ': ' + changes);
+      }
       changesPerFile[_id] = changes;
     }
 
@@ -79,5 +82,10 @@ export class ActiveCodeService {
   }): Promise<number> {
     const { stdChangesPerFile, changesPerRepo } = data;
     return 1 - (3 * stdChangesPerFile) / changesPerRepo;
+  }
+
+  async meanActiveCode(data: { activeCode: number[] }): Promise<number> {
+    const { activeCode } = data;
+    return sum(activeCode) / activeCode.length;
   }
 }

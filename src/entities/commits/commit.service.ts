@@ -76,6 +76,11 @@ export class CommitService {
     }
     if (options.author) {
       pipeline.lookup(authorLookup);
+      pipeline.addFields({
+        author: {
+          $arrayElemAt: ['$author', 0],
+        },
+      });
     } else {
       pipeline.project({ author: 0 });
     }
@@ -86,6 +91,11 @@ export class CommitService {
     }
     if (options.repo) {
       pipeline.lookup(repoLookup);
+      pipeline.addFields({
+        repo: {
+          $arrayElemAt: ['$repo', 0],
+        },
+      });
     } else {
       pipeline.project({ repo: 0 });
     }
