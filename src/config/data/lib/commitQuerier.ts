@@ -7,7 +7,7 @@ export async function* commitQuerier(repoIdent: RepositoryIdentifier) {
   yield* querier<Commit>(
     repoIdent,
     queryCommitPage,
-    (commit) => 'author' in commit,
+    (commit) => 'author' in commit && commit.author !== null,
   );
 }
 

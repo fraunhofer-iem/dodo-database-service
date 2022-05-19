@@ -30,6 +30,8 @@ export class DataExtractionController {
         await this.extractionService.extractReleases(repo, target);
         await this.extractionService.extractDiffs(repo, target);
       }
-    } catch (e) {}
+    } catch (e) {
+      console.log(e);
+    }
   }
 }

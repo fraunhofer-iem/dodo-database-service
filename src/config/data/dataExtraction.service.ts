@@ -36,14 +36,15 @@ export class DataExtractionService {
       const issueDocument = await this.issueService.create(issue);
       for await (const event of issueEventQuerier(target, issue.number)) {
         issueDocument.events.push(event);
-        await issueDocument.save();
       }
+      await issueDocument.save();
       repo.issues.push(issueDocument);
       await repo.save();
     }
   }
 
   public async extractCommits(repo: RepositoryDocument, target: DodoTarget) {
+    this.logger.debug('Commits');
     for await (const commit of commitQuerier(target)) {
       this.logger.log(`Commit ${commit.url}`);
       let files: DiffFile[] = [];
@@ -61,6 +62,7 @@ export class DataExtractionService {
   }
 
   public async extractReleases(repo: RepositoryDocument, target: DodoTarget) {
+    this.logger.debug('Releases');
     for await (const release of releaseQuerier(target)) {
       this.logger.log(`Release ${release.name}`);
       const tag = await getTag(repo, release.tag_name);
@@ -76,6 +78,7 @@ export class DataExtractionService {
   }
 
   public async extractDiffs(repo: RepositoryDocument, target: DodoTarget) {
+    this.logger.debug('Diffs');
     for await (const pullRequest of pullRequestQuerier(target)) {
       this.logger.log(`Pull request ${pullRequest.number}`);
       const diff: Diff = {
