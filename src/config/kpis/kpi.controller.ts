@@ -15,6 +15,7 @@ import { KpiCreate } from './model';
 import { KpiTypeService } from '../kpiTypes/kpiType.service';
 import { KpiRunService } from '../kpiRuns/kpiRun.service';
 import { KpiDocument } from './model/schemas';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Controller('api/kpis')
 export class KpiController {
@@ -25,6 +26,7 @@ export class KpiController {
     private kpiTypeService: KpiTypeService,
     private targetService: DodoTargetService,
     private kpiRunService: KpiRunService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   @Get()
@@ -102,13 +104,21 @@ export class KpiController {
         target: target,
         children: children.map((child) => child._id),
       });
-      this.kpiRunService.calculate({
-        _id: currentKpi._id,
-        target,
-        kpiType,
-        children,
-        id: currentKpi.id,
+      this.eventEmitter.emit('kpi.registered', {
+        kpi: {
+          _id: currentKpi._id,
+          children: currentKpi.children,
+          kpiType: kpiType,
+          target: target,
+        },
       });
+      // this.kpiRunService.calculate({
+      //   _id: currentKpi._id,
+      //   target,
+      //   kpiType,
+      //   children,
+      //   id: currentKpi.id,
+      // });
       return await this.readKpi(currentKpi.id);
     } catch (err) {
       this.logger.debug(err.message);

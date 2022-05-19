@@ -5,19 +5,19 @@ import { CommitService } from 'src/entities/commits/commit.service';
 import { CalculationEventPayload } from '../lib';
 
 @Injectable()
-export class ActiveCodeService {
-  private readonly logger = new Logger(ActiveCodeService.name);
+export class ChangesPerFileService {
+  private readonly logger = new Logger(ChangesPerFileService.name);
 
   constructor(
     private commitService: CommitService,
     private eventEmitter: EventEmitter2,
   ) {}
 
-  @OnEvent('kpi.prepared.numOfFilesChanged')
-  async numberOfFilesChanged(payload: CalculationEventPayload) {
+  @OnEvent('kpi.prepared.changesPerFile')
+  public async changesPerFile(payload: CalculationEventPayload) {
     const { kpi, since, release } = payload;
 
-    const result: { _id: string }[] = await this.commitService
+    const result: { _id: string; changes: number }[] = await this.commitService
       .preAggregate(
         {
           repo: (release.repo as any)._id,
@@ -31,35 +31,38 @@ export class ActiveCodeService {
       .unwind('$files')
       .group({
         _id: '$files.filename',
+        changes: { $sum: 1 },
       })
       .exec();
 
-    const numberOfFilesChanged = sum(
-      result.map((file) =>
-        release.files.map((repoFile) => repoFile.path).includes(file._id)
-          ? 1
-          : 0,
-      ),
+    const changesPerFile: { [key: string]: number } = Object.fromEntries(
+      release.files.map((file) => [file.path, 0]),
     );
+    for (const { _id, changes } of result) {
+      if (changesPerFile.hasOwnProperty(_id)) {
+        changesPerFile[_id] = changes;
+      }
+    }
     this.eventEmitter.emit('kpi.calculated', {
       kpi,
       release,
       since,
-      value: numberOfFilesChanged,
+      value: changesPerFile,
     });
   }
 
-  @OnEvent('kpi.prepared.activeCode')
-  async activeCode(payload: CalculationEventPayload) {
+  @OnEvent('kpi.prepared.avgChangesPerFile')
+  public async avgChangesPerFile(payload: CalculationEventPayload) {
     const { kpi, since, release, data } = payload;
-    const { numOfFilesChanged } = data;
+    const { changesPerFile } = data;
 
-    const activeCode = numOfFilesChanged / release.files.length;
+    const avgChangesPerFile =
+      sum(Object.values(changesPerFile)) / Object.values(changesPerFile).length;
     this.eventEmitter.emit('kpi.calculated', {
       kpi,
       release,
       since,
-      value: activeCode,
+      value: avgChangesPerFile,
     });
   }
 }

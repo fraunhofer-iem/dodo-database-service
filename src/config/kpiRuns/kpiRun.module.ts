@@ -5,6 +5,7 @@ import { ActiveCodeModule } from 'src/kpi/statistics/activeCode/activeCode.modul
 import { KpiRunService } from './kpiRun.service';
 import { KpiRun, KpiRunSchema } from './model/schemas';
 import { ReleaseService } from 'src/entities/releases/release.service';
+import { ChangesPerFileModule } from 'src/kpi/statistics/changesPerFile/changesPerFile.module';
 
 @Module({
   imports: [
@@ -27,9 +28,10 @@ import { ReleaseService } from 'src/entities/releases/release.service';
           inject: [ReleaseService],
         },
       ],
-      'lake',
+      'config',
     ),
     ReleaseModule,
+    ChangesPerFileModule,
     ActiveCodeModule,
   ],
   providers: [KpiRunService],

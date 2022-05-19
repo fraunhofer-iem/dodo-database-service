@@ -3,9 +3,11 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { KpiModule } from './kpi/kpi.module';
 import { DodoConfigModule } from './config/dodoConfig.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
+    EventEmitterModule.forRoot(),
     ConfigModule.forRoot({
       envFilePath: ['.env', '.env.prod', '.env.local'], // If a variable is found in multiple files, the first one takes precedence.
     }),

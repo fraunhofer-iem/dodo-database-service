@@ -1,10 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
 import { Aggregate, FilterQuery, Model } from 'mongoose';
+import { Release } from 'src/entities/releases/model/schemas';
 import { ReleaseService } from 'src/entities/releases/release.service';
-import { ActiveCodeService } from 'src/kpi/statistics/activeCode/activeCode.service';
 import { documentExists, retrieveDocument } from 'src/lib';
-import { Kpi, KpiDocument } from '../kpis/model/schemas';
+import { KpiDocument } from '../kpis/model/schemas';
+import { kpiLookup, kpiTypeLookup, releaseLookup } from './lib';
 import { KpiRun, KpiRunDocument } from './model/schemas';
 
 @Injectable()
@@ -14,16 +16,12 @@ export class KpiRunService {
   constructor(
     @InjectModel(KpiRun.name) private kpiRunModel: Model<KpiRunDocument>,
     private releaseService: ReleaseService,
-    private activeCodeService: ActiveCodeService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
-  public async calculate(kpi: Kpi & { _id?: any }) {
-    // const data = await this.preAggregate({
-    //   kpi: { $in: kpi.children.map((child) => (child as any)._id) },
-    // })
-    //   .sort({ to: 1 })
-    //   .exec();
-
+  @OnEvent('kpi.registered')
+  public async calculate(payload: { kpi: KpiDocument }) {
+    const { kpi } = payload;
     const releases = await this.releaseService
       .preAggregate(
         {},
@@ -41,53 +39,41 @@ export class KpiRunService {
 
     let since = undefined;
     for (const release of releases) {
+      const children = await this.preAggregate(
+        {
+          release: release._id,
+          kpi: { $in: kpi.children },
+        },
+        { kpi: true },
+      ).exec();
       const data: any = {};
-      for (const child of kpi.children) {
-        data[child.id.split('@')[0]] = (
-          await this.read({
-            release: release._id,
-            //@ts-ignore
-            kpi: child._id,
-          })
-        ).value;
+      for (const child of children) {
+        data[child.kpi.kpiType.id] = child.value;
       }
-      let value: any[] | any;
-      switch (kpi.kpiType.id) {
-        case 'changesPerFile':
-          value = this.activeCodeService.changesPerFile(
-            release.repo._id,
-            since,
-            release.published_at,
-            release.files,
-          );
-          break;
-        case 'changesPerRepo':
-          value = this.activeCodeService.changesPerRepo(data);
-          break;
-        case 'avgChangesPerFile':
-          value = this.activeCodeService.avgChangesPerFile(data);
-          break;
-        case 'stdChangesPerFile':
-          value = this.activeCodeService.stdChangesPerFile(data);
-          break;
-        case 'activeCode':
-          value = this.activeCodeService.activeCode(data);
-          break;
-        case 'meanActiveCode':
-          value = this.activeCodeService.meanActiveCode(data);
-          break;
-        default:
-          break;
-      }
-      this.create({
-        kpi: kpi._id,
-        release,
-        since,
-        to: release.published_at,
-        value: await value,
+      this.eventEmitter.emit(`kpi.prepared.${kpi.kpiType.id}`, {
+        kpi: kpi,
+        since: since,
+        release: release,
+        data: data,
       });
       since = release.published_at;
     }
+  }
+
+  @OnEvent('kpi.calculated')
+  public async store(payload: {
+    kpi: KpiDocument;
+    release: Release;
+    since: Date;
+    value: any;
+  }) {
+    this.create({
+      kpi: payload.kpi._id,
+      release: payload.release,
+      since: payload.since as any,
+      to: payload.release.published_at,
+      value: payload.value,
+    });
   }
 
   public async readOrCreate(json: KpiRun): Promise<KpiRunDocument> {
@@ -120,61 +106,31 @@ export class KpiRunService {
 
   public preAggregate(
     filter: FilterQuery<KpiRunDocument> = undefined,
+    options: {
+      kpi?: boolean;
+      release?: boolean;
+    } = {},
   ): Aggregate<any> {
     const pipeline = this.kpiRunModel.aggregate();
     if (filter) {
       pipeline.match(filter);
     }
-
+    if (options.kpi) {
+      pipeline.lookup(kpiLookup);
+      pipeline.addFields({
+        kpi: { $arrayElemAt: ['$kpi', 0] },
+      });
+      pipeline.lookup(kpiTypeLookup);
+      pipeline.addFields({
+        'kpi.kpiType': { $arrayElemAt: ['$kpi.kpiType', 0] },
+      });
+    }
+    if (options.release) {
+      pipeline.lookup(releaseLookup);
+      pipeline.addFields({
+        release: { $arrayElemAt: ['$release', 0] },
+      });
+    }
     return pipeline;
   }
-
-  // public preAggregate(
-  //   filter: FilterQuery<KpiDocument> = undefined,
-  //   options: { target?: boolean; children?: boolean },
-  // ): Aggregate<any[]> {
-  //   const pipeline = this.kpiModel.aggregate();
-  //   if (filter) {
-  //     pipeline.match(filter);
-  //   }
-  //   pipeline.lookup(kpiTypeLookup);
-  //   pipeline.addFields({
-  //     type: { $arrayElemAt: ['$kpiType.id', 0] },
-  //     name: { $arrayElemAt: ['$kpiType.name', 0] },
-  //   });
-  //   if (options.target === true) {
-  //     pipeline.lookup(targetLookup);
-  //     pipeline.addFields({
-  //       owner: { $arrayElemAt: ['$target.owner', 0] },
-  //       repo: { $arrayElemAt: ['$target.repo', 0] },
-  //     });
-  //   } else {
-  //     pipeline.project({ target: 0 });
-  //   }
-  //   if (options.children) {
-  //     pipeline.lookup(childrenLookup);
-  //     pipeline.unwind({ path: '$children', preserveNullAndEmptyArrays: true });
-  //     pipeline.group({
-  //       _id: '$_id',
-  //       data: { $first: '$$ROOT' },
-  //       children: {
-  //         $push: '$children.id',
-  //       },
-  //     });
-  //     pipeline.addFields({
-  //       'data.children': '$children',
-  //     });
-  //     pipeline.replaceRoot('$data');
-  //   } else {
-  //     pipeline.project({ children: 0 });
-  //   }
-  //   pipeline.project({
-  //     target: 0,
-  //     kpiType: 0,
-  //     _id: 0,
-  //     __v: 0,
-  //   });
-
-  //   return pipeline;
-  // }
 }
