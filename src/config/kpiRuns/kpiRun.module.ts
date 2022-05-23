@@ -6,6 +6,7 @@ import { KpiRunService } from './kpiRun.service';
 import { KpiRun, KpiRunSchema } from './model/schemas';
 import { ReleaseService } from 'src/entities/releases/release.service';
 import { ChangesPerFileModule } from 'src/kpi/statistics/changesPerFile/changesPerFile.module';
+import { FileSeparationModule } from 'src/kpi/statistics/fileSeparation/fileSeparation.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { ChangesPerFileModule } from 'src/kpi/statistics/changesPerFile/changesP
     ReleaseModule,
     ChangesPerFileModule,
     ActiveCodeModule,
+    FileSeparationModule,
   ],
   providers: [KpiRunService],
   exports: [KpiRunService],
