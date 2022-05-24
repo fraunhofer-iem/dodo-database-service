@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
-import { KpiModule } from './kpi/kpi.module';
 import { DodoConfigModule } from './config/dodoConfig.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 

@@ -1,4 +1,4 @@
-import { KpiDocument } from 'src/entities/kpis/model/schemas';
+import { KpiDocument } from 'src/config/kpis/model/schemas';
 import { Release } from 'src/entities/releases/model/schemas';
 
 export type CalculationEventPayload = {
