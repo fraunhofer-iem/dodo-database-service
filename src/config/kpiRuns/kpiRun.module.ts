@@ -8,6 +8,7 @@ import { ReleaseService } from 'src/entities/releases/release.service';
 import { ChangesPerFileModule } from 'src/kpi/statistics/changesPerFile/changesPerFile.module';
 import { FileSeparationModule } from 'src/kpi/statistics/fileSeparation/fileSeparation.module';
 import { CodeSpreadModule } from 'src/kpi/statistics/codeSpread/codeSpread.module';
+import { GodClassIndexModule } from 'src/kpi/statistics/godClassIndex/godClassIndex.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { CodeSpreadModule } from 'src/kpi/statistics/codeSpread/codeSpread.modul
     ActiveCodeModule,
     FileSeparationModule,
     CodeSpreadModule,
+    GodClassIndexModule,
   ],
   providers: [KpiRunService],
   exports: [KpiRunService],
