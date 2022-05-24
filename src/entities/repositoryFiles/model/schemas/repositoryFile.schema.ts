@@ -17,6 +17,8 @@ export class RepositoryFile {
   @Prop()
   size: number;
   @Prop()
+  content: string;
+  @Prop()
   url: string;
 }
 export type RepositoryFileDocument = RepositoryFile & Document;

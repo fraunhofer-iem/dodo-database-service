@@ -66,7 +66,7 @@ export class DataExtractionService {
     for await (const release of releaseQuerier(target)) {
       this.logger.log(`Release ${release.name}`);
       const tag = await getTag(repo, release.tag_name);
-      const files = await getRepoFiles(target, tag.sha);
+      const files = await getRepoFiles(target, tag.sha, release.tag_name);
       const releaseDocument = await this.releaseService.create({
         ...release,
         repo,
@@ -84,7 +84,11 @@ export class DataExtractionService {
       const diff: Diff = {
         pullRequest: pullRequest,
         files: await getPullRequestFiles(target, pullRequest),
-        repositoryFiles: await getRepoFiles(target, pullRequest.base.sha),
+        repositoryFiles: await getRepoFiles(
+          target,
+          pullRequest.base.sha,
+          pullRequest.base.ref,
+        ),
       };
       const diffDocument = await this.diffService.create(diff);
       repo.diffs.push(diffDocument);

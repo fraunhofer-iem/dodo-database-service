@@ -22,7 +22,7 @@ export class RepositoryFileService {
   ): Promise<RepositoryFileDocument> {
     let repoFile: RepositoryFileDocument;
     try {
-      repoFile = await this.read({ path: json.path });
+      repoFile = await this.read({ sha: json.sha });
     } catch {
       repoFile = await this.create(json);
     }
@@ -42,7 +42,7 @@ export class RepositoryFileService {
   public async create(
     json: AnyKeys<RepositoryFile>,
   ): Promise<RepositoryFileDocument> {
-    if (await documentExists(this.repoFileModel, { path: json.path })) {
+    if (await documentExists(this.repoFileModel, { sha: json.sha })) {
       throw new Error('RepositoryFile does already exist');
     }
     return this.repoFileModel.create(json);

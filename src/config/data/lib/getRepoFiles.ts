@@ -10,6 +10,7 @@ enum FileType {
 export async function getRepoFiles(
   repoIdent: RepositoryIdentifier,
   sha: string,
+  ref?: string,
 ) {
   const { owner, repo } = repoIdent;
 
@@ -20,5 +21,22 @@ export async function getRepoFiles(
     recursive: 'true',
   });
 
-  return baseTree.data.tree.filter((v) => v.type == FileType.file);
+  const files = baseTree.data.tree.filter((v) => v.type == FileType.file);
+  if (ref) {
+    for (const file of files) {
+      await OCTOKIT.rest.repos
+        .getContent({
+          owner: owner,
+          repo: repo,
+          path: file.path,
+          ref: ref,
+        })
+        .then((res) => res.data)
+        .then((data) => {
+          file['content'] = data['content'];
+        });
+    }
+  }
+
+  return files;
 }

@@ -4,5 +4,6 @@ export interface RepositoryFile {
   type?: string;
   sha?: string;
   size?: number;
+  content?: string;
   url?: string;
 }
