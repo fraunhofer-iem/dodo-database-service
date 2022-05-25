@@ -11,28 +11,8 @@ import { Kpi, KpiSchema } from './model/schemas';
 
 @Module({
   imports: [
-    MongooseModule.forFeatureAsync(
-      [
-        {
-          name: Kpi.name,
-          imports: [DodoTargetModule, KpiTypeModule],
-          useFactory: (
-            targetService: DodoTargetService,
-            kpiTypeService: KpiTypeService,
-          ) => {
-            const schema = KpiSchema;
-            schema.pre<Kpi>('validate', async function (this: Kpi) {
-              this.id = `${this.kpiType.id}@${this.target.owner}/${this.target.repo}`;
-              this.target = (await targetService.readOrCreate(this.target))._id;
-              this.kpiType = (
-                await kpiTypeService.read({ id: this.kpiType.id })
-              )._id;
-            });
-            return schema;
-          },
-          inject: [DodoTargetService, KpiTypeService],
-        },
-      ],
+    MongooseModule.forFeature(
+      [{ name: Kpi.name, schema: KpiSchema }],
       'config',
     ),
     DodoTargetModule,

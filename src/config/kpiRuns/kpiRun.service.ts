@@ -48,7 +48,15 @@ export class KpiRunService {
       ).exec();
       const data: any = {};
       for (const child of children) {
-        data[child.kpi.kpiType.id] = child.value;
+        const kpiTypeId = child.kpi.kpiType.id;
+        if (data.hasOwnProperty(kpiTypeId)) {
+          if (!Array.isArray(data[kpiTypeId])) {
+            data[kpiTypeId] = [data[kpiTypeId]];
+          }
+          data[kpiTypeId].push(child.value);
+        } else {
+          data[kpiTypeId] = child.value;
+        }
       }
       this.eventEmitter.emit(`kpi.prepared.${kpi.kpiType.id}`, {
         kpi: kpi,

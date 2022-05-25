@@ -33,11 +33,10 @@ export class KpiService {
     yield* kpis;
   }
 
-  public async create(json: Omit<Kpi, 'id'>): Promise<KpiDocument> {
+  public async create(json: Kpi): Promise<KpiDocument> {
     if (
       await documentExists(this.kpiModel, {
-        kpiType: json.kpiType,
-        target: json.target,
+        id: json.id,
       })
     ) {
       throw new Error('KPI does already exist');

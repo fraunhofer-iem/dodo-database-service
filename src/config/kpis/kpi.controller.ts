@@ -83,26 +83,25 @@ export class KpiController {
         .exec();
       const children = [];
       for (const child of kpiType.children) {
-        let instance: KpiDocument;
         if (child.type === 'repo') {
           for (const childTarget of childTargets) {
-            instance = await this.kpiService.read({
+            for await (const instance of this.kpiService.readAll({
               kpiType: child,
               target: childTarget._id,
-            });
+            })) {
+              children.push(instance);
+            }
           }
-        } else {
-          instance = await this.kpiService.read({
-            kpiType: child,
-            target: target._id,
-          });
         }
-        children.push(instance);
       }
       const currentKpi = await this.kpiService.create({
+        id: `${kpiType.id}@${target.owner}${kpi.id ? `[${kpi.id}]` : ''}/${
+          target.repo
+        }`,
         kpiType: kpiType,
         target: target,
         children: children.map((child) => child._id),
+        params: kpi.params,
       });
       this.eventEmitter.emit('kpi.registered', {
         kpi: {
@@ -112,13 +111,6 @@ export class KpiController {
           target: target,
         },
       });
-      // this.kpiRunService.calculate({
-      //   _id: currentKpi._id,
-      //   target,
-      //   kpiType,
-      //   children,
-      //   id: currentKpi.id,
-      // });
       return await this.readKpi(currentKpi.id);
     } catch (err) {
       this.logger.debug(err.message);
