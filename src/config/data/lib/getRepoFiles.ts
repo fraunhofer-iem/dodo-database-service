@@ -1,6 +1,7 @@
 import { PullRequest } from 'src/entities/pullRequests/model';
-import { OCTOKIT } from '../../../lib';
+import { documentExists, OCTOKIT } from '../../../lib';
 import { RepositoryIdentifier } from 'src/entities/repositories/model';
+import { RepositoryFileService } from 'src/entities/repositoryFiles/repositoryFile.service';
 
 enum FileType {
   file = 'blob',
@@ -11,6 +12,7 @@ export async function getRepoFiles(
   repoIdent: RepositoryIdentifier,
   sha: string,
   ref?: string,
+  repoFileService?: RepositoryFileService,
 ) {
   const { owner, repo } = repoIdent;
 
@@ -22,17 +24,21 @@ export async function getRepoFiles(
   });
   const files = baseTree.data.tree.filter((v) => v.type === FileType.file);
   if (ref) {
-    for (const file of files) {
-      const data = await OCTOKIT.rest.repos
-        .getContent({
-          owner: owner,
-          repo: repo,
-          path: file.path,
-          ref: ref,
-        })
-        .then((res) => res.data);
-      file['content'] = (data as any).content;
-      file['encoding'] = (data as any).encoding;
+    for (let i = 0; i < files.length; i++) {
+      try {
+        files[i] = await repoFileService.read({ sha: files[i].sha });
+      } catch {
+        const data = await OCTOKIT.rest.repos
+          .getContent({
+            owner: owner,
+            repo: repo,
+            path: files[i].path,
+            ref: ref,
+          })
+          .then((res) => res.data);
+        files[i]['content'] = (data as any).content;
+        files[i]['encoding'] = (data as any).encoding;
+      }
     }
   }
   return files;

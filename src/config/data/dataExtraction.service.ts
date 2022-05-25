@@ -6,6 +6,7 @@ import { Diff } from 'src/entities/diffs/model';
 import { IssueService } from 'src/entities/issues/issue.service';
 import { ReleaseService } from 'src/entities/releases/release.service';
 import { RepositoryDocument } from 'src/entities/repositories/model/schemas';
+import { RepositoryFileService } from 'src/entities/repositoryFiles/repositoryFile.service';
 import { DodoTarget } from '../targets/model/schemas';
 import {
   issueQuerier,
@@ -27,6 +28,7 @@ export class DataExtractionService {
     private issueService: IssueService,
     private commitService: CommitService,
     private releaseService: ReleaseService,
+    private repoFileService: RepositoryFileService,
     private diffService: DiffService,
   ) {}
 
@@ -66,7 +68,12 @@ export class DataExtractionService {
     for await (const release of releaseQuerier(target)) {
       this.logger.log(`Release ${release.name}`);
       const tag = await getTag(repo, release.tag_name);
-      const files = await getRepoFiles(target, tag.sha, release.tag_name);
+      const files = await getRepoFiles(
+        target,
+        tag.sha,
+        release.tag_name,
+        this.repoFileService,
+      );
       const releaseDocument = await this.releaseService.create({
         ...release,
         repo,
