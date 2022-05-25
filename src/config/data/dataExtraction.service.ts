@@ -84,11 +84,7 @@ export class DataExtractionService {
       const diff: Diff = {
         pullRequest: pullRequest,
         files: await getPullRequestFiles(target, pullRequest),
-        repositoryFiles: await getRepoFiles(
-          target,
-          pullRequest.base.sha,
-          pullRequest.base.ref,
-        ),
+        repositoryFiles: await getRepoFiles(target, pullRequest.base.sha),
       };
       const diffDocument = await this.diffService.create(diff);
       repo.diffs.push(diffDocument);

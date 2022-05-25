@@ -20,23 +20,20 @@ export async function getRepoFiles(
     repo: repo,
     recursive: 'true',
   });
-
-  const files = baseTree.data.tree.filter((v) => v.type == FileType.file);
+  const files = baseTree.data.tree.filter((v) => v.type === FileType.file);
   if (ref) {
     for (const file of files) {
-      await OCTOKIT.rest.repos
+      const data = await OCTOKIT.rest.repos
         .getContent({
           owner: owner,
           repo: repo,
           path: file.path,
           ref: ref,
         })
-        .then((res) => res.data)
-        .then((data) => {
-          file['content'] = data['content'];
-        });
+        .then((res) => res.data);
+      file['content'] = (data as any).content;
+      file['encoding'] = (data as any).encoding;
     }
   }
-
   return files;
 }

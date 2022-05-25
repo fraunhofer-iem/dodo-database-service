@@ -19,6 +19,8 @@ export class RepositoryFile {
   @Prop()
   content: string;
   @Prop()
+  encoding: string;
+  @Prop()
   url: string;
 }
 export type RepositoryFileDocument = RepositoryFile & Document;
