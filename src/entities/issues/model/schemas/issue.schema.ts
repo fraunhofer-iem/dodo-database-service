@@ -4,6 +4,7 @@ import { Milestone } from '../../../milestones/model/schemas';
 import { Document, Schema as mSchema } from 'mongoose';
 import { User } from '../../../users/model/schemas';
 import { IssueEvent } from '../../../issueEvents/model/schemas';
+import { Repository } from 'src/entities/repositories/model/schemas';
 
 /**
  * For further information, see: https://docs.github.com/en/rest/reference/issues#list-repository-issues
@@ -54,6 +55,9 @@ export class Issue {
 
   @Prop()
   author_association: string;
+
+  @Prop({ type: mSchema.Types.Mixed, ref: 'Repository' })
+  repo: Repository;
 
   @Prop([{ type: mSchema.Types.Mixed, ref: 'IssueEvent' }])
   events: IssueEvent[];

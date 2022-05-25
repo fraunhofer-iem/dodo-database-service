@@ -9,6 +9,7 @@ import { ChangesPerFileModule } from 'src/kpi/statistics/changesPerFile/changesP
 import { FileSeparationModule } from 'src/kpi/statistics/fileSeparation/fileSeparation.module';
 import { CodeSpreadModule } from 'src/kpi/statistics/codeSpread/codeSpread.module';
 import { GodClassIndexModule } from 'src/kpi/statistics/godClassIndex/godClassIndex.module';
+import { MeanTimeToResolutionModule } from 'src/kpi/statistics/meanTimeToResolution/meanTimeToResolution.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { GodClassIndexModule } from 'src/kpi/statistics/godClassIndex/godClassIn
     FileSeparationModule,
     CodeSpreadModule,
     GodClassIndexModule,
+    MeanTimeToResolutionModule,
   ],
   providers: [KpiRunService],
   exports: [KpiRunService],
