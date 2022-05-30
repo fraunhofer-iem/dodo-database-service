@@ -6,6 +6,8 @@ import { LabelModule } from '../labels/label.module';
 import { LabelService } from '../labels/label.service';
 import { MilestoneModule } from '../milestones/milestone.module';
 import { MilestoneService } from '../milestones/milestone.service';
+import { RepositoryModule } from '../repositories/repository.module';
+import { RepositoryService } from '../repositories/repository.service';
 import { UserModule } from '../users/user.module';
 import { UserService } from '../users/user.service';
 import { IssueService } from './issue.service';
@@ -17,9 +19,16 @@ import { IssueSchema, Issue } from './model/schemas';
       [
         {
           name: Issue.name,
-          imports: [UserModule, IssueEventModule, LabelModule, MilestoneModule],
+          imports: [
+            UserModule,
+            RepositoryModule,
+            IssueEventModule,
+            LabelModule,
+            MilestoneModule,
+          ],
           useFactory: (
             userService: UserService,
+            repoService: RepositoryService,
             issueEventService: IssueEventService,
             labelService: LabelService,
             milestoneService: MilestoneService,
@@ -46,6 +55,9 @@ import { IssueSchema, Issue } from './model/schemas';
               }
             });
             schema.pre<Issue>('validate', async function (this: Issue) {
+              this.repo = (await repoService.readOrCreate(this.repo))._id;
+            });
+            schema.pre<Issue>('validate', async function (this: Issue) {
               for (let i = 0; i < this.events.length; i++) {
                 this.events[i] = (
                   await issueEventService.create(this.events[i])
@@ -70,6 +82,7 @@ import { IssueSchema, Issue } from './model/schemas';
           },
           inject: [
             UserService,
+            RepositoryService,
             IssueEventService,
             LabelService,
             MilestoneService,

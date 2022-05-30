@@ -3,6 +3,7 @@ import { CommitService } from 'src/entities/commits/commit.service';
 import { DiffFile } from 'src/entities/diffFiles/model/schemas';
 import { DiffService } from 'src/entities/diffs/diff.service';
 import { Diff } from 'src/entities/diffs/model';
+import { IssueEvent } from 'src/entities/issueEvents/model/schemas';
 import { IssueService } from 'src/entities/issues/issue.service';
 import { ReleaseService } from 'src/entities/releases/release.service';
 import { RepositoryDocument } from 'src/entities/repositories/model/schemas';
@@ -35,11 +36,15 @@ export class DataExtractionService {
   public async extractIssues(repo: RepositoryDocument, target: DodoTarget) {
     for await (const issue of issueQuerier(target)) {
       this.logger.log(`Issue ${issue.number}`);
-      const issueDocument = await this.issueService.create(issue);
+      const events: IssueEvent[] = [];
       for await (const event of issueEventQuerier(target, issue.number)) {
-        issueDocument.events.push(event);
+        events.push(event);
       }
-      await issueDocument.save();
+      const issueDocument = await this.issueService.create({
+        ...issue,
+        repo,
+        events,
+      });
       repo.issues.push(issueDocument);
       await repo.save();
     }
