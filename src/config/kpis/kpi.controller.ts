@@ -83,19 +83,18 @@ export class KpiController {
         .exec();
       const children = [];
       for (const child of kpiType.children) {
-        if (child.type === 'repo') {
-          for (const childTarget of childTargets) {
-            for await (const instance of this.kpiService.readAll({
-              kpiType: child,
-              target: childTarget._id,
-            })) {
-              children.push(instance);
-            }
+        for (const childTarget of childTargets) {
+          for await (const instance of this.kpiService.readAll({
+            kpiType: child,
+            target: childTarget._id,
+          })) {
+            children.push(instance);
           }
         }
       }
+
       const currentKpi = await this.kpiService.create({
-        id: `${kpiType.id}@${target.owner}${kpi.id ? `[${kpi.id}]` : ''}/${
+        id: `${kpiType.id}${kpi.id ? `[${kpi.id}]` : ''}@${target.owner}/${
           target.repo
         }`,
         kpiType: kpiType,
@@ -107,6 +106,7 @@ export class KpiController {
         kpi: {
           _id: currentKpi._id,
           children: currentKpi.children,
+          params: currentKpi.params,
           kpiType: kpiType,
           target: target,
         },

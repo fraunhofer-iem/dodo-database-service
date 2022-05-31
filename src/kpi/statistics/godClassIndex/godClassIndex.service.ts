@@ -12,12 +12,12 @@ export class GodClassIndexService {
   @OnEvent('kpi.prepared.locRatioPerFile')
   async locRatioPerFile(payload: CalculationEventPayload) {
     const { kpi, since, release, data } = payload;
-    const { totalLoc } = data;
+    const { locPerFile, totalLoc } = data;
 
     const locRatioPerFile: { [key: string]: number } = {};
 
-    for (const file of release.files) {
-      locRatioPerFile[file.path] = file.content.split('\n').length / totalLoc;
+    for (const [file, loc] of Object.entries<number>(locPerFile)) {
+      locRatioPerFile[file] = loc / totalLoc;
     }
 
     this.eventEmitter.emit('kpi.calculated', {

@@ -15,7 +15,22 @@ export class CodeSpreadService {
 
     const locPerFile: { [key: string]: number } = {};
     for (const file of release.files) {
-      locPerFile[file.path] = file.content.split('\n').length;
+      const fileExtension = file.path.split('.').slice(-1)[0];
+      let excluded = kpi.params.excludedFileExtensions.includes(fileExtension);
+      for (const excludedPath of kpi.params.excludedPaths) {
+        if (file.path.startsWith(excludedPath)) {
+          excluded = true;
+          break;
+        }
+      }
+      if (!excluded) {
+        locPerFile[file.path] = Buffer.from(
+          file.content as any,
+          file.encoding as any,
+        )
+          .toString()
+          .split('\n').length;
+      }
     }
 
     this.eventEmitter.emit('kpi.calculated', {
@@ -64,8 +79,8 @@ export class CodeSpreadService {
 
     const stdLoc = Math.sqrt(
       sum(
-        Object.values(locPerFile).map((fileParings: string[]) =>
-          Math.pow(fileParings.length - avgLoc, 2),
+        Object.values(locPerFile).map((loc: number) =>
+          Math.pow(loc - avgLoc, 2),
         ),
       ) / Object.values(locPerFile).length,
     );

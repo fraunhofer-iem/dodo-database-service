@@ -1,25 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { RepositoryService } from 'src/entities/repositories/repository.service';
-import { RepositoryIdentifier } from 'src/entities/repositories/model';
-import { Aggregate } from 'mongoose';
-import {
-  CalculationEventPayload,
-  groupByIntervalSelector,
-  Intervals,
-  serialize,
-  transformMapToObject,
-} from '../lib';
+import { CalculationEventPayload, transformMapToObject } from '../lib';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Issue } from 'src/entities/issues/model/schemas';
 import { IssueService } from 'src/entities/issues/issue.service';
-import { sum } from 'lodash';
+import { min, sum } from 'lodash';
+import { group } from 'console';
 
 @Injectable()
 export class MeanTimeToResolutionService {
   private readonly logger = new Logger(MeanTimeToResolutionService.name);
 
   constructor(
-    private readonly repoService: RepositoryService,
     private readonly issueService: IssueService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
@@ -27,16 +18,24 @@ export class MeanTimeToResolutionService {
   @OnEvent('kpi.prepared.timeToResolution')
   async timeToResolution(payload: CalculationEventPayload) {
     const { kpi, since, release } = payload;
-
     const issues: Issue[] = await this.issueService
       .preAggregate(
         { repo: (release.repo as any)._id },
         { to: release.published_at },
       )
       .match({
-        closed_at: {
-          $gte: since,
-        },
+        $or: [
+          {
+            state: 'closed',
+            closed_at: {
+              $gt: new Date(since),
+              $lte: new Date(release.published_at),
+            },
+          },
+          {
+            state: 'open',
+          },
+        ],
       })
       .exec();
 
@@ -44,7 +43,7 @@ export class MeanTimeToResolutionService {
     for (const issue of issues) {
       timeToResolution.set(
         issue.node_id,
-        new Date(issue.closed_at).valueOf() -
+        new Date(issue.closed_at ?? release.published_at).valueOf() -
           new Date(issue.created_at).valueOf(),
       );
     }
@@ -59,7 +58,10 @@ export class MeanTimeToResolutionService {
   @OnEvent('kpi.prepared.meanTimeToResolution')
   async meanTimeToResolution(payload: CalculationEventPayload) {
     const { kpi, since, release, data } = payload;
-    const { timeToResolution } = data;
+    let { timeToResolution } = data;
+    if (timeToResolution === undefined) {
+      timeToResolution = {};
+    }
 
     const issues: Issue[] = await this.issueService
       .preAggregate(
@@ -74,6 +76,10 @@ export class MeanTimeToResolutionService {
         'labels.name': {
           $in: kpi.params.labels,
         },
+      })
+      .group({
+        _id: '$_id',
+        node_id: { $first: '$node_id' },
       })
       .exec();
 
@@ -91,7 +97,12 @@ export class MeanTimeToResolutionService {
   @OnEvent('kpi.prepared.overallMeanTimeToResolution')
   async overallMeanTimeToResolution(payload: CalculationEventPayload) {
     const { kpi, since, release, data } = payload;
-    const { meanTimeToResolution } = data;
+    let { meanTimeToResolution } = data;
+    meanTimeToResolution = meanTimeToResolution.reduce(
+      (mttr: number[], value: number) =>
+        isNaN(value) ? mttr : [value, ...mttr],
+      [],
+    );
 
     const overallMeanTimeToResolution =
       sum(meanTimeToResolution) / meanTimeToResolution.length;
@@ -103,79 +114,19 @@ export class MeanTimeToResolutionService {
     });
   }
 
-  // async meanTimeToResolution(
-  //   repoIdent: RepositoryIdentifier,
-  //   interval: Intervals = Intervals.MONTH,
-  //   labels: string[] = [], // calculate only for tickets with at least on of these labels
-  //   since: string = undefined,
-  //   to: string = undefined,
-  // ) {
-  //   const pipeline: Aggregate<
-  //     {
-  //       avg: number; // mean time to resolution (in seconds) for all tickets selected using labels parameter
-  //       data: {
-  //         // development of mean time to resolution over time
-  //         _id: {
-  //           // granularity information as defined by the interval parameter
-  //           year: number | undefined;
-  //           month: number | undefined;
-  //           week: number | undefined;
-  //           day: number | undefined;
-  //         };
-  //         avg: number; // mean time to resolution (in seconds) for current interval
-  //         data: any[]; // time to resolution (in seconds) of tickets that have been closed in this interval
-  //       }[];
-  //     }[]
-  //   > = this.repoService.preAggregate(repoIdent, {
-  //     issues: { labels: true, since: since, to: to },
-  //   });
-  //   pipeline.unwind('issues');
-  //   pipeline.replaceRoot('$issues');
-  //   pipeline.match({
-  //     labels: { $not: { $size: 0 } },
-  //   });
-  //   pipeline.unwind('labels');
-  //   if (labels.length) {
-  //     pipeline.match({
-  //       'labels.name': {
-  //         $in: labels,
-  //       },
-  //       state: 'closed',
-  //     });
-  //   }
-  //   pipeline.addFields({
-  //     timeToResolution: {
-  //       $dateDiff: {
-  //         startDate: '$created_at',
-  //         endDate: '$closed_at',
-  //         unit: 'second',
-  //       },
-  //     },
-  //   });
-  //   pipeline.group({
-  //     _id: groupByIntervalSelector('$closed_at', interval),
-  //     data: { $push: '$timeToResolution' },
-  //   });
-  //   pipeline.addFields({
-  //     avg: { $avg: '$data' },
-  //   });
-  //   pipeline.group({
-  //     _id: null,
-  //     sum: { $sum: { $multiply: ['$avg', { $size: '$data' }] } },
-  //     tickets: { $sum: { $size: '$data' } },
-  //     data: { $push: '$$ROOT' },
-  //   });
-  //   pipeline.project({
-  //     avg: { $divide: ['$sum', '$tickets'] },
-  //     data: 1,
-  //   });
+  @OnEvent('kpi.prepared.resolutionInTime')
+  async resolutionInTime(payload: CalculationEventPayload) {
+    const { kpi, since, release, data } = payload;
+    const { overallMeanTimeToResolution } = data;
 
-  //   const [result] = await pipeline.exec();
-  //   try {
-  //     return serialize(result, interval, 'resolutionTimes');
-  //   } catch (err) {
-  //     this.logger.error(err);
-  //     throw err;
-  //   }
-  // }
+    const resolutionInTime =
+      1 -
+      min([(overallMeanTimeToResolution / 2) * kpi.params.expectedValue, 1]);
+    this.eventEmitter.emit('kpi.calculated', {
+      kpi,
+      release,
+      since,
+      value: resolutionInTime,
+    });
+  }
 }
