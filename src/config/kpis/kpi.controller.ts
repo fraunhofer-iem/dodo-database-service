@@ -14,7 +14,6 @@ import { FilterQuery } from 'mongoose';
 import { KpiCreate } from './model';
 import { KpiTypeService } from '../kpiTypes/kpiType.service';
 import { KpiRunService } from '../kpiRuns/kpiRun.service';
-import { KpiDocument } from './model/schemas';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Controller('api/kpis')
@@ -78,9 +77,19 @@ export class KpiController {
         repo: kpi.repo ? kpi.repo : null,
       });
       const kpiType = await this.kpiTypeService.read({ id: kpi.type });
-      const childTargets = await this.targetService
-        .preAggregate({ owner: kpi.owner, repo: kpi.repo })
-        .exec();
+      let filter: FilterQuery<DodoTargetDocument> = {};
+      if (!kpi.repo) {
+        filter = {
+          owner: kpi.owner,
+          repo: { $ne: null },
+        };
+      } else {
+        filter = {
+          owner: kpi.owner,
+          repo: kpi.repo,
+        };
+      }
+      const childTargets = await this.targetService.preAggregate(filter).exec();
       const children = [];
       for (const child of kpiType.children) {
         for (const childTarget of childTargets) {
@@ -94,8 +103,8 @@ export class KpiController {
       }
 
       const currentKpi = await this.kpiService.create({
-        id: `${kpiType.id}${kpi.id ? `[${kpi.id}]` : ''}@${target.owner}/${
-          target.repo
+        id: `${kpiType.id}${kpi.id ? `[${kpi.id}]` : ''}@${target.owner}${
+          target.repo ? `/${target.repo}` : ''
         }`,
         kpiType: kpiType,
         target: target,

@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
 import { Aggregate, FilterQuery, Model } from 'mongoose';
-import { Release } from 'src/entities/releases/model/schemas';
+import { Release, ReleaseDocument } from 'src/entities/releases/model/schemas';
 import { ReleaseService } from 'src/entities/releases/release.service';
 import { documentExists, retrieveDocument } from 'src/lib';
 import { KpiDocument } from '../kpis/model/schemas';
@@ -22,7 +22,7 @@ export class KpiRunService {
   @OnEvent('kpi.registered')
   public async calculate(payload: { kpi: KpiDocument }) {
     const { kpi } = payload;
-    const releases = await this.releaseService
+    const releases: ReleaseDocument[] = await this.releaseService
       .preAggregate(
         {},
         {
@@ -32,16 +32,35 @@ export class KpiRunService {
       )
       .match({
         'repo.owner': kpi.target.owner,
-        'repo.repo': kpi.target.repo,
+        'repo.repo': kpi.target.repo ?? { $ne: null },
       })
-      .sort({ published_at: 1 })
+      .sort({
+        published_at: 1,
+      })
       .exec();
 
     let since = undefined;
-    for (const release of releases) {
+    for (let i = 0; i < releases.length; i++) {
+      const currentRelease = releases[i];
+
+      let correspondingReleases = [];
+      for (let j = i; j >= 0; j--) {
+        const candidate = releases[j];
+        if (
+          !correspondingReleases
+            .map((release) => `${release.repo.owner}/${release.repo.repo}`)
+            .includes(`${candidate.repo.owner}/${candidate.repo.repo}`)
+        ) {
+          correspondingReleases.push(candidate);
+        }
+      }
+      correspondingReleases = correspondingReleases.map(
+        (release) => release._id,
+      );
+
       const children = await this.preAggregate(
         {
-          release: release._id,
+          release: { $in: correspondingReleases },
           kpi: { $in: kpi.children },
         },
         { kpi: true },
@@ -61,10 +80,10 @@ export class KpiRunService {
       this.eventEmitter.emit(`kpi.prepared.${kpi.kpiType.id}`, {
         kpi: kpi,
         since: since,
-        release: release,
+        release: currentRelease,
         data: data,
       });
-      since = release.published_at;
+      since = currentRelease.published_at;
     }
   }
 

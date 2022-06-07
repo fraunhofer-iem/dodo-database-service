@@ -12,12 +12,16 @@ export class CodeSpreadService {
   @OnEvent('kpi.prepared.locPerFile')
   async locPerFile(payload: CalculationEventPayload) {
     const { kpi, since, release } = payload;
+    const params = kpi.params ?? {
+      excludedFileExtensions: [],
+      excludedPaths: [],
+    };
 
     const locPerFile: { [key: string]: number } = {};
     for (const file of release.files) {
       const fileExtension = file.path.split('.').slice(-1)[0];
-      let excluded = kpi.params.excludedFileExtensions.includes(fileExtension);
-      for (const excludedPath of kpi.params.excludedPaths) {
+      let excluded = params.excludedFileExtensions.includes(fileExtension);
+      for (const excludedPath of params.excludedPaths) {
         if (file.path.startsWith(excludedPath)) {
           excluded = true;
           break;
@@ -105,6 +109,24 @@ export class CodeSpreadService {
       release,
       since,
       value: codeSpread,
+    });
+  }
+
+  @OnEvent('kpi.prepared.codeSpreadTotal')
+  async codeSpreadTotal(payload: CalculationEventPayload) {
+    const { kpi, since, release, data } = payload;
+    let { codeSpread } = data;
+    if (!Array.isArray(codeSpread)) {
+      codeSpread = [codeSpread];
+    }
+
+    const codeSpreadTotal = codeSpread.reduce((a, b) => a * b);
+
+    this.eventEmitter.emit('kpi.calculated', {
+      kpi,
+      release,
+      since,
+      value: codeSpreadTotal,
     });
   }
 }

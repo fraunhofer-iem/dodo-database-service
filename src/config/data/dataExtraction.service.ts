@@ -54,7 +54,7 @@ export class DataExtractionService {
     this.logger.debug('Commits');
     for await (const commit of commitQuerier(target)) {
       this.logger.log(`Commit ${commit.url}`);
-      let files: DiffFile[] = [];
+      const files: DiffFile[] = [];
       for await (const file of commitFileQuerier(target, commit)) {
         files.push(file);
       }

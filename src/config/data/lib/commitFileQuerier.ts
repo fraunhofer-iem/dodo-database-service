@@ -8,8 +8,6 @@ export async function* commitFileQuerier(
   repoIdent: RepositoryIdentifier,
   commit: Commit,
 ) {
-  const { owner, repo } = repoIdent;
-
   yield* querier<DiffFile>(
     repoIdent,
     (repoIdent, pageNumber) =>

@@ -4,7 +4,6 @@ import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Issue } from 'src/entities/issues/model/schemas';
 import { IssueService } from 'src/entities/issues/issue.service';
 import { min, sum } from 'lodash';
-import { group } from 'console';
 
 @Injectable()
 export class MeanTimeToResolutionService {

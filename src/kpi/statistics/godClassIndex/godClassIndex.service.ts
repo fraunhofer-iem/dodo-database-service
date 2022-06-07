@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
-import { max, sum } from 'lodash';
-import { CalculationEventPayload, transformMapToObject } from '../lib';
+import { max } from 'lodash';
+import { CalculationEventPayload } from '../lib';
 
 @Injectable()
 export class GodClassIndexService {

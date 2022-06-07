@@ -1,5 +1,4 @@
-import { PullRequest } from 'src/entities/pullRequests/model';
-import { documentExists, OCTOKIT } from '../../../lib';
+import { OCTOKIT } from '../../../lib';
 import { RepositoryIdentifier } from 'src/entities/repositories/model';
 import { RepositoryFileService } from 'src/entities/repositoryFiles/repositoryFile.service';
 

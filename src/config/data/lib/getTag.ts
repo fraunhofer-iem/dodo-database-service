@@ -1,4 +1,3 @@
-import { Commit } from 'src/entities/commits/model';
 import { RepositoryIdentifier } from 'src/entities/repositories/model';
 import { OCTOKIT } from '../../../lib';
 
