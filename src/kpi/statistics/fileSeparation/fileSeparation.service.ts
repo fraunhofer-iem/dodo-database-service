@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { sum } from 'lodash';
-import { CommitService } from 'src/entities/commits/commit.service';
-import { Commit } from 'src/entities/commits/model/schemas';
+import { CommitService } from '../../../entities/commits/commit.service';
+import { Commit } from '../../../entities/commits/model/schemas';
 import { CalculationEventPayload, transformMapToObject } from '../lib';
 
 @Injectable()

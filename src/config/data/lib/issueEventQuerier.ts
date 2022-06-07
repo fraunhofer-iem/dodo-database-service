@@ -1,5 +1,5 @@
-import { IssueEvent } from 'src/entities/issueEvents/model';
-import { RepositoryIdentifier } from 'src/entities/repositories/model';
+import { IssueEvent } from '../../../entities/issueEvents/model';
+import { RepositoryIdentifier } from '../../../entities/repositories/model';
 import { OCTOKIT } from '../../../lib';
 import { querier } from './querier';
 

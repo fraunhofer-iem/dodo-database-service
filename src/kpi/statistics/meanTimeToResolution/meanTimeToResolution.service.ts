@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { CalculationEventPayload, transformMapToObject } from '../lib';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
-import { Issue } from 'src/entities/issues/model/schemas';
-import { IssueService } from 'src/entities/issues/issue.service';
 import { min, sum } from 'lodash';
+import { IssueService } from '../../../entities/issues/issue.service';
+import { Issue } from '../../../entities/issues/model/schemas';
+import { CalculationEventPayload, transformMapToObject } from '../lib';
 
 @Injectable()
 export class MeanTimeToResolutionService {

@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { CommitModule } from 'src/entities/commits/commit.module';
+import { CommitModule } from '../../../entities/commits/commit.module';
 import { ActiveCodeService } from './activeCode.service';
 
 @Module({

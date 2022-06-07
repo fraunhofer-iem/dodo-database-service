@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { RepositoryService } from 'src/entities/repositories/repository.service';
+import { RepositoryService } from '../../../entities/repositories/repository.service';
 import { Intervals } from '../lib';
 import { pullRequestQuery } from './lib/pullRequestQuery';
 

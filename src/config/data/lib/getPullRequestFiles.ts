@@ -1,6 +1,6 @@
-import { DiffFile } from 'src/entities/diffFiles/model';
-import { PullRequest } from 'src/entities/pullRequests/model/schemas';
-import { RepositoryIdentifier } from 'src/entities/repositories/model';
+import { DiffFile } from '../../../entities/diffFiles/model';
+import { PullRequest } from '../../../entities/pullRequests/model/schemas';
+import { RepositoryIdentifier } from '../../../entities/repositories/model';
 import { OCTOKIT } from '../../../lib';
 
 export async function getPullRequestFiles(

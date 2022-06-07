@@ -1,6 +1,6 @@
-import { Release } from 'src/entities/releases/model';
-import { RepositoryIdentifier } from 'src/entities/repositories/model';
-import { OCTOKIT } from 'src/lib';
+import { Release } from '../../../entities/releases/model';
+import { RepositoryIdentifier } from '../../../entities/repositories/model';
+import { OCTOKIT } from '../../../lib';
 import { querier } from './querier';
 
 export async function* releaseQuerier(repoIdent: RepositoryIdentifier) {

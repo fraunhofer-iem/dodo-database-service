@@ -1,4 +1,4 @@
-import { RepositoryIdentifier } from 'src/entities/repositories/model';
+import { RepositoryIdentifier } from '../../../entities/repositories/model';
 
 export async function* querier<T>(
   repoIdent: RepositoryIdentifier,

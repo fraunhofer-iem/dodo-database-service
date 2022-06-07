@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as mSchema } from 'mongoose';
-import { DiffFile } from 'src/entities/diffFiles/model/schemas';
-import { Repository } from 'src/entities/repositories/model/schemas';
+import { DiffFile } from '../../../../entities/diffFiles/model/schemas';
+import { Repository } from '../../../../entities/repositories/model/schemas';
 import { User } from '../../../users/model/schemas';
 
 /**

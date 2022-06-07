@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as mSchema } from 'mongoose';
-import { KpiType } from 'src/config/kpiTypes/model/schemas';
-import { DodoTarget } from 'src/config/targets/model/schemas';
+import { KpiType } from '../../../../config/kpiTypes/model/schemas';
+import { DodoTarget } from '../../../../config/targets/model/schemas';
 
 @Schema()
 export class Kpi {

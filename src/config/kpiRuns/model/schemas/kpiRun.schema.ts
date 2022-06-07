@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as mSchema } from 'mongoose';
-import { Kpi } from 'src/config/kpis/model/schemas';
-import { Release } from 'src/entities/releases/model/schemas';
+import { Kpi } from '../../../../config/kpis/model/schemas';
+import { Release } from '../../../../entities/releases/model/schemas';
 
 @Schema()
 export class KpiRun {

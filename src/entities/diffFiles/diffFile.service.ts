@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { AnyKeys, FilterQuery, Model } from 'mongoose';
-import { documentExists, retrieveDocument } from 'src/lib';
-import { DiffFileDocument, DiffFile } from './model/schemas';
+import { documentExists, retrieveDocument } from '../../lib';
+import { DiffFile, DiffFileDocument } from './model/schemas';
 
 @Injectable()
 export class DiffFileService {

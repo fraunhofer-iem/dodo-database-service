@@ -1,14 +1,14 @@
-import { Issue } from '../../src/entities/issues/model';
+import { DiffFile } from '../../src/entities/diffFiles/model';
+import { Diff } from '../../src/entities/diffs/model';
 import { IssueEvent } from '../../src/entities/issueEvents/model/schemas';
+import { Issue } from '../../src/entities/issues/model';
+import { PullRequest } from '../../src/entities/pullRequests/model';
+import { Release } from '../../src/entities/releases/model';
 import {
   CreateRepositoryDto,
   RepositoryIdentifier,
 } from '../../src/entities/repositories/model';
-import { Diff } from '../../src/entities/diffs/model';
-import { PullRequest } from '../../src/entities/pullRequests/model';
-import { DiffFile } from '../../src/entities/diffFiles/model';
 import { RepositoryFile } from '../../src/entities/repositoryFiles/model';
-import { Release } from '../../src/entities/releases/model';
 
 /**
  * Class to get all relevant test data for the statistic tests
@@ -592,6 +592,7 @@ export class TestData {
           description: 'Question about usage',
         },
       ],
+      author_association: 'NONE',
       id: 1011837373,
       number: 121,
       state: 'closed',
@@ -658,6 +659,7 @@ export class TestData {
         },
       ],
       id: 1011837376,
+      author_association: 'CONTRIBUTOR',
       number: 122,
       state: 'closed',
       node_id: 'I_kwDOFWkwyc48T2m9',
@@ -718,6 +720,7 @@ export class TestData {
       ],
       id: 101183737366,
       number: 123,
+      author_association: 'CONTRIBUTOR',
       state: 'open',
       node_id: 'I_kwDOFWkwyc48T2m9',
       assignee: {
@@ -775,6 +778,7 @@ export class TestData {
         },
       ],
       id: 101183732323,
+      author_association: 'CONTRIBUTOR',
       number: 124,
       state: 'closed',
       node_id: 'I_kwDOFWkwyc48T2m9',

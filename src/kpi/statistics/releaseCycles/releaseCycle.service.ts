@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Aggregate } from 'mongoose';
-import { RepositoryService } from 'src/entities/repositories/repository.service';
+import { RepositoryService } from '../../../entities/repositories/repository.service';
 import { groupByIntervalSelector, Intervals, serialize } from '../lib';
 
 @Injectable()

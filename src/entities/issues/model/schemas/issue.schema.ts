@@ -1,10 +1,10 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document, Schema as mSchema } from 'mongoose';
+import { IssueEvent } from '../../../issueEvents/model/schemas';
 import { Label } from '../../../labels/model/schemas';
 import { Milestone } from '../../../milestones/model/schemas';
-import { Document, Schema as mSchema } from 'mongoose';
+import { Repository } from '../../../repositories/model/schemas';
 import { User } from '../../../users/model/schemas';
-import { IssueEvent } from '../../../issueEvents/model/schemas';
-import { Repository } from 'src/entities/repositories/model/schemas';
 
 /**
  * For further information, see: https://docs.github.com/en/rest/reference/issues#list-repository-issues

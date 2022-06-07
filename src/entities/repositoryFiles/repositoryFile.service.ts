@@ -1,12 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { AnyKeys, FilterQuery, Model } from 'mongoose';
-import { documentExists, retrieveDocument } from 'src/lib';
+import { documentExists, retrieveDocument } from '../../lib';
+import { RepositoryFile } from './model/RepositoryFile';
 import {
   RepositoryFile as RepositoryFileModel,
   RepositoryFileDocument,
 } from './model/schemas/repositoryFile.schema';
-import { RepositoryFile } from './model/RepositoryFile';
 
 @Injectable()
 export class RepositoryFileService {

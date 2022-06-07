@@ -1,6 +1,6 @@
-import { Commit } from 'src/entities/commits/model';
-import { RepositoryIdentifier } from 'src/entities/repositories/model';
-import { OCTOKIT } from 'src/lib';
+import { Commit } from '../../../entities/commits/model';
+import { RepositoryIdentifier } from '../../../entities/repositories/model';
+import { OCTOKIT } from '../../../lib';
 import { querier } from './querier';
 
 export async function* commitQuerier(repoIdent: RepositoryIdentifier) {

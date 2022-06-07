@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { RepositoryModule } from 'src/entities/repositories/repository.module';
+import { RepositoryModule } from '../../../entities/repositories/repository.module';
 import { PullRequestComplexityService } from './pullRequestComponents.service';
 
 @Module({

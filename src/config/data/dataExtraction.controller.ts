@@ -1,5 +1,5 @@
 import { Body, Controller, Logger, Post } from '@nestjs/common';
-import { RepositoryService } from 'src/entities/repositories/repository.service';
+import { RepositoryService } from '../../entities/repositories/repository.service';
 import { DodoUserService } from '../users/dodoUser.service';
 import { DodoUser } from '../users/model/schemas';
 import { DataExtractionService } from './dataExtraction.service';

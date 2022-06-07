@@ -1,6 +1,6 @@
+import { RepositoryIdentifier } from '../../../entities/repositories/model';
+import { RepositoryFileService } from '../../../entities/repositoryFiles/repositoryFile.service';
 import { OCTOKIT } from '../../../lib';
-import { RepositoryIdentifier } from 'src/entities/repositories/model';
-import { RepositoryFileService } from 'src/entities/repositoryFiles/repositoryFile.service';
 
 enum FileType {
   file = 'blob',

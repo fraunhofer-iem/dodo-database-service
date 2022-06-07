@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model } from 'mongoose';
-import { documentExists, retrieveDocument } from 'src/lib';
+import { documentExists, retrieveDocument } from '../../lib';
 import { DodoTarget } from '../targets/model/schemas';
 import { targetsLookup } from './lib';
 import { DodoUser, DodoUserDocument } from './model/schemas';

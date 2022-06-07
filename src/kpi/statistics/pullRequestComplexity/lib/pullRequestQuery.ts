@@ -1,5 +1,5 @@
 import { Aggregate, ObjectId } from 'mongoose';
-import { PullRequestDocument } from 'src/entities/pullRequests/model/schemas';
+import { PullRequestDocument } from '../../../../entities/pullRequests/model/schemas';
 import { groupByIntervalSelector, Intervals } from '../../lib';
 
 export function pullRequestQuery(

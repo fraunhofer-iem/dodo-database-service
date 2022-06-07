@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { IssueModule } from 'src/entities/issues/issue.module';
-import { RepositoryModule } from 'src/entities/repositories/repository.module';
+import { IssueModule } from '../../../entities/issues/issue.module';
+import { RepositoryModule } from '../../../entities/repositories/repository.module';
 import { MeanTimeToResolutionService } from './meanTimeToResolution.service';
 
 @Module({

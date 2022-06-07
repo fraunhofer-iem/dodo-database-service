@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { AnyKeys, FilterQuery, Model } from 'mongoose';
-import { documentExists, retrieveDocument } from 'src/lib';
+import { documentExists, retrieveDocument } from '../../lib';
 import { IssueEvent, IssueEventDocument } from './model/schemas';
 
 @Injectable()

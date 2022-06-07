@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { CommitModule } from 'src/entities/commits/commit.module';
-import { DiffModule } from 'src/entities/diffs/diff.module';
-import { IssueModule } from 'src/entities/issues/issue.module';
-import { ReleaseModule } from 'src/entities/releases/release.module';
-import { RepositoryModule } from 'src/entities/repositories/repository.module';
-import { RepositoryFileModule } from 'src/entities/repositoryFiles/repositoryFile.module';
+import { CommitModule } from '../../entities/commits/commit.module';
+import { DiffModule } from '../../entities/diffs/diff.module';
+import { IssueModule } from '../../entities/issues/issue.module';
+import { ReleaseModule } from '../../entities/releases/release.module';
+import { RepositoryModule } from '../../entities/repositories/repository.module';
+import { RepositoryFileModule } from '../../entities/repositoryFiles/repositoryFile.module';
 import { DodoUserModule } from '../users/dodoUser.module';
 import { DataExtractionController } from './dataExtraction.controller';
 import { DataExtractionService } from './dataExtraction.service';

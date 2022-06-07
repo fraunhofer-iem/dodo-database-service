@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Aggregate, FilterQuery, Model } from 'mongoose';
-import { documentExists, retrieveDocument } from 'src/lib';
+import { documentExists, retrieveDocument } from '../../lib';
 import { childrenLookup } from './lib';
 import { KpiType, KpiTypeDocument } from './model/schemas';
 

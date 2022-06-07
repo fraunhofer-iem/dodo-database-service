@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
+import { RepositoryModule } from '../../../entities/repositories/repository.module';
 import { DeveloperSpreadService } from './developerSpread.service';
-import { RepositoryModule } from 'src/entities/repositories/repository.module';
 
 @Module({
   providers: [DeveloperSpreadService],

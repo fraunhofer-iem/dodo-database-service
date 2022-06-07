@@ -1,13 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { CommitService } from 'src/entities/commits/commit.service';
-import { DiffFile } from 'src/entities/diffFiles/model/schemas';
-import { DiffService } from 'src/entities/diffs/diff.service';
-import { Diff } from 'src/entities/diffs/model';
-import { IssueEvent } from 'src/entities/issueEvents/model/schemas';
-import { IssueService } from 'src/entities/issues/issue.service';
-import { ReleaseService } from 'src/entities/releases/release.service';
-import { RepositoryDocument } from 'src/entities/repositories/model/schemas';
-import { RepositoryFileService } from 'src/entities/repositoryFiles/repositoryFile.service';
+import { CommitService } from '../../entities/commits/commit.service';
+import { DiffFile } from '../../entities/diffFiles/model/schemas';
+import { DiffService } from '../../entities/diffs/diff.service';
+import { Diff } from '../../entities/diffs/model';
+import { IssueEvent } from '../../entities/issueEvents/model/schemas';
+import { IssueService } from '../../entities/issues/issue.service';
+import { ReleaseService } from '../../entities/releases/release.service';
+import { RepositoryDocument } from '../../entities/repositories/model/schemas';
+import { RepositoryFileService } from '../../entities/repositoryFiles/repositoryFile.service';
 import { DodoTarget } from '../targets/model/schemas';
 import {
   issueQuerier,

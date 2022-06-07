@@ -1,15 +1,15 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { ReleaseModule } from 'src/entities/releases/release.module';
-import { ActiveCodeModule } from 'src/kpi/statistics/activeCode/activeCode.module';
+import { ReleaseModule } from '../../entities/releases/release.module';
+import { ReleaseService } from '../../entities/releases/release.service';
+import { ActiveCodeModule } from '../../kpi/statistics/activeCode/activeCode.module';
+import { ChangesPerFileModule } from '../../kpi/statistics/changesPerFile/changesPerFile.module';
+import { CodeSpreadModule } from '../../kpi/statistics/codeSpread/codeSpread.module';
+import { FileSeparationModule } from '../../kpi/statistics/fileSeparation/fileSeparation.module';
+import { GodClassIndexModule } from '../../kpi/statistics/godClassIndex/godClassIndex.module';
+import { MeanTimeToResolutionModule } from '../../kpi/statistics/meanTimeToResolution/meanTimeToResolution.module';
 import { KpiRunService } from './kpiRun.service';
 import { KpiRun, KpiRunSchema } from './model/schemas';
-import { ReleaseService } from 'src/entities/releases/release.service';
-import { ChangesPerFileModule } from 'src/kpi/statistics/changesPerFile/changesPerFile.module';
-import { FileSeparationModule } from 'src/kpi/statistics/fileSeparation/fileSeparation.module';
-import { CodeSpreadModule } from 'src/kpi/statistics/codeSpread/codeSpread.module';
-import { GodClassIndexModule } from 'src/kpi/statistics/godClassIndex/godClassIndex.module';
-import { MeanTimeToResolutionModule } from 'src/kpi/statistics/meanTimeToResolution/meanTimeToResolution.module';
 
 @Module({
   imports: [

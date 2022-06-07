@@ -2,9 +2,12 @@ import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
 import { Aggregate, FilterQuery, Model } from 'mongoose';
-import { Release, ReleaseDocument } from 'src/entities/releases/model/schemas';
-import { ReleaseService } from 'src/entities/releases/release.service';
-import { documentExists, retrieveDocument } from 'src/lib';
+import {
+  Release,
+  ReleaseDocument,
+} from '../../entities/releases/model/schemas';
+import { ReleaseService } from '../../entities/releases/release.service';
+import { documentExists, retrieveDocument } from '../../lib';
 import { KpiDocument } from '../kpis/model/schemas';
 import { kpiLookup, kpiTypeLookup, releaseLookup } from './lib';
 import { KpiRun, KpiRunDocument } from './model/schemas';
