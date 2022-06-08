@@ -7,8 +7,8 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
-import { DodoUser } from './model';
 import { DodoUserService } from './dodoUser.service';
+import { DodoUser } from './model';
 
 @Controller('api/users')
 export class DodoUserController {
@@ -43,6 +43,28 @@ export class DodoUserController {
     try {
       const user = await this.userService.read({ email: email });
       return user;
+    } catch (err) {
+      return 'No such user';
+    }
+  }
+
+  @Get(':email/targets')
+  async targets(@Param('email') email: string) {
+    try {
+      const targets = await this.userService
+        .preAggregate({ email: email }, {})
+        .unwind('targets')
+        .replaceRoot('$targets')
+        .match({
+          repo: { $ne: null },
+        })
+        .addFields({
+          id: { $concat: ['$owner', '/', '$repo'] },
+          name: '$repo',
+        })
+        .project({ _id: 0, __v: 0, repo: 0 })
+        .exec();
+      return targets;
     } catch (err) {
       return 'No such user';
     }
