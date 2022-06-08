@@ -8,6 +8,7 @@ import { CodeSpreadModule } from '../../kpi/statistics/codeSpread/codeSpread.mod
 import { FileSeparationModule } from '../../kpi/statistics/fileSeparation/fileSeparation.module';
 import { GodClassIndexModule } from '../../kpi/statistics/godClassIndex/godClassIndex.module';
 import { MeanTimeToResolutionModule } from '../../kpi/statistics/meanTimeToResolution/meanTimeToResolution.module';
+import { KpiRunController } from './kpiRun.controller';
 import { KpiRunService } from './kpiRun.service';
 import { KpiRun, KpiRunSchema } from './model/schemas';
 
@@ -43,6 +44,7 @@ import { KpiRun, KpiRunSchema } from './model/schemas';
     MeanTimeToResolutionModule,
   ],
   providers: [KpiRunService],
+  controllers: [KpiRunController],
   exports: [KpiRunService],
 })
 export class KpiRunModule {}

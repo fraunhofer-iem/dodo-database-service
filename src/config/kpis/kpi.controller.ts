@@ -7,14 +7,14 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { KpiService } from './kpi.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { FilterQuery } from 'mongoose';
+import { KpiRunService } from '../kpiRuns/kpiRun.service';
+import { KpiTypeService } from '../kpiTypes/kpiType.service';
 import { DodoTargetService } from '../targets/dodoTarget.service';
 import { DodoTargetDocument } from '../targets/model/schemas';
-import { FilterQuery } from 'mongoose';
+import { KpiService } from './kpi.service';
 import { KpiCreate } from './model';
-import { KpiTypeService } from '../kpiTypes/kpiType.service';
-import { KpiRunService } from '../kpiRuns/kpiRun.service';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Controller('api/kpis')
 export class KpiController {
@@ -59,6 +59,7 @@ export class KpiController {
       {
         target: true,
         children: children !== undefined ? JSON.parse(children) : true,
+        _id: true,
       },
     );
     const kpi = await pipeline.exec();
