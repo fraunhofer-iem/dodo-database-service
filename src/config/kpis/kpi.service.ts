@@ -56,6 +56,7 @@ export class KpiService {
     pipeline.addFields({
       type: { $arrayElemAt: ['$kpiType.id', 0] },
       name: { $arrayElemAt: ['$kpiType.name', 0] },
+      kind: { $arrayElemAt: ['$kpiType.type', 0] },
     });
     if (options.target === true) {
       pipeline.lookup(targetLookup);

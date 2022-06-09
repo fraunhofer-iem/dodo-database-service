@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
+import { reverse, sortBy } from 'lodash';
 import { Aggregate, FilterQuery, Model } from 'mongoose';
 import {
   Release,
@@ -104,6 +105,28 @@ export class KpiRunService {
       to: payload.release.published_at,
       value: payload.value,
     });
+  }
+
+  public async valueAt(filter: FilterQuery<KpiRunDocument>, at: string) {
+    const runs = await this.readAll(filter);
+
+    let hydratedRuns = runs.map<{ to: Date; value: number }>((run) => ({
+      to: new Date(run.to),
+      value: run.value,
+    }));
+    hydratedRuns = hydratedRuns.filter((run) => run.to <= new Date(at));
+    hydratedRuns = reverse(sortBy(hydratedRuns, [(run) => run.to]));
+    return hydratedRuns[0];
+  }
+
+  public async readAll(
+    filter: FilterQuery<KpiRunDocument>,
+  ): Promise<KpiRunDocument[]> {
+    let kpiRuns: KpiRunDocument[] = await this.preAggregate({}, { kpi: true })
+      .match(filter)
+      .exec();
+
+    return kpiRuns;
   }
 
   public async readOrCreate(json: KpiRun): Promise<KpiRunDocument> {

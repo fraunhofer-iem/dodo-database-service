@@ -33,20 +33,44 @@ export class KpiController {
     @Query('owner') owner?: string,
     @Query('repo') repo?: string,
     @Query('children') children?: 'true' | 'false',
+    @Query('at') at?: string,
   ) {
     let filter: FilterQuery<DodoTargetDocument> = undefined;
-    try {
-      const target = await this.targetService.read({
-        owner: owner,
-        repo: repo,
-      });
-      filter = { target: target._id };
-    } catch {}
-    const pipeline = this.kpiService.preAggregate(filter, {
-      target: true,
-      children: children !== undefined ? JSON.parse(children) : true,
-    });
-    return pipeline.exec();
+    if (owner) {
+      let targets = await this.targetService
+        .preAggregate({
+          owner: owner,
+          repo: repo ?? { $ne: null },
+        })
+        .exec();
+      targets = targets.map((target) => target._id);
+      filter = { target: { $in: targets } };
+    }
+    const kpis = await this.kpiService
+      .preAggregate(filter, {
+        target: true,
+        children: children !== undefined ? JSON.parse(children) : true,
+      })
+      .match({
+        kind: 'repo',
+      })
+      .exec();
+    if (at) {
+      for (const kpi of kpis) {
+        kpi.value = (
+          await this.kpiRunService.valueAt({ 'kpi.id': kpi.id }, at)
+        ).value;
+      }
+    }
+    return kpis;
+  }
+
+  @Get(':kpiId([^/]+)')
+  async readOrgKpi(
+    @Param('kpiId') kpiId: string,
+    @Query('children') children?: 'true' | 'false',
+  ) {
+    return this.readKpi(kpiId, children);
   }
 
   @Get(':kpiId([^/]+/[^/]+)')
