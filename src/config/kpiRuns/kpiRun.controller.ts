@@ -9,23 +9,25 @@ export class KpiRunController {
   @Get(':kpiId([^/]+)')
   async readOrgRuns(
     @Param('kpiId') kpiId: string,
-    @Query('at') at?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
     @Query('history') history?: 'true' | 'false',
   ) {
-    return this.readRuns(kpiId, at, history);
+    return this.readRuns(kpiId, from, to, history);
   }
 
   @Get(':kpiId([^/]+/[^/]+)')
   async readRuns(
     @Param('kpiId') kpiId: string,
-    @Query('at') at?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
     @Query('history') history?: 'true' | 'false',
   ) {
-    if (at) {
-      return this.kpiRunService.valueAt({ 'kpi.id': kpiId }, at);
-    } else if (history !== undefined && JSON.parse(history)) {
-      let runs = await this.kpiRunService.readAll({ 'kpi.id': kpiId });
-      return Object.fromEntries(runs.map((run) => [run.to, run.value]));
+    if (history === 'true') {
+      return this.kpiRunService.history({ 'kpi.id': kpiId }, from, to);
+    }
+    if (to) {
+      return this.kpiRunService.valueAt({ 'kpi.id': kpiId }, to);
     }
   }
 }

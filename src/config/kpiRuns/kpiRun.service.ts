@@ -9,8 +9,8 @@ import {
 } from '../../entities/releases/model/schemas';
 import { ReleaseService } from '../../entities/releases/release.service';
 import { documentExists, retrieveDocument } from '../../lib';
-import { KpiDocument } from '../kpis/model/schemas';
-import { kpiLookup, kpiTypeLookup, releaseLookup } from './lib';
+import { Kpi, KpiDocument } from '../kpis/model/schemas';
+import { kpiLookup, kpiTypeLookup } from './lib';
 import { KpiRun, KpiRunDocument } from './model/schemas';
 
 @Injectable()
@@ -114,9 +114,52 @@ export class KpiRunService {
       to: new Date(run.to),
       value: run.value,
     }));
-    hydratedRuns = hydratedRuns.filter((run) => run.to <= new Date(at));
+    hydratedRuns = hydratedRuns.filter(
+      (run) => run.to <= new Date(new Date(at).setUTCHours(23, 59, 59)),
+    );
     hydratedRuns = reverse(sortBy(hydratedRuns, [(run) => run.to]));
     return hydratedRuns[0];
+  }
+
+  public async history(
+    filter: FilterQuery<KpiRunDocument>,
+    from?: string,
+    to?: string,
+  ) {
+    console.log(from, to);
+    let runs = await this.readAll(filter);
+    let hydratedRuns = runs.map<{
+      to: Date;
+      value: number;
+      release: string;
+      kpi: Kpi;
+    }>((run) => ({
+      release: run.release as any,
+      kpi: run.kpi,
+      to: new Date(run.to),
+      value: run.value,
+    }));
+    if (from) {
+      hydratedRuns = hydratedRuns.filter(
+        (run) => run.to >= new Date(new Date(from).setUTCHours(0, 0, 0)),
+      );
+    }
+    if (to) {
+      hydratedRuns = hydratedRuns.filter(
+        (run) => run.to <= new Date(new Date(to).setUTCHours(23, 59, 59)),
+      );
+    }
+
+    const entries = [];
+    for (const run of hydratedRuns) {
+      if (run.kpi.kpiType.type === 'repo') {
+        const release = await this.releaseService.read({ _id: run.release });
+        entries.push([release.name, run.value]);
+      } else {
+        entries.push([run.to, run.value]);
+      }
+    }
+    return Object.fromEntries(entries);
   }
 
   public async readAll(
@@ -161,7 +204,6 @@ export class KpiRunService {
     filter: FilterQuery<KpiRunDocument> = undefined,
     options: {
       kpi?: boolean;
-      release?: boolean;
     } = {},
   ): Aggregate<any> {
     const pipeline = this.kpiRunModel.aggregate();
@@ -176,12 +218,6 @@ export class KpiRunService {
       pipeline.lookup(kpiTypeLookup);
       pipeline.addFields({
         'kpi.kpiType': { $arrayElemAt: ['$kpi.kpiType', 0] },
-      });
-    }
-    if (options.release) {
-      pipeline.lookup(releaseLookup);
-      pipeline.addFields({
-        release: { $arrayElemAt: ['$release', 0] },
       });
     }
     return pipeline;

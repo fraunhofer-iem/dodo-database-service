@@ -33,7 +33,9 @@ export class KpiController {
     @Query('owner') owner?: string,
     @Query('repo') repo?: string,
     @Query('children') children?: 'true' | 'false',
-    @Query('at') at?: string,
+    @Query('to') to?: string,
+    @Query('from') from?: string,
+    @Query('history') history?: 'true' | 'false',
   ) {
     let filter: FilterQuery<DodoTargetDocument> = undefined;
     if (owner) {
@@ -55,11 +57,18 @@ export class KpiController {
         kind: 'repo',
       })
       .exec();
-    if (at) {
-      for (const kpi of kpis) {
+    for (const kpi of kpis) {
+      if (to) {
         kpi.value = (
-          await this.kpiRunService.valueAt({ 'kpi.id': kpi.id }, at)
+          await this.kpiRunService.valueAt({ 'kpi.id': kpi.id }, to)
         ).value;
+      }
+      if (history === 'true') {
+        kpi.data = await this.kpiRunService.history(
+          { 'kpi.id': kpi.id },
+          from,
+          to,
+        );
       }
     }
     return kpis;
