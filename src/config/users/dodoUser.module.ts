@@ -17,7 +17,6 @@ import { DodoUser, DodoUserSchema } from './model/schemas';
             const schema = DodoUserSchema;
             schema.pre<DodoUser>('validate', async function (this: DodoUser) {
               for (let i = 0; i < this.targets.length; i++) {
-                console.log(this.targets[i]);
                 this.targets[i] = (
                   await targetService.readOrCreate(this.targets[i])
                 )._id;

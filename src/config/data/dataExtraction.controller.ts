@@ -31,7 +31,7 @@ export class DataExtractionController {
         await this.extractionService.extractDiffs(repo, target);
       }
     } catch (e) {
-      console.log(e);
+      this.logger.error(e);
     }
   }
 }
