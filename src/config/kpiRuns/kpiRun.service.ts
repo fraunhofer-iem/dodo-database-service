@@ -126,7 +126,6 @@ export class KpiRunService {
     from?: string,
     to?: string,
   ) {
-    console.log(from, to);
     let runs = await this.readAll(filter);
     let hydratedRuns = runs.map<{
       to: Date;
@@ -152,12 +151,13 @@ export class KpiRunService {
 
     const entries = [];
     for (const run of hydratedRuns) {
+      let label: Date | string = run.to;
       if (run.kpi.kpiType.type === 'repo') {
         const release = await this.releaseService.read({ _id: run.release });
+        label = release.name;
         entries.push([release.name, run.value]);
-      } else {
-        entries.push([run.to, run.value]);
       }
+      entries.push([run.to, { label: label, value: run.value }]);
     }
     return Object.fromEntries(entries);
   }
