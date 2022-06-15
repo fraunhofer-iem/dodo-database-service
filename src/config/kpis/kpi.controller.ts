@@ -33,6 +33,7 @@ export class KpiController {
     @Query('owner') owner?: string,
     @Query('repo') repo?: string,
     @Query('children') children?: 'true' | 'false',
+    @Query('kinds') kinds?: string[],
     @Query('to') to?: string,
     @Query('from') from?: string,
     @Query('history') history?: 'true' | 'false',
@@ -40,10 +41,16 @@ export class KpiController {
     let filter: FilterQuery<DodoTargetDocument> = undefined;
     if (owner) {
       let targets = await this.targetService
-        .preAggregate({
-          owner: owner,
-          repo: repo ?? { $ne: null },
-        })
+        .preAggregate(
+          repo
+            ? {
+                owner: owner,
+                repo: repo,
+              }
+            : {
+                owner: owner,
+              },
+        )
         .exec();
       targets = targets.map((target) => target._id);
       filter = { target: { $in: targets } };
@@ -51,10 +58,10 @@ export class KpiController {
     const kpis = await this.kpiService
       .preAggregate(filter, {
         target: true,
-        children: children !== undefined ? JSON.parse(children) : true,
+        children: children === undefined ? true : children === 'true',
       })
       .match({
-        kind: 'repo',
+        kind: { $in: Array.isArray(kinds) ? kinds : [kinds] },
       })
       .exec();
     for (const kpi of kpis) {
@@ -91,7 +98,7 @@ export class KpiController {
       { id: kpiId },
       {
         target: true,
-        children: children !== undefined ? JSON.parse(children) : true,
+        children: children === undefined ? true : children === 'true',
         _id: true,
       },
     );

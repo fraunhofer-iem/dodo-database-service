@@ -114,9 +114,7 @@ export class KpiRunService {
       to: new Date(run.to),
       value: run.value,
     }));
-    hydratedRuns = hydratedRuns.filter(
-      (run) => run.to <= new Date(new Date(at).setUTCHours(23, 59, 59)),
-    );
+    hydratedRuns = hydratedRuns.filter((run) => run.to <= new Date(at));
     hydratedRuns = reverse(sortBy(hydratedRuns, [(run) => run.to]));
     return hydratedRuns[0];
   }
@@ -155,7 +153,6 @@ export class KpiRunService {
       if (run.kpi.kpiType.type === 'repo') {
         const release = await this.releaseService.read({ _id: run.release });
         label = release.name;
-        entries.push([release.name, run.value]);
       }
       entries.push([run.to, { label: label, value: run.value }]);
     }
