@@ -3,4 +3,6 @@ export interface KpiTypeCreate {
   name: string;
   children: string[];
   type: 'repo' | 'orga';
+  description: string;
+  unit: string;
 }

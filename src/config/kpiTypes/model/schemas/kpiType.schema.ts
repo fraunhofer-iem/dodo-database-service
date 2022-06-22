@@ -14,6 +14,12 @@ export class KpiType {
 
   @Prop()
   type: 'repo' | 'orga';
+
+  @Prop()
+  description: string;
+
+  @Prop()
+  unit: string;
 }
 
 export type KpiTypeDocument = KpiType & Document;

@@ -57,6 +57,8 @@ export class KpiService {
       type: { $arrayElemAt: ['$kpiType.id', 0] },
       name: { $arrayElemAt: ['$kpiType.name', 0] },
       kind: { $arrayElemAt: ['$kpiType.type', 0] },
+      description: { $arrayElemAt: ['$kpiType.description', 0] },
+      unit: { $arrayElemAt: ['$kpiType.unit', 0] },
     });
     if (options.target === true) {
       pipeline.lookup(targetLookup);

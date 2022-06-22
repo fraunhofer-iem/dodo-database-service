@@ -101,12 +101,13 @@ export class KpiRunService {
     this.create({
       kpi: payload.kpi._id,
       release: payload.release,
-      since: payload.since as any,
-      to: payload.release.published_at,
+      since: payload.since.toUTCString(),
+      to: (payload.release.published_at as any).toUTCString(),
       value: payload.value,
     });
   }
 
+  //TODO: Check if manual hydration can be given up when storing UTC strings
   public async valueAt(filter: FilterQuery<KpiRunDocument>, at: string) {
     const runs = await this.readAll(filter);
 
