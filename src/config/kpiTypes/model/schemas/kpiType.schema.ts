@@ -13,7 +13,7 @@ export class KpiType {
   children: KpiType[];
 
   @Prop()
-  type: 'repo' | 'orga';
+  type: 'repo' | 'orga' | 'data';
 
   @Prop()
   description: string;

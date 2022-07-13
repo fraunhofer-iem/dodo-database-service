@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { HealthIndexModule } from 'src/kpi/statistics/healthIndex/healthIndex.module';
+import { PrProcessingEfficiencyModule } from 'src/kpi/statistics/prProcessingEfficiency/prProcessingEfficiency.module';
 import { ReleaseModule } from '../../entities/releases/release.module';
 import { ReleaseService } from '../../entities/releases/release.service';
 import { ActiveCodeModule } from '../../kpi/statistics/activeCode/activeCode.module';
@@ -44,6 +45,7 @@ import { KpiRun, KpiRunSchema } from './model/schemas';
     GodClassIndexModule,
     MeanTimeToResolutionModule,
     HealthIndexModule,
+    PrProcessingEfficiencyModule,
   ],
   providers: [KpiRunService],
   controllers: [KpiRunController],

@@ -101,7 +101,7 @@ export class KpiRunService {
     this.create({
       kpi: payload.kpi._id,
       release: payload.release,
-      since: payload.since.toUTCString(),
+      since: payload.since ? payload.since.toUTCString() : null,
       to: (payload.release.published_at as any).toUTCString(),
       value: payload.value,
     });
