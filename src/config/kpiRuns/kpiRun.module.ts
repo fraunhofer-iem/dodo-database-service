@@ -6,6 +6,7 @@ import { PrChurnModule } from 'src/kpi/statistics/prChurn/prChurn.module';
 import { PrCommentsModule } from 'src/kpi/statistics/prComments/prComments.module';
 import { PrComplexityModule } from 'src/kpi/statistics/prComplexity/prComplexity.module';
 import { PrProcessingEfficiencyModule } from 'src/kpi/statistics/prProcessingEfficiency/prProcessingEfficiency.module';
+import { PrSpreadModule } from 'src/kpi/statistics/prSpread/prSpread.module';
 import { ReleaseModule } from '../../entities/releases/release.module';
 import { ReleaseService } from '../../entities/releases/release.service';
 import { ActiveCodeModule } from '../../kpi/statistics/activeCode/activeCode.module';
@@ -54,6 +55,7 @@ import { KpiRun, KpiRunSchema } from './model/schemas';
     PrChurnModule,
     PrCommentsModule,
     PrComplexityModule,
+    PrSpreadModule,
   ],
   providers: [KpiRunService],
   controllers: [KpiRunController],

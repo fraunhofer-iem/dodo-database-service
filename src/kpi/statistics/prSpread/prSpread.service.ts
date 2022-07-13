@@ -67,8 +67,10 @@ export class PrSpreadService {
       since ?? new Date(minBy(commits, (commit) => commit.timestamp).timestamp);
     const expectedSpread =
       numberOfPRs /
-      ((new Date(release.published_at).getTime() - from.getTime()) /
-        (1000 * 3600 * 24));
+      Math.ceil(
+        (new Date(release.published_at).getTime() - from.getTime()) /
+          (1000 * 3600 * 24),
+      );
 
     const actualSpread = numberOfPRs / Object.keys(prCreationDates).length;
 
