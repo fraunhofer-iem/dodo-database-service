@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { DeveloperSpreadModule } from 'src/kpi/statistics/developerSpread/developerSpread.module';
 import { HealthIndexModule } from 'src/kpi/statistics/healthIndex/healthIndex.module';
 import { PrChangeRatioModule } from 'src/kpi/statistics/prChangeRatio/prChangeRatio.module';
 import { PrChurnModule } from 'src/kpi/statistics/prChurn/prChurn.module';
@@ -56,6 +57,7 @@ import { KpiRun, KpiRunSchema } from './model/schemas';
     PrCommentsModule,
     PrComplexityModule,
     PrSpreadModule,
+    DeveloperSpreadModule,
   ],
   providers: [KpiRunService],
   controllers: [KpiRunController],

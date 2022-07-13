@@ -1,142 +1,94 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import { sumBy } from 'lodash';
+import { CommitService } from 'src/entities/commits/commit.service';
 import { RepositoryService } from '../../../entities/repositories/repository.service';
-import {
-  Intervals,
-  groupByIntervalSelector,
-  serialize,
-} from '../../statistics/lib';
+import { CalculationEventPayload } from '../../statistics/lib';
 
 @Injectable()
 export class DeveloperSpreadService {
   private readonly logger = new Logger(DeveloperSpreadService.name);
 
-  constructor(private readonly repoService: RepositoryService) {}
+  constructor(
+    private readonly repoService: RepositoryService,
+    private readonly commitService: CommitService,
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
 
-  async developerSpread(
-    interval: Intervals = Intervals.MONTH,
-    owner: string,
-    repo: string = undefined,
-    since: string = undefined,
-    to: string = undefined,
-  ) {
-    const pipeline = this.repoService.preAggregate(
-      { owner: owner },
-      {
-        issues: { events: { actor: true, since: since, to: to } },
-        commits: { author: true, since: since, to: to },
-      },
-    );
-    pipeline.unwind('$commits');
-    pipeline.group({
-      _id: '$_id',
-      contributors: {
-        $addToSet: '$commits.author',
-      },
-      owner: { $first: '$owner' },
-      repo: { $first: '$repo' },
-      commits: { $push: '$commits' },
-      issues: { $first: '$issues' },
-    });
-    if (repo) {
-      pipeline.addFields({
-        contributors: {
-          $cond: {
-            if: { $eq: ['$repo', repo] },
-            then: '$contributors',
-            else: null,
-          },
-        },
-      });
-    }
-    pipeline.unwind('$commits');
-    pipeline.unwind('$issues');
-    pipeline.unwind('$issues.events');
-    pipeline.group({
-      _id: '$owner',
-      contributors: {
-        $addToSet: '$contributors',
-      },
-      commits: {
-        $addToSet: {
-          user: '$commits.author',
-          timestamp: '$commits.timestamp',
-          repo: '$repo',
-        },
-      },
-      events: {
-        $addToSet: {
-          user: '$issues.events.actor',
-          timestamp: '$issues.events.created_at',
-          repo: '$repo',
-        },
-      },
-    });
-    pipeline.project({
-      activities: {
-        $setUnion: ['$commits', '$events'],
-      },
-      contributors: 1,
-    });
-    // without a repo filter, contributors looks like:
-    //    [ [<contributors of repo 1>], [<contributors of repo 2>], [<contributors of repo 3>]]
-    // with a repo filter, contributors looks like:
-    //    [ [], [<contributors of filtered repo>]]
-    // I couldn't find a more elegant way to flatten this array than this combination of unwind-unwind-group
-    pipeline.unwind('$contributors');
-    pipeline.unwind('$contributors');
-    pipeline.group({
-      _id: '_id',
-      contributors: {
-        $addToSet: '$contributors',
-      },
-      activities: {
-        $first: '$activities',
-      },
-    });
-    pipeline.unwind('$activities');
-    pipeline.match({
-      'activities.user.type': 'User', // filter Bots
-    });
-    pipeline.redact(
-      // if
-      { $in: ['$activities.user', '$contributors'] },
-      // then
-      '$$KEEP',
-      // else
-      '$$PRUNE',
-    );
-    pipeline.group({
-      _id: {
-        login: '$activities.user.login',
-        ...groupByIntervalSelector('$activities.timestamp', interval),
-      },
-      timestamp: { $last: '$activities.timestamp' },
-      repos: { $addToSet: '$activities.repo' },
-    });
-    pipeline.group({
-      _id: groupByIntervalSelector('$timestamp', interval),
-      avg: {
-        $avg: { $size: '$repos' },
-      },
-      data: { $sum: 1 },
-    });
-    pipeline.group({
-      _id: null,
-      data: { $push: '$$ROOT' },
-      sum: { $sum: { $multiply: ['$avg', '$data'] } }, // weighted average spread
-      intervals: { $sum: '$data' },
-    });
-    pipeline.project({
-      avg: { $divide: ['$sum', '$intervals'] }, // total weighted average spread
-      data: '$data',
-    });
+  @OnEvent('kpi.prepared.devSpread')
+  public async devSpread(payload: CalculationEventPayload) {
+    const { kpi, since, release } = payload;
+    const devs = (
+      await this.commitService
+        .preAggregate(
+          { repo: (release.repo as any)._id },
+          { author: true, since: since, to: release.published_at },
+        )
+        .match({
+          'author.type': 'User', // filter Bots
+        })
+        .group({
+          _id: null,
+          logins: { $addToSet: '$author.login' },
+        })
+        .exec()
+    )[0];
 
-    const [result] = await pipeline.exec();
-    try {
-      return serialize(result, interval, 'numberOfDevs');
-    } catch (err) {
-      this.logger.error(err);
-      throw err;
+    const devsToRepos = await this.commitService
+      .preAggregate(
+        {},
+        { author: true, repo: true, since: since, to: release.published_at },
+      )
+      .match({
+        'repo.owner': release.repo.owner,
+      })
+      .match({
+        'author.login': { $in: devs.logins },
+      })
+      .group({
+        _id: '$author.login',
+        repos: { $addToSet: { $concat: ['$repo.owner', '/', '$repo.repo'] } },
+      })
+      .exec();
+
+    const devSpread = Object.fromEntries(
+      devsToRepos.map((entry) => [entry._id, entry.repos]),
+    );
+    this.eventEmitter.emit('kpi.calculated', {
+      kpi,
+      release,
+      since,
+      value: devSpread,
+    });
+  }
+
+  @OnEvent('kpi.prepared.unsharedAttention')
+  public async unsharedAttention(payload: CalculationEventPayload) {
+    const { kpi, since, release, data } = payload;
+    let { devSpread } = data;
+
+    const attentionMap: { [key: string]: Set<string> } = {};
+
+    if (!Array.isArray(devSpread)) {
+      devSpread = [devSpread];
     }
+    for (const element of devSpread) {
+      for (const [login, repos] of Object.entries(element)) {
+        if (!attentionMap.hasOwnProperty(login)) {
+          attentionMap[login] = new Set();
+        }
+        (repos as string[]).forEach((repo) => attentionMap[login].add(repo));
+      }
+    }
+
+    const avgSpread =
+      sumBy(Object.values(attentionMap), (repos) => repos.size) /
+      Object.keys(attentionMap).length;
+    this.eventEmitter.emit('kpi.calculated', {
+      kpi,
+      release,
+      since,
+      value: 1 / avgSpread,
+    });
   }
 }
