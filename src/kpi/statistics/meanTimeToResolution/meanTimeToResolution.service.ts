@@ -22,29 +22,30 @@ export class MeanTimeToResolutionService {
         { repo: (release.repo as any)._id },
         { to: release.published_at },
       )
-      .match({
-        $or: [
-          {
-            state: 'closed',
-            closed_at: {
-              $gt: new Date(since),
-              $lte: new Date(release.published_at),
-            },
-          },
-          {
-            state: 'open',
-          },
-        ],
-      })
       .exec();
 
     const timeToResolution: Map<string, number> = new Map<string, number>();
     for (const issue of issues) {
-      timeToResolution.set(
-        issue.node_id,
-        new Date(issue.closed_at ?? release.published_at).valueOf() -
-          new Date(issue.created_at).valueOf(),
-      );
+      let ttr = 0;
+      if (issue.state === 'closed') {
+        if (new Date(issue.closed_at) <= new Date(release.published_at)) {
+          // issue was closed within the release window
+          ttr =
+            new Date(issue.closed_at).valueOf() -
+            new Date(issue.created_at).valueOf();
+        } else {
+          // issue existed during the release window but was closed at a later point
+          // therefore, it probably was open during this release window
+          ttr =
+            new Date(release.published_at).valueOf() -
+            new Date(issue.created_at).valueOf();
+        }
+      } else {
+        ttr =
+          new Date(release.published_at).valueOf() -
+          new Date(issue.created_at).valueOf();
+      }
+      timeToResolution.set(issue.node_id, ttr / 1000);
     }
     this.eventEmitter.emit('kpi.calculated', {
       kpi,
