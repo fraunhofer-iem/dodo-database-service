@@ -8,4 +8,4 @@ import { TicketResolutionService } from './ticketResolution.service';
   exports: [TicketResolutionService],
   controllers: [],
 })
-export class TIcketResolutionModule {}
+export class TicketResolutionModule {}

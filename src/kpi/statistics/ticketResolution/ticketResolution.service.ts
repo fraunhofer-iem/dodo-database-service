@@ -103,12 +103,26 @@ export class TicketResolutionService {
   @OnEvent('kpi.prepared.resolutionRate')
   public async resolutionRate(payload: CalculationEventPayload) {
     const { kpi, since, release } = payload;
+    const { labels } = kpi.params;
 
     const issues: Issue[] = await this.issueService
       .preAggregate(
         { repo: (release.repo as any)._id },
-        { to: release.published_at },
+        { to: release.published_at, labels: true },
       )
+      .match({
+        labels: { $not: { $size: 0 } },
+      })
+      .unwind('labels')
+      .match({
+        'labels.name': {
+          $in: labels,
+        },
+      })
+      .group({
+        _id: '$_id',
+        closed_at: { $first: '$closed_at' },
+      })
       .exec();
 
     const closedIssues: Issue[] = [];
