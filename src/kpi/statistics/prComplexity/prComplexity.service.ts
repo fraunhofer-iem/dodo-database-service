@@ -1,17 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { sum } from 'lodash';
-import { RepositoryService } from 'src/entities/repositories/repository.service';
 import { CalculationEventPayload } from '../lib';
 
 @Injectable()
 export class PrComplexityService {
   private readonly logger = new Logger(PrComplexityService.name);
 
-  constructor(
-    private repoService: RepositoryService,
-    private eventEmitter: EventEmitter2,
-  ) {}
+  constructor(private eventEmitter: EventEmitter2) {}
 
   @OnEvent('kpi.prepared.prComplexity')
   public async prComplexity(payload: CalculationEventPayload) {
@@ -57,7 +53,7 @@ export class PrComplexityService {
     });
   }
 
-  @OnEvent('kpi.prepared.avgPrComplexity')
+  @OnEvent('kpi.prepared.stdPrComplexity')
   public async stdPrComplexity(payload: CalculationEventPayload) {
     const { kpi, since, release, data } = payload;
     const { prComplexity, avgPrComplexity } = data;

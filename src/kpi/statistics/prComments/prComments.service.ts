@@ -51,13 +51,16 @@ export class PrCommentsService {
     const { kpi, since, release, data } = payload;
     const { prComments, prChurnRatio, prChangeRatio } = data;
     const { threshold } = kpi.params;
-
     const prCommentRatio = Object.fromEntries(
-      Object.entries(prComments).map((entry) => [
-        entry[0],
-        +entry[1] /
-          (threshold * prChurnRatio[entry[0]] * prChangeRatio[entry[0]]),
-      ]),
+      Object.entries(prComments).map((entry) => {
+        const expectedNumberOfComments =
+          +entry[1] /
+          (threshold * prChurnRatio[entry[0]] * prChangeRatio[entry[0]]);
+        return [
+          entry[0],
+          isNaN(expectedNumberOfComments) ? 1 : expectedNumberOfComments,
+        ];
+      }),
     );
     this.eventEmitter.emit('kpi.calculated', {
       kpi,

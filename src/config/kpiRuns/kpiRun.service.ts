@@ -151,7 +151,7 @@ export class KpiRunService {
     const entries = [];
     for (const run of hydratedRuns) {
       let label: Date | string = run.to;
-      if (run.kpi.kpiType.type === 'repo') {
+      if (run.kpi.kpiType.type !== 'orga') {
         const release = await this.releaseService.read({ _id: run.release });
         label = release.name;
       }
