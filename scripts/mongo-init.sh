@@ -27,6 +27,7 @@ file_env() {
 
 file_env 'DB_USER'
 file_env 'DB_USER_PASSWORD'
+file_env 'MONGO_CONFIG_DATABASE'
 
 mongo <<EOF
 use $MONGO_INITDB_DATABASE
@@ -36,6 +37,15 @@ db.createUser({
   roles: [{
     role: 'readWrite',
     db: '$MONGO_INITDB_DATABASE'
+  }]
+})
+use $MONGO_CONFIG_DATABASE
+db.createUser({
+  user:  '$DB_USER',
+  pwd: '$DB_USER_PASSWORD',
+  roles: [{
+    role: 'readWrite',
+    db: '$MONGO_CONFIG_DATABASE'
   }]
 })
 EOF

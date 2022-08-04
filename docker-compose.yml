@@ -6,7 +6,8 @@ services:
     environment:
       - MONGO_INITDB_ROOT_USERNAME=root
       - MONGO_INITDB_ROOT_PASSWORD=pass12345
-      - MONGO_INITDB_DATABASE=githubMirror
+      - MONGO_INITDB_DATABASE=dodoData
+      - MONGO_CONFIG_DATABASE=dodoConfig
       - DB_USER=visuCodeDbService
       - DB_USER_PASSWORD=changeMe
     volumes:
