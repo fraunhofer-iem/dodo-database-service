@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { MongooseModule } from '@nestjs/mongoose';
 import { DodoConfigModule } from './config/dodoConfig.module';
-import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
@@ -34,19 +34,6 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
         useNewUrlParser: true,
       }),
       connectionName: 'data',
-      inject: [ConfigService],
-    }),
-    MongooseModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        uri: configService.get<string>('LAKE_URI'),
-        auth: {
-          username: configService.get<string>('DB_USER'),
-          password: configService.get<string>('DB_USER_PASSWORD'),
-        },
-        useNewUrlParser: true,
-      }),
-      connectionName: 'lake',
       inject: [ConfigService],
     }),
     DodoConfigModule,
