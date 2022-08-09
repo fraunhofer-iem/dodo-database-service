@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
-import { reverse, sortBy } from 'lodash';
 import { Aggregate, FilterQuery, Model } from 'mongoose';
+import { transformMapToObject } from 'src/kpi/statistics/lib';
 import {
   Release,
   ReleaseDocument,
@@ -107,25 +107,13 @@ export class KpiRunService {
     });
   }
 
-  //TODO: Check if manual hydration can be given up when storing UTC strings
-  public async valueAt(filter: FilterQuery<KpiRunDocument>, at: string) {
-    const runs = await this.readAll(filter);
-
-    let hydratedRuns = runs.map<{ to: Date; value: number }>((run) => ({
-      to: new Date(run.to),
-      value: run.value,
-    }));
-    hydratedRuns = hydratedRuns.filter((run) => run.to <= new Date(at));
-    hydratedRuns = reverse(sortBy(hydratedRuns, [(run) => run.to]));
-    return hydratedRuns[0];
-  }
-
-  public async history(
-    filter: FilterQuery<KpiRunDocument>,
-    from?: string,
-    to?: string,
-  ) {
-    let runs = await this.readAll(filter);
+  public async history(kpiIds: string[], from?: string, to?: string) {
+    let runs: KpiRunDocument[] = await this.preAggregate(
+      { kpi: { $in: kpiIds } },
+      {
+        kpi: true,
+      },
+    ).exec();
     let hydratedRuns = runs.map<{
       to: Date;
       value: number;
@@ -147,17 +135,32 @@ export class KpiRunService {
         (run) => run.to <= new Date(new Date(to).setUTCHours(23, 59, 59)),
       );
     }
-
-    const entries = [];
+    const releases: ReleaseDocument[] = await this.releaseService
+      .preAggregate(
+        { _id: { $in: hydratedRuns.map((run) => run.release) } },
+        {},
+      )
+      .exec();
+    const releaseMap: Map<string, string> = new Map();
+    for (const release of releases) {
+      releaseMap.set('' + release._id, release.name);
+    }
+    const kpiMap: Map<string, any[]> = new Map();
     for (const run of hydratedRuns) {
+      if (!kpiMap.has('' + (run.kpi as KpiDocument)._id)) {
+        kpiMap.set('' + (run.kpi as KpiDocument)._id, []);
+      }
       let label: Date | string = run.to;
       if (run.kpi.kpiType.type !== 'orga') {
-        const release = await this.releaseService.read({ _id: run.release });
-        label = release.name;
+        label = releaseMap.get('' + run.release);
       }
-      entries.push([run.to, { label: label, value: run.value }]);
+      kpiMap
+        .get('' + (run.kpi as KpiDocument)._id)
+        .push([run.to, { label: label, value: run.value }]);
     }
-    return Object.fromEntries(entries);
+    return transformMapToObject(kpiMap, (entries: any[]) =>
+      Object.fromEntries(entries),
+    );
   }
 
   public async readAll(

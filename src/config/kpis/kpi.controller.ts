@@ -8,6 +8,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { reverse, sortBy } from 'lodash';
 import { FilterQuery } from 'mongoose';
 import { KpiRunService } from '../kpiRuns/kpiRun.service';
 import { KpiTypeService } from '../kpiTypes/kpiType.service';
@@ -57,6 +58,7 @@ export class KpiController {
     }
     const kpis = await this.kpiService
       .preAggregate(filter, {
+        _id: true,
         target: true,
         children: children === undefined ? true : children === 'true',
       })
@@ -64,18 +66,20 @@ export class KpiController {
         kind: { $in: Array.isArray(kinds) ? kinds : [kinds] },
       })
       .exec();
+
+    const kpiData = await this.kpiRunService.history(
+      kpis.map((kpi) => kpi._id),
+      from,
+      to,
+    );
     for (const kpi of kpis) {
       if (to) {
-        kpi.value = (
-          await this.kpiRunService.valueAt({ 'kpi.id': kpi.id }, to)
-        ).value;
+        kpi.value = reverse(
+          sortBy(kpiData['' + kpi._id], [(entry) => new Date(entry[0])]),
+        )[0].value;
       }
       if (history === 'true') {
-        kpi.data = await this.kpiRunService.history(
-          { 'kpi.id': kpi.id },
-          from,
-          to,
-        );
+        kpi.data = kpiData['' + kpi._id];
       }
     }
     return kpis;
@@ -85,14 +89,20 @@ export class KpiController {
   async readOrgKpi(
     @Param('kpiId') kpiId: string,
     @Query('children') children?: 'true' | 'false',
+    @Query('to') to?: string,
+    @Query('from') from?: string,
+    @Query('history') history?: 'true' | 'false',
   ) {
-    return this.readKpi(kpiId, children);
+    return this.readKpi(kpiId, children, to, from, history);
   }
 
   @Get(':kpiId([^/]+/[^/]+)')
   async readKpi(
     @Param('kpiId') kpiId: string,
     @Query('children') children?: 'true' | 'false',
+    @Query('to') to?: string,
+    @Query('from') from?: string,
+    @Query('history') history?: 'true' | 'false',
   ) {
     const pipeline = this.kpiService.preAggregate(
       { id: kpiId },
@@ -102,9 +112,19 @@ export class KpiController {
         _id: true,
       },
     );
-    const kpi = await pipeline.exec();
-    if (kpi.length) {
-      return kpi[0];
+    const kpis = await pipeline.exec();
+    if (kpis.length) {
+      const kpi = kpis[0];
+      const kpiData = await this.kpiRunService.history([kpi._id], from, to);
+      if (to) {
+        kpi.value = reverse(
+          sortBy(kpiData['' + kpi._id], [(entry) => new Date(entry[0])]),
+        )[0].value;
+      }
+      if (history === 'true') {
+        kpi.data = kpiData['' + kpi._id];
+      }
+      return kpi;
     } else {
       return null;
     }
