@@ -81,6 +81,7 @@ export class KpiRunService {
           data[kpiTypeId] = child.value;
         }
       }
+
       this.eventEmitter.emit(`kpi.prepared.${kpi.kpiType.id}`, {
         kpi: kpi,
         since: since,

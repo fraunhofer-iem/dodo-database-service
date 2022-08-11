@@ -11,3 +11,10 @@ export const filesLookup = {
   foreignField: '_id',
   as: 'files',
 };
+
+export const commitsLookup = {
+  from: 'commits',
+  localField: 'commits',
+  foreignField: '_id',
+  as: 'commits',
+};

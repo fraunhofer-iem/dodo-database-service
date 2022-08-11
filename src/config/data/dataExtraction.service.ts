@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ReleaseDocument } from 'src/entities/releases/model/schemas';
 import { CommitService } from '../../entities/commits/commit.service';
 import { DiffFile } from '../../entities/diffFiles/model/schemas';
 import { DiffService } from '../../entities/diffs/diff.service';
@@ -58,10 +59,14 @@ export class DataExtractionService {
         published_at: 1,
       })
       .exec();
-    let since: Date | undefined = undefined;
+    let previousRelease: ReleaseDocument | undefined = undefined;
     for (const release of releases) {
       this.logger.debug(`Extracting commits of release ${release.name}`);
-      for await (const commit of commitQuerier(target, release, since)) {
+      for await (const commit of commitQuerier(
+        target,
+        release,
+        previousRelease,
+      )) {
         if (!(await this.commitService.exists({ url: commit.url }))) {
           this.logger.log(`Commit ${commit.url}`);
           const files: DiffFile[] = [];
@@ -75,9 +80,14 @@ export class DataExtractionService {
           });
           repo.commits.push(commitDocument);
           await repo.save();
+          const releaseDocument = await this.releaseService.read({
+            _id: release._id,
+          });
+          releaseDocument.commits.push(commitDocument);
+          await releaseDocument.save();
         }
       }
-      since = release.published_at;
+      previousRelease = release;
     }
   }
 

@@ -7,7 +7,7 @@ import { querier } from './querier';
 export async function* commitQuerier(
   repoIdent: RepositoryIdentifier,
   release: ReleaseDocument,
-  since?: Date,
+  previousRelease: ReleaseDocument,
 ) {
   yield* querier<Commit>(
     repoIdent,
@@ -16,7 +16,7 @@ export async function* commitQuerier(
         repoIdent,
         pageNumber,
         release.name,
-        since ? since.toISOString() : undefined,
+        previousRelease ? previousRelease.name : undefined,
         new Date(release.published_at).toISOString(),
       ),
     (commit) => 'author' in commit && commit.author !== null,
@@ -26,30 +26,52 @@ export async function* commitQuerier(
 async function queryCommitPage(
   repoIdent: RepositoryIdentifier,
   pageNumber: number,
-  sha?: string,
-  since?: string,
+  release: string,
+  previousRelease?: string,
   until?: string,
 ) {
   const { owner, repo } = repoIdent;
-
-  return OCTOKIT.rest.repos
-    .listCommits({
-      owner: owner,
-      repo: repo,
-      per_page: 100,
-      page: pageNumber,
-      sha: sha,
-      until: until,
-    })
-    .then((res) => {
-      return res.data.map((commit) => {
-        return {
-          sha: commit.sha,
-          url: commit.url,
-          author: commit.author,
-          timestamp: commit.commit.author.date,
-          message: commit.commit.message,
-        };
+  if (!previousRelease) {
+    return OCTOKIT.rest.repos
+      .listCommits({
+        owner: owner,
+        repo: repo,
+        per_page: 100,
+        page: pageNumber,
+        sha: release,
+        until: until,
+      })
+      .then((res) => {
+        return res.data.map((commit) => {
+          return {
+            sha: commit.sha,
+            url: commit.url,
+            author: commit.author,
+            timestamp: commit.commit.author.date,
+            message: commit.commit.message,
+          };
+        });
       });
-    });
+  } else {
+    return OCTOKIT.rest.repos
+      .compareCommits({
+        owner: owner,
+        repo: repo,
+        base: previousRelease,
+        head: release,
+        per_page: 100,
+        page: pageNumber,
+      })
+      .then((res) => {
+        return res.data.commits.map((commit) => {
+          return {
+            sha: commit.sha,
+            url: commit.url,
+            author: commit.author,
+            timestamp: commit.commit.author.date,
+            message: commit.commit.message,
+          };
+        });
+      });
+  }
 }

@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as mSchema } from 'mongoose';
+import { Commit } from 'src/entities/commits/model/schemas';
 import { Repository } from '../../../../entities/repositories/model/schemas';
 import { RepositoryFile } from '../../../../entities/repositoryFiles/model/schemas';
 
@@ -31,6 +32,9 @@ export class Release {
 
   @Prop({ type: mSchema.Types.Mixed, ref: 'RepositoryFiles' })
   files: RepositoryFile[];
+
+  @Prop([{ type: mSchema.Types.ObjectId, ref: 'Commit' }])
+  commits: Commit[];
 }
 
 export type ReleaseDocument = Release & Document;

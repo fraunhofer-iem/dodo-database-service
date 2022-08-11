@@ -26,7 +26,7 @@ export class DataExtractionController {
         this.logger.log(`Extracting data of ${target.owner}/${target.repo}`);
         const repo = await this.repositoryService.readOrCreate(target);
         // await this.extractionService.extractIssues(repo, target);
-        // await this.extractionService.extractReleases(repo, target);
+        await this.extractionService.extractReleases(repo, target);
         await this.extractionService.extractCommits(repo, target);
         // await this.extractionService.extractDiffs(repo, target);
       }

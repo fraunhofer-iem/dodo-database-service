@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Aggregate, AnyKeys, FilterQuery, Model } from 'mongoose';
 import { documentExists, retrieveDocument } from '../../lib';
-import { repoLookup, filesLookup } from './lib';
+import { commitsLookup, filesLookup, repoLookup } from './lib';
 import { Release, ReleaseDocument } from './model/schemas';
 
 @Injectable()
@@ -45,7 +45,7 @@ export class ReleaseService {
 
   public preAggregate(
     filter: FilterQuery<ReleaseDocument> = undefined,
-    options: { repo?: boolean; files?: boolean },
+    options: { repo?: boolean; files?: boolean; commits?: boolean },
   ): Aggregate<any> {
     const pipeline = this.releaseModel.aggregate();
     if (filter) {
@@ -83,6 +83,9 @@ export class ReleaseService {
         'repo.commits': 0,
         'repo.issues': 0,
       });
+    }
+    if (options.commits) {
+      pipeline.lookup(commitsLookup);
     }
     return pipeline;
   }
