@@ -1,24 +1,34 @@
+import { ReleaseDocument } from 'src/entities/releases/model/schemas';
 import { Commit } from '../../../entities/commits/model';
 import { RepositoryIdentifier } from '../../../entities/repositories/model';
 import { OCTOKIT } from '../../../lib';
-import { branchQuerier } from './branchQuerier';
 import { querier } from './querier';
 
-export async function* commitQuerier(repoIdent: RepositoryIdentifier) {
-  for await (const branch of branchQuerier(repoIdent)) {
-    yield* querier<Commit>(
-      repoIdent,
-      (repoIdent, pageNumber) =>
-        queryCommitPage(repoIdent, pageNumber, branch.name),
-      (commit) => 'author' in commit && commit.author !== null,
-    );
-  }
+export async function* commitQuerier(
+  repoIdent: RepositoryIdentifier,
+  release: ReleaseDocument,
+  since?: Date,
+) {
+  yield* querier<Commit>(
+    repoIdent,
+    (repoIdent, pageNumber) =>
+      queryCommitPage(
+        repoIdent,
+        pageNumber,
+        release.name,
+        since ? since.toISOString() : undefined,
+        new Date(release.published_at).toISOString(),
+      ),
+    (commit) => 'author' in commit && commit.author !== null,
+  );
 }
 
 async function queryCommitPage(
   repoIdent: RepositoryIdentifier,
   pageNumber: number,
-  branch?: string,
+  sha?: string,
+  since?: string,
+  until?: string,
 ) {
   const { owner, repo } = repoIdent;
 
@@ -28,7 +38,8 @@ async function queryCommitPage(
       repo: repo,
       per_page: 100,
       page: pageNumber,
-      sha: branch,
+      sha: sha,
+      until: until,
     })
     .then((res) => {
       return res.data.map((commit) => {

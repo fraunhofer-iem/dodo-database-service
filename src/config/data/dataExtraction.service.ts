@@ -52,21 +52,32 @@ export class DataExtractionService {
 
   public async extractCommits(repo: RepositoryDocument, target: DodoTarget) {
     this.logger.debug('Commits');
-    for await (const commit of commitQuerier(target)) {
-      if (!(await this.commitService.exists({ url: commit.url }))) {
-        this.logger.log(`Commit ${commit.url}`);
-        const files: DiffFile[] = [];
-        for await (const file of commitFileQuerier(target, commit)) {
-          files.push(file);
+    const releases = await this.releaseService
+      .preAggregate({ repo: repo._id }, {})
+      .sort({
+        published_at: 1,
+      })
+      .exec();
+    let since: Date | undefined = undefined;
+    for (const release of releases) {
+      this.logger.debug(`Extracting commits of release ${release.name}`);
+      for await (const commit of commitQuerier(target, release, since)) {
+        if (!(await this.commitService.exists({ url: commit.url }))) {
+          this.logger.log(`Commit ${commit.url}`);
+          const files: DiffFile[] = [];
+          for await (const file of commitFileQuerier(target, commit)) {
+            files.push(file);
+          }
+          const commitDocument = await this.commitService.create({
+            ...commit,
+            repo,
+            files,
+          });
+          repo.commits.push(commitDocument);
+          await repo.save();
         }
-        const commitDocument = await this.commitService.create({
-          ...commit,
-          repo,
-          files,
-        });
-        repo.commits.push(commitDocument);
-        await repo.save();
       }
+      since = release.published_at;
     }
   }
 
