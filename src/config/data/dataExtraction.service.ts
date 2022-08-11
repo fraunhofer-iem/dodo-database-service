@@ -10,14 +10,14 @@ import { RepositoryDocument } from '../../entities/repositories/model/schemas';
 import { RepositoryFileService } from '../../entities/repositoryFiles/repositoryFile.service';
 import { DodoTarget } from '../targets/model/schemas';
 import {
-  issueQuerier,
-  issueEventQuerier,
   commitQuerier,
-  releaseQuerier,
-  pullRequestQuerier,
   getPullRequestFiles,
   getRepoFiles,
   getTag,
+  issueEventQuerier,
+  issueQuerier,
+  pullRequestQuerier,
+  releaseQuerier,
 } from './lib';
 import { commitFileQuerier } from './lib/commitFileQuerier';
 
@@ -53,18 +53,20 @@ export class DataExtractionService {
   public async extractCommits(repo: RepositoryDocument, target: DodoTarget) {
     this.logger.debug('Commits');
     for await (const commit of commitQuerier(target)) {
-      this.logger.log(`Commit ${commit.url}`);
-      const files: DiffFile[] = [];
-      for await (const file of commitFileQuerier(target, commit)) {
-        files.push(file);
+      if (!(await this.commitService.exists({ url: commit.url }))) {
+        this.logger.log(`Commit ${commit.url}`);
+        const files: DiffFile[] = [];
+        for await (const file of commitFileQuerier(target, commit)) {
+          files.push(file);
+        }
+        const commitDocument = await this.commitService.create({
+          ...commit,
+          repo,
+          files,
+        });
+        repo.commits.push(commitDocument);
+        await repo.save();
       }
-      const commitDocument = await this.commitService.create({
-        ...commit,
-        repo,
-        files,
-      });
-      repo.commits.push(commitDocument);
-      await repo.save();
     }
   }
 

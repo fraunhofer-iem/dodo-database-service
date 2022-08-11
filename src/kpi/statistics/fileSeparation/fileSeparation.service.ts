@@ -38,6 +38,7 @@ export class FileSeparationService {
     release.files.forEach((file) =>
       filePairings.set(file.path, new Set<string>()),
     );
+    console.log(release.name, commits.length, since, release.published_at);
     for (const commit of commits) {
       for (const file of commit.files) {
         for (const partner of commit.files) {
@@ -65,12 +66,14 @@ export class FileSeparationService {
     const { kpi, since, release, data } = payload;
     const { addFilesChanged } = data;
 
+    console.log(release.name, addFilesChanged);
+
     const avgFilesChanged =
       sum(
         Object.values(addFilesChanged).map(
           (filePairings: string[]) => filePairings.length,
         ),
-      ) / Object.values(addFilesChanged).length;
+      ) / Object.keys(addFilesChanged).length;
 
     this.eventEmitter.emit('kpi.calculated', {
       kpi,

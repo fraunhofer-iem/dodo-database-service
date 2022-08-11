@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { AnyKeys, FilterQuery, Model, Aggregate } from 'mongoose';
+import { Aggregate, AnyKeys, FilterQuery, Model } from 'mongoose';
 import { documentExists, retrieveDocument } from '../../lib';
 import { authorLookup, filesLookup, repoLookup } from './lib';
 import { Commit, CommitDocument } from './model/schemas';
@@ -22,6 +22,13 @@ export class CommitService {
       commit = await this.create(json);
     }
     return commit;
+  }
+
+  public async exists(filter: FilterQuery<CommitDocument>): Promise<boolean> {
+    if (await documentExists(this.commitModel, filter)) {
+      return true;
+    }
+    return false;
   }
 
   public async read(

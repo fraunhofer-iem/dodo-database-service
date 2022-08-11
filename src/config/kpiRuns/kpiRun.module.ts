@@ -8,6 +8,7 @@ import { PrCommentsModule } from 'src/kpi/statistics/prComments/prComments.modul
 import { PrComplexityModule } from 'src/kpi/statistics/prComplexity/prComplexity.module';
 import { PrProcessingEfficiencyModule } from 'src/kpi/statistics/prProcessingEfficiency/prProcessingEfficiency.module';
 import { PrSpreadModule } from 'src/kpi/statistics/prSpread/prSpread.module';
+import { TechnicalDebtModule } from 'src/kpi/statistics/technicalDebt/technicalDebt.module';
 import { TicketAssignmentModule } from 'src/kpi/statistics/ticketAssignment/ticketAssignment.module';
 import { TicketResolutionModule } from 'src/kpi/statistics/ticketResolution/ticketResolution.module';
 import { ReleaseModule } from '../../entities/releases/release.module';
@@ -61,6 +62,7 @@ import { KpiRun, KpiRunSchema } from './model/schemas';
     DeveloperSpreadModule,
     TicketResolutionModule,
     TicketAssignmentModule,
+    TechnicalDebtModule,
   ],
   providers: [KpiRunService],
   exports: [KpiRunService],
