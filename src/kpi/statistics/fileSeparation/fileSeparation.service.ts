@@ -21,12 +21,10 @@ export class FileSeparationService {
     const commits: Commit[] = await this.commitService
       .preAggregate(
         {
-          repo: (release.repo as any)._id,
+          _id: { $in: release.commits },
         },
         {
           files: true,
-          since: since,
-          to: release.published_at,
         },
       )
       .exec();
@@ -38,7 +36,7 @@ export class FileSeparationService {
     release.files.forEach((file) =>
       filePairings.set(file.path, new Set<string>()),
     );
-    console.log(release.name, commits.length, since, release.published_at);
+
     for (const commit of commits) {
       for (const file of commit.files) {
         for (const partner of commit.files) {
@@ -51,6 +49,7 @@ export class FileSeparationService {
         }
       }
     }
+
     this.eventEmitter.emit('kpi.calculated', {
       kpi,
       release,
@@ -65,8 +64,6 @@ export class FileSeparationService {
   async avgAddFilesChanged(payload: CalculationEventPayload) {
     const { kpi, since, release, data } = payload;
     const { addFilesChanged } = data;
-
-    console.log(release.name, addFilesChanged);
 
     const avgFilesChanged =
       sum(
@@ -109,10 +106,10 @@ export class FileSeparationService {
 
     const stdAddFilesChanged = Math.sqrt(
       sum(
-        Object.values(addFilesChanged).map((fileParings: string[]) =>
-          Math.pow(fileParings.length - avgAddFilesChanged, 2),
+        Object.values(addFilesChanged).map((filePairings: string[]) =>
+          Math.pow(filePairings.length - avgAddFilesChanged, 2),
         ),
-      ) / Object.values(addFilesChanged).length,
+      ) / Object.keys(addFilesChanged).length,
     );
 
     this.eventEmitter.emit('kpi.calculated', {
@@ -134,7 +131,7 @@ export class FileSeparationService {
       kpi,
       release,
       since,
-      value: fileSeparation,
+      value: isNaN(fileSeparation) ? 0 : fileSeparation,
     });
   }
 }

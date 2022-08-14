@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { sum } from 'lodash';
-import { CalculationEventPayload } from '../lib';
+import { CalculationEventPayload, transformMapToObject } from '../lib';
 
 @Injectable()
 export class CodeSpreadService {
@@ -17,7 +17,7 @@ export class CodeSpreadService {
       excludedPaths: [],
     };
 
-    const locPerFile: { [key: string]: number } = {};
+    const locPerFile: Map<string, number> = new Map();
     for (const file of release.files) {
       const fileExtension = file.path.split('.').slice(-1)[0];
       let excluded = params.excludedFileExtensions.includes(fileExtension);
@@ -28,12 +28,12 @@ export class CodeSpreadService {
         }
       }
       if (!excluded) {
-        locPerFile[file.path] = Buffer.from(
-          file.content as any,
-          file.encoding as any,
-        )
-          .toString()
-          .split('\n').length;
+        locPerFile.set(
+          file.path,
+          Buffer.from(file.content as any, file.encoding as any)
+            .toString()
+            .split('\n').length,
+        );
       }
     }
 
@@ -41,7 +41,7 @@ export class CodeSpreadService {
       kpi,
       release,
       since,
-      value: locPerFile,
+      value: transformMapToObject(locPerFile),
     });
   }
 
@@ -51,7 +51,7 @@ export class CodeSpreadService {
     const { locPerFile } = data;
 
     const avgLoc =
-      sum(Object.values(locPerFile)) / Object.values(locPerFile).length;
+      sum(Object.values(locPerFile)) / Object.keys(locPerFile).length;
 
     this.eventEmitter.emit('kpi.calculated', {
       kpi,
@@ -86,7 +86,7 @@ export class CodeSpreadService {
         Object.values(locPerFile).map((loc: number) =>
           Math.pow(loc - avgLoc, 2),
         ),
-      ) / Object.values(locPerFile).length,
+      ) / Object.keys(locPerFile).length,
     );
 
     this.eventEmitter.emit('kpi.calculated', {

@@ -33,13 +33,11 @@ export class CommitService {
 
   public async read(
     filter: FilterQuery<CommitDocument>,
-  ): Promise<CommitDocument> {
-    let commit: CommitDocument;
+  ): Promise<CommitDocument | undefined> {
+    let commit: CommitDocument | undefined = undefined;
     try {
       commit = await retrieveDocument(this.commitModel, filter);
-    } catch (e) {
-      throw e;
-    }
+    } catch {}
     return commit;
   }
 

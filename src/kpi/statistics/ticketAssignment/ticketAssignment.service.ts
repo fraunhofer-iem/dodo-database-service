@@ -17,7 +17,7 @@ export class TicketAssignmentService {
   @OnEvent('kpi.prepared.unassignedTicketRate')
   public async resolutionRate(payload: CalculationEventPayload) {
     const { kpi, since, release } = payload;
-    const { labels } = kpi.params.labels;
+    const { labels } = kpi.params;
 
     const issues: Issue[] = await this.issueService
       .preAggregate(
@@ -47,11 +47,13 @@ export class TicketAssignmentService {
       }
     }
 
+    const unassignedTicketRate = assignedIssues.length / issues.length;
+
     this.eventEmitter.emit('kpi.calculated', {
       kpi,
       release,
       since,
-      value: assignedIssues.length / issues.length,
+      value: isNaN(unassignedTicketRate) ? 0 : unassignedTicketRate,
     });
   }
 
@@ -72,6 +74,22 @@ export class TicketAssignmentService {
       release,
       since,
       value: overallUnassignedTicketRate,
+    });
+  }
+
+  @OnEvent('kpi.prepared.overallWorkInProgress')
+  public async workInProgress(payload: CalculationEventPayload) {
+    const { kpi, since, release, data } = payload;
+    const { overallResolutionRate, overallUnassignedTicketRate } = data;
+
+    const overallWorkInProgress =
+      (1 - overallUnassignedTicketRate) / (1 - overallResolutionRate);
+
+    this.eventEmitter.emit('kpi.calculated', {
+      kpi,
+      release,
+      since,
+      value: overallWorkInProgress,
     });
   }
 }

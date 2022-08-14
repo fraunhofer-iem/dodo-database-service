@@ -60,32 +60,35 @@ export class DataExtractionService {
       })
       .exec();
     let previousRelease: ReleaseDocument | undefined = undefined;
+    repo.commits = [];
     for (const release of releases) {
       this.logger.debug(`Extracting commits of release ${release.name}`);
+      const releaseDocument = await this.releaseService.read({
+        _id: release._id,
+      });
+      releaseDocument.commits = [];
       for await (const commit of commitQuerier(
         target,
         release,
         previousRelease,
       )) {
-        if (!(await this.commitService.exists({ url: commit.url }))) {
-          this.logger.log(`Commit ${commit.url}`);
+        this.logger.log(`Commit ${commit.url}`);
+        let commitDocument = await this.commitService.read({ url: commit.url });
+        if (!commitDocument) {
           const files: DiffFile[] = [];
           for await (const file of commitFileQuerier(target, commit)) {
             files.push(file);
           }
-          const commitDocument = await this.commitService.create({
+          commitDocument = await this.commitService.create({
             ...commit,
             repo,
             files,
           });
-          repo.commits.push(commitDocument);
-          await repo.save();
-          const releaseDocument = await this.releaseService.read({
-            _id: release._id,
-          });
-          releaseDocument.commits.push(commitDocument);
-          await releaseDocument.save();
         }
+        repo.commits.push(commitDocument);
+        await repo.save();
+        releaseDocument.commits.push(commitDocument);
+        await releaseDocument.save();
       }
       previousRelease = release;
     }

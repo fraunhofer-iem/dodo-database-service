@@ -28,18 +28,18 @@ export class GodClassIndexService {
     });
   }
 
-  @OnEvent('kpi.prepared.godClassIndex')
+  @OnEvent('kpi.prepared.noGodClassIndex')
   async godClassIndex(payload: CalculationEventPayload) {
     const { kpi, since, release, data } = payload;
     const { locRatioPerFile } = data;
 
-    const godClassIndex = 1 - max<number>(Object.values(locRatioPerFile));
+    const noGodClassIndex = 1 - max<number>(Object.values(locRatioPerFile));
 
     this.eventEmitter.emit('kpi.calculated', {
       kpi,
       release,
       since,
-      value: godClassIndex,
+      value: noGodClassIndex,
     });
   }
 }

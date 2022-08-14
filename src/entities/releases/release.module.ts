@@ -20,15 +20,12 @@ import { ReleaseService } from './release.service';
           ) => {
             const schema = ReleaseSchema;
             schema.pre<Release>('validate', async function (this: Release) {
-              if (
-                this.repo.hasOwnProperty('owner') &&
-                this.repo.hasOwnProperty('repo')
-              ) {
+              if (this.repo.owner && this.repo.repo) {
                 this.repo = (await repoService.readOrCreate(this.repo))._id;
               }
 
               for (let i = 0; i < this.files.length; i++) {
-                if (this.repo.hasOwnProperty('sha')) {
+                if (this.files[i].sha) {
                   this.files[i] = (
                     await repositoryFileService.readOrCreate(this.files[i])
                   )._id;

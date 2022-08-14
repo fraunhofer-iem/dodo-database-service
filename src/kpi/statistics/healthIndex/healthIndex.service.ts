@@ -25,14 +25,28 @@ export class HealthIndexService {
   @OnEvent('kpi.prepared.repoHealth')
   async repoHealth(payload: CalculationEventPayload) {
     const { kpi, since, release, data } = payload;
+    const {
+      technicalDebt,
+      codeSpread,
+      noGodClassIndex,
+      overallWorkInProgress,
+      prHandlingIndex,
+    } = data;
 
-    const orgHealth = Math.random() * 100;
+    const repoHealth =
+      (1 -
+        technicalDebt +
+        codeSpread +
+        noGodClassIndex +
+        overallWorkInProgress +
+        prHandlingIndex) /
+      5;
 
     this.eventEmitter.emit('kpi.calculated', {
       kpi,
       release,
       since,
-      value: orgHealth,
+      value: repoHealth,
     });
   }
 }

@@ -53,7 +53,7 @@ export class TicketResolutionService {
       kpi,
       release,
       since,
-      value: resolutionCapability,
+      value: isNaN(resolutionCapability) ? 0 : resolutionCapability,
     });
   }
 
@@ -96,7 +96,7 @@ export class TicketResolutionService {
       kpi,
       release,
       since,
-      value: resolutionEfficiency,
+      value: isNaN(resolutionEfficiency) ? 0 : resolutionEfficiency,
     });
   }
 
@@ -134,11 +134,13 @@ export class TicketResolutionService {
       }
     }
 
+    const resolutionRate = closedIssues.length / issues.length;
+
     this.eventEmitter.emit('kpi.calculated', {
       kpi,
       release,
       since,
-      value: closedIssues.length / issues.length,
+      value: isNaN(resolutionRate) ? 0 : resolutionRate,
     });
   }
 

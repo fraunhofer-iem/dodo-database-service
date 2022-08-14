@@ -59,6 +59,7 @@ export class MeanTimeToResolutionService {
   async meanTimeToResolution(payload: CalculationEventPayload) {
     const { kpi, since, release, data } = payload;
     let { timeToResolution } = data;
+    const { labels } = kpi.params;
     if (timeToResolution === undefined) {
       timeToResolution = {};
     }
@@ -74,7 +75,7 @@ export class MeanTimeToResolutionService {
       .unwind('labels')
       .match({
         'labels.name': {
-          $in: kpi.params.labels,
+          $in: labels,
         },
       })
       .group({
@@ -98,6 +99,7 @@ export class MeanTimeToResolutionService {
   async overallMeanTimeToResolution(payload: CalculationEventPayload) {
     const { kpi, since, release, data } = payload;
     let { meanTimeToResolution } = data;
+
     meanTimeToResolution = meanTimeToResolution.reduce(
       (mttr: number[], value: number) =>
         isNaN(value) ? mttr : [value, ...mttr],
@@ -118,10 +120,10 @@ export class MeanTimeToResolutionService {
   async resolutionInTime(payload: CalculationEventPayload) {
     const { kpi, since, release, data } = payload;
     const { overallMeanTimeToResolution } = data;
+    const { expectedValue } = kpi.params;
 
     const resolutionInTime =
-      1 -
-      min([(overallMeanTimeToResolution / 2) * kpi.params.expectedValue, 1]);
+      1 - min([(overallMeanTimeToResolution / 2) * expectedValue, 1]);
     this.eventEmitter.emit('kpi.calculated', {
       kpi,
       release,
