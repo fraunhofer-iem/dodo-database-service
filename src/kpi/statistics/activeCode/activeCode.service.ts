@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
-import { sum } from 'lodash';
+import { Commit } from 'src/entities/commits/model/schemas';
 import { CommitService } from '../../../entities/commits/commit.service';
 import { CalculationEventPayload } from '../lib';
 
@@ -17,35 +17,35 @@ export class ActiveCodeService {
   async numberOfFilesChanged(payload: CalculationEventPayload) {
     const { kpi, since, release } = payload;
 
-    const result: { _id: string }[] = await this.commitService
+    const commits: Commit[] = await this.commitService
       .preAggregate(
         {
-          repo: (release.repo as any)._id,
+          _id: { $in: release.commits },
         },
         {
           files: true,
-          since: since,
-          to: release.published_at,
         },
       )
-      .unwind('$files')
-      .group({
-        _id: '$files.filename',
-      })
       .exec();
 
-    const numberOfFilesChanged = sum(
-      result.map((file) =>
-        release.files.map((repoFile) => repoFile.path).includes(file._id)
-          ? 1
-          : 0,
-      ),
-    );
+    const releaseFiles = release.files.map((file) => file.path);
+    const changedFiles: string[] = [];
+    for (const commit of commits) {
+      for (const file of commit.files) {
+        if (
+          releaseFiles.includes(file.filename) &&
+          !changedFiles.includes(file.filename)
+        ) {
+          changedFiles.push(file.filename);
+        }
+      }
+    }
+
     this.eventEmitter.emit('kpi.calculated', {
       kpi,
       release,
       since,
-      value: numberOfFilesChanged,
+      value: changedFiles.length,
     });
   }
 
