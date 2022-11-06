@@ -124,6 +124,8 @@ export class KpiController {
       if (history === 'true') {
         kpi.data = kpiData['' + kpi._id];
       }
+      console.log('KPI:');
+      console.log(kpi);
       return kpi;
     } else {
       return null;

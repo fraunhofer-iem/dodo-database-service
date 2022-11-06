@@ -36,19 +36,20 @@ export class TicketAssignmentService {
       .group({
         _id: '$_id',
         assignee: { $first: '$assignee' },
-        assignees: { $first: '$assignees' },
+        assignees: { $push: '$assignees' },
       })
       .exec();
 
     const assignedIssues: Issue[] = [];
     for (const issue of issues) {
-      if (issue.assignee || issue.assignees.length) {
+      console.log(issue);
+      if (issue.assignee !== null) {
         assignedIssues.push(issue);
       }
     }
 
     const unassignedTicketRate = assignedIssues.length / issues.length;
-
+    console.log(unassignedTicketRate);
     this.eventEmitter.emit('kpi.calculated', {
       kpi,
       release,

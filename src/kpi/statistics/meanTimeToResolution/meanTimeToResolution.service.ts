@@ -100,6 +100,8 @@ export class MeanTimeToResolutionService {
     const { kpi, since, release, data } = payload;
     let { meanTimeToResolution } = data;
 
+    this.logger.log(meanTimeToResolution);
+
     meanTimeToResolution = meanTimeToResolution.reduce(
       (mttr: number[], value: number) =>
         isNaN(value) ? mttr : [value, ...mttr],
@@ -119,11 +121,12 @@ export class MeanTimeToResolutionService {
   @OnEvent('kpi.prepared.resolutionInTime')
   async resolutionInTime(payload: CalculationEventPayload) {
     const { kpi, since, release, data } = payload;
-    const { overallMeanTimeToResolution } = data;
+    let { overallMeanTimeToResolution } = data;
     const { expectedValue } = kpi.params;
 
     const resolutionInTime =
-      1 - min([(overallMeanTimeToResolution / 2) * expectedValue, 1]);
+      1 - min([((overallMeanTimeToResolution / 2) * 1) / expectedValue, 1]);
+    this.logger.log(resolutionInTime);
     this.eventEmitter.emit('kpi.calculated', {
       kpi,
       release,

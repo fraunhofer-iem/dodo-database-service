@@ -51,22 +51,52 @@ export class PrCommentsService {
     const { kpi, since, release, data } = payload;
     const { prComments, prChurnRatio, prChangeRatio } = data;
     const { threshold } = kpi.params;
-    const prCommentRatio = Object.fromEntries(
-      Object.entries(prComments).map((entry) => {
+    console.log(prComments);
+    console.log(prChurnRatio);
+    console.log(prChangeRatio);
+    if (
+      typeof prComments === 'undefined' &&
+      typeof prChurnRatio === 'undefined' &&
+      typeof prChangeRatio === 'undefined'
+    ) {
+      this.eventEmitter.emit('kpi.calculated', {
+        kpi,
+        release,
+        since,
+        value: {},
+      });
+    } else {
+      const prCommentRatio: { [key: string]: number } = {};
+      // const prCommentRatio = Object.fromEntries(
+      //   Object.entries(prComments).map((entry) => {
+      //     const expectedNumberOfComments =
+      //       +entry[1] /
+      //       (threshold * prChurnRatio[entry[0]] * prChangeRatio[entry[0]]);
+      //     return [
+      //       entry[0],
+      //       isNaN(expectedNumberOfComments) ? 1 : expectedNumberOfComments,
+      //     ];
+      //   }),
+      // );
+
+      for (const [pullRequest, comments] of Object.entries<number>(
+        prComments,
+      )) {
         const expectedNumberOfComments =
-          +entry[1] /
-          (threshold * prChurnRatio[entry[0]] * prChangeRatio[entry[0]]);
-        return [
-          entry[0],
-          isNaN(expectedNumberOfComments) ? 1 : expectedNumberOfComments,
-        ];
-      }),
-    );
-    this.eventEmitter.emit('kpi.calculated', {
-      kpi,
-      release,
-      since,
-      value: prCommentRatio,
-    });
+          (comments / threshold) *
+          prChurnRatio[pullRequest] *
+          prChangeRatio[pullRequest];
+        prCommentRatio[pullRequest] = isNaN(expectedNumberOfComments)
+          ? 1
+          : expectedNumberOfComments;
+      }
+
+      this.eventEmitter.emit('kpi.calculated', {
+        kpi,
+        release,
+        since,
+        value: prCommentRatio,
+      });
+    }
   }
 }

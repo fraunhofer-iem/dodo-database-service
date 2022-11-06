@@ -80,7 +80,8 @@ export class CodeSpreadService {
   async stdLoc(payload: CalculationEventPayload) {
     const { kpi, since, release, data } = payload;
     const { locPerFile, avgLoc } = data;
-
+    console.log(avgLoc);
+    console.log(locPerFile);
     const stdLoc = Math.sqrt(
       sum(
         Object.values(locPerFile).map((loc: number) =>

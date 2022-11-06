@@ -12,6 +12,10 @@ import { documentExists, retrieveDocument } from '../../lib';
 import { Kpi, KpiDocument } from '../kpis/model/schemas';
 import { kpiLookup, kpiTypeLookup } from './lib';
 import { KpiRun, KpiRunDocument } from './model/schemas';
+import { sortBy } from 'lodash';
+import { PrSpreadService } from 'src/kpi/statistics/prSpread/prSpread.service';
+import { PrProcessingEfficiencyService } from 'src/kpi/statistics/prProcessingEfficiency/prProcessingEfficiency.service';
+import { DeveloperSpreadService } from 'src/kpi/statistics/developerSpread/developerSpread.service';
 
 @Injectable()
 export class KpiRunService {
@@ -21,6 +25,9 @@ export class KpiRunService {
     @InjectModel(KpiRun.name) private kpiRunModel: Model<KpiRunDocument>,
     private releaseService: ReleaseService,
     private eventEmitter: EventEmitter2,
+    private prSpreadService: PrSpreadService,
+    private prProcessingEfficiency: PrProcessingEfficiencyService,
+    private devSpread: DeveloperSpreadService,
   ) {}
 
   @OnEvent('kpi.registered')
@@ -81,7 +88,33 @@ export class KpiRunService {
           data[kpiTypeId] = child.value;
         }
       }
+      // console.log('DATA');
+      // console.log(data);
+      console.log('release: ', currentRelease.name);
+      console.log(currentRelease.created_at);
+      console.log(currentRelease.published_at);
+      console.log(kpi.kpiType.id);
+      console.log(kpi.children);
+      console.log('---------------------');
 
+      // await this.prSpreadService.prCreationDates({
+      //   kpi: kpi,
+      //   since: since,
+      //   release: currentRelease,
+      //   data: data,
+      // });
+      // await this.prProcessingEfficiency.prsInProcess({
+      //   kpi: kpi,
+      //   since: since,
+      //   release: currentRelease,
+      //   data: data,
+      // });
+      // await this.devSpread.devSpread({
+      //   kpi: kpi,
+      //   since: since,
+      //   release: currentRelease,
+      //   data: data,
+      // });
       this.eventEmitter.emit(`kpi.prepared.${kpi.kpiType.id}`, {
         kpi: kpi,
         since: since,
@@ -99,6 +132,8 @@ export class KpiRunService {
     since: Date;
     value: any;
   }) {
+    // console.log('Value before storing:');
+    // console.log(payload.value);
     this.create({
       kpi: payload.kpi._id,
       release: payload.release,
@@ -126,6 +161,12 @@ export class KpiRunService {
       to: new Date(run.to),
       value: run.value,
     }));
+    // sort the runs as they are not sorted
+    hydratedRuns = sortBy(hydratedRuns, [
+      function (obj) {
+        return obj.to;
+      },
+    ]);
     if (from) {
       hydratedRuns = hydratedRuns.filter(
         (run) => run.to >= new Date(new Date(from).setUTCHours(0, 0, 0)),
@@ -141,6 +182,7 @@ export class KpiRunService {
         { _id: { $in: hydratedRuns.map((run) => run.release) } },
         {},
       )
+      .sort({ published_at: 1 })
       .exec();
     const releaseMap: Map<string, string> = new Map();
     for (const release of releases) {
@@ -148,6 +190,9 @@ export class KpiRunService {
     }
     const kpiMap: Map<string, any[]> = new Map();
     for (const run of hydratedRuns) {
+      console.log('VALUE');
+      console.log(run.value);
+      console.log(run.kpi);
       if (!kpiMap.has('' + (run.kpi as KpiDocument)._id)) {
         kpiMap.set('' + (run.kpi as KpiDocument)._id, []);
       }
@@ -159,6 +204,7 @@ export class KpiRunService {
         .get('' + (run.kpi as KpiDocument)._id)
         .push([run.to, { label: label, value: run.value }]);
     }
+    console.log(kpiMap);
     return transformMapToObject(kpiMap, (entries: any[]) =>
       Object.fromEntries(entries),
     );

@@ -293,6 +293,8 @@ export class RepositoryService {
       pipeline.unwind('$diffs');
       if (options.diffs.pullRequest) {
         const { since, to } = options.diffs.pullRequest;
+        console.log('since: ', since);
+        console.log('to: ', to);
         pipeline.lookup(diffsPullRequestLookup);
         pipeline.addFields({
           'diffs.pullRequest': { $arrayElemAt: ['$diffs.pullRequest', 0] },
@@ -326,6 +328,7 @@ export class RepositoryService {
             },
           });
         }
+        // all PRs less or equal then release.published_at
         if (to) {
           pipeline.match({
             'diffs.pullRequest.created_at': {

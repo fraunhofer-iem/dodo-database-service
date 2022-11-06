@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { ConsoleLogger, Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { sum } from 'lodash';
 import { Issue } from 'src/entities/issues/model/schemas';
@@ -105,6 +105,8 @@ export class TicketResolutionService {
     const { kpi, since, release } = payload;
     const { labels } = kpi.params;
 
+    this.logger.log(labels);
+
     const issues: Issue[] = await this.issueService
       .preAggregate(
         { repo: (release.repo as any)._id },
@@ -127,15 +129,23 @@ export class TicketResolutionService {
 
     const closedIssues: Issue[] = [];
     for (const issue of issues) {
-      if (issue.state === 'closed') {
+      if (issue.closed_at !== null) {
+        console.log('issue closed at: ', issue.closed_at);
+        console.log('release published at: ', release.published_at);
         if (new Date(issue.closed_at) <= new Date(release.published_at)) {
           closedIssues.push(issue);
         }
       }
     }
+    console.log('closed issues:');
+    console.log(closedIssues);
+    console.log('issues:');
+    console.log(issues);
 
     const resolutionRate = closedIssues.length / issues.length;
 
+    console.log('resolution rate:');
+    console.log(resolutionRate);
     this.eventEmitter.emit('kpi.calculated', {
       kpi,
       release,

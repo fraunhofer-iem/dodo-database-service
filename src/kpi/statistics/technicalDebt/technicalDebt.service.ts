@@ -13,13 +13,13 @@ export class TechnicalDebtService {
     const { kpi, since, release, data } = payload;
     const { fileSeparation, resolutionInTime } = data;
 
-    const technicalDebt = fileSeparation / (1 - resolutionInTime) / 2;
+    const technicalDebt = fileSeparation + (1 - resolutionInTime) / 2;
 
     this.eventEmitter.emit('kpi.calculated', {
       kpi,
       release,
       since,
-      value: isNaN(technicalDebt) ? 0 : technicalDebt,
+      value: isNaN(technicalDebt) ? {} : technicalDebt,
     });
   }
 }

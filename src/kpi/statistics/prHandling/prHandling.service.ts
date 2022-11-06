@@ -22,7 +22,7 @@ export class PrHandlingService {
       kpi,
       release,
       since,
-      value: isNaN(prHandlingIndex) ? 0 : prHandlingIndex,
+      value: isNaN(prHandlingIndex) ? {} : prHandlingIndex,
     });
   }
 }

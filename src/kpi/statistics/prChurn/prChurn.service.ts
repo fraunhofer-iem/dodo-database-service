@@ -56,14 +56,26 @@ export class PrChurnService {
     const { kpi, since, release, data } = payload;
     const { prChurn, totalLoc } = data;
 
-    const prChurnRatio = Object.fromEntries(
-      Object.entries(prChurn).map((entry) => [entry[0], +entry[1] / totalLoc]),
-    );
-    this.eventEmitter.emit('kpi.calculated', {
-      kpi,
-      release,
-      since,
-      value: prChurnRatio,
-    });
+    if (typeof prChurn === 'undefined') {
+      this.eventEmitter.emit('kpi.calculated', {
+        kpi,
+        release,
+        since,
+        value: {},
+      });
+    } else {
+      const prChurnRatio = Object.fromEntries(
+        Object.entries(prChurn).map((entry) => [
+          entry[0],
+          +entry[1] / totalLoc,
+        ]),
+      );
+      this.eventEmitter.emit('kpi.calculated', {
+        kpi,
+        release,
+        since,
+        value: prChurnRatio,
+      });
+    }
   }
 }

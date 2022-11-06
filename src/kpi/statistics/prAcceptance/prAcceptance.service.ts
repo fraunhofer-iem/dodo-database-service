@@ -34,7 +34,14 @@ export class PrAcceptanceService {
       .replaceRoot('$pullRequest')
       .exec();
 
-    const acceptedPrCount = sumBy(pullRequests, (pr) => (pr.closed_at ? 1 : 0));
+    console.log(pullRequests);
+    const acceptedPrCount = sumBy(pullRequests, (pr) =>
+      since <= new Date(pr.closed_at) &&
+      new Date(pr.closed_at) <= new Date(release.published_at) &&
+      pr.merged_at !== null
+        ? 1
+        : 0,
+    );
     const prAcceptanceRatio = acceptedPrCount / pullRequests.length;
 
     this.eventEmitter.emit('kpi.calculated', {

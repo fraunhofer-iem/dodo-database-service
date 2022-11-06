@@ -36,6 +36,12 @@ export class PrProcessingEfficiencyService {
       })
       .exec();
 
+    pullRequests.forEach((element) => {
+      console.log(element.number);
+      console.log(element.created_at);
+      console.log(element.closed_at);
+    });
+
     const prLatency: { [key: string]: number } = Object.fromEntries(
       pullRequests.map((pullRequest) => [
         pullRequest.url,
@@ -87,6 +93,24 @@ export class PrProcessingEfficiencyService {
       .replaceRoot('$pullRequest')
       .exec();
 
+    console.log('ich war in PrsInProcess');
+    let count = 0;
+    pullRequests.forEach((element) => {
+      count += 1;
+      console.log('PullRequest: ', element.number);
+      console.log(element.created_at);
+      console.log(element.closed_at);
+      console.log(element.merged_at);
+    });
+    console.log('how many PRs?: ', count);
+    // console.log('--- --- --- --- ---');
+    // openPRs.forEach((element) => {
+    //   console.log('PullRequest: ', element.number);
+    //   console.log(element.created_at);
+    //   console.log(element.closed_at);
+    //   console.log(element.merged_at);
+    // });
+
     const prsInProcess: { [key: string]: string[] } = Object.fromEntries(
       pullRequests.map((pullRequest) => [
         pullRequest.url,
@@ -100,6 +124,8 @@ export class PrProcessingEfficiencyService {
           .map((pr) => pr.url),
       ]),
     );
+
+    console.log(Object.keys(prsInProcess).length);
 
     this.eventEmitter.emit('kpi.calculated', {
       kpi,
@@ -116,15 +142,24 @@ export class PrProcessingEfficiencyService {
     const { threshold } = kpi.params;
 
     const prProcessingEfficiency: { [key: string]: number } = {};
-    for (const [pullRequest, latency] of Object.entries<number>(prLatency)) {
-      prProcessingEfficiency[pullRequest] = latency / threshold;
-    }
+    if (typeof prLatency === 'undefined') {
+      this.eventEmitter.emit('kpi.calculated', {
+        kpi,
+        release,
+        since,
+        value: {},
+      });
+    } else {
+      for (const [pullRequest, latency] of Object.entries<number>(prLatency)) {
+        prProcessingEfficiency[pullRequest] = latency / threshold;
+      }
 
-    this.eventEmitter.emit('kpi.calculated', {
-      kpi,
-      release,
-      since,
-      value: prProcessingEfficiency,
-    });
+      this.eventEmitter.emit('kpi.calculated', {
+        kpi,
+        release,
+        since,
+        value: prProcessingEfficiency,
+      });
+    }
   }
 }
