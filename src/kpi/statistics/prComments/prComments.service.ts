@@ -79,6 +79,7 @@ export class PrCommentsService {
       //   }),
       // );
 
+      let evs = [];
       for (const [pullRequest, comments] of Object.entries<number>(
         prComments,
       )) {
@@ -89,6 +90,7 @@ export class PrCommentsService {
         prCommentRatio[pullRequest] = isNaN(expectedNumberOfComments)
           ? 1
           : expectedNumberOfComments;
+        evs.push(expectedNumberOfComments);
       }
 
       this.eventEmitter.emit('kpi.calculated', {
@@ -96,6 +98,7 @@ export class PrCommentsService {
         release,
         since,
         value: prCommentRatio,
+        ev: evs,
       });
     }
   }

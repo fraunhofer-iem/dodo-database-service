@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { AnyKeys, FilterQuery, Model } from 'mongoose';
+import { PrComplexityService } from 'src/kpi/statistics/prComplexity/prComplexity.service';
 import { documentExists, retrieveDocument } from '../../lib';
 import { PullRequest } from './model';
 import {
@@ -46,5 +47,14 @@ export class PullRequestService {
       throw new Error('PullRequest does already exist');
     }
     return this.pullRequestModel.create(json);
+  }
+
+  public async prExists(json: AnyKeys<PullRequest>) {
+    if (
+      await documentExists(this.pullRequestModel, { node_id: json.node_id })
+    ) {
+      return true;
+    }
+    return false;
   }
 }

@@ -93,7 +93,7 @@ export class KpiController {
     @Query('from') from?: string,
     @Query('history') history?: 'true' | 'false',
   ) {
-    return this.readKpi(kpiId, children, to, from, history);
+    return await this.readKpi(kpiId, children, to, from, history);
   }
 
   @Get(':kpiId([^/]+/[^/]+)')

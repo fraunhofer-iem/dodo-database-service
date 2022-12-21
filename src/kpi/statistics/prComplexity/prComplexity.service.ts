@@ -18,32 +18,52 @@ export class PrComplexityService {
       prChurnRatio,
       prCommentRatio,
     } = data;
-
-    if (typeof prProcessingEfficiency === 'undefined') {
-      this.eventEmitter.emit('kpi.calculated', {
-        kpi,
-        release,
-        since,
-        value: {},
-      });
-    } else {
-      const prComplexity = Object.fromEntries(
-        Object.keys(prProcessingEfficiency).map((pullRequest) => [
-          pullRequest,
-          (prProcessingEfficiency[pullRequest] +
-            prChangeRatio[pullRequest] +
-            prChurnRatio[pullRequest] +
-            prCommentRatio[pullRequest]) /
-            4,
-        ]),
-      );
-      this.eventEmitter.emit('kpi.calculated', {
-        kpi,
-        release,
-        since,
-        value: prComplexity,
-      });
+    const allValues = [
+      prProcessingEfficiency,
+      prChangeRatio,
+      prChurnRatio,
+      prCommentRatio,
+    ];
+    let definedValues = allValues.filter(
+      (value) => typeof value !== 'undefined',
+    );
+    // prProcessingEfficiency can be undefined, as it only has a value for closed/merged PRs
+    // take prCommentRatio to get the pr keys as it will contain every PR, if there is one
+    let prComplexity = {};
+    if (typeof prCommentRatio !== 'undefined') {
+      for (let pullRequest of Object.keys(prCommentRatio)) {
+        let valueSum = 0;
+        for (let value of definedValues) {
+          valueSum += value[pullRequest];
+        }
+        prComplexity[pullRequest] = valueSum / definedValues.length;
+      }
     }
+
+    // if (typeof prCommentRatio !== 'undefined') {
+    //   prComplexity = Object.fromEntries(
+    //     Object.keys(prCommentRatio).map((pullRequest) => [
+    //       pullRequest,
+    //       (typeof prProcessingEfficiency === 'undefined'
+    //         ? 0
+    //         : prProcessingEfficiency[pullRequest] + typeof prChangeRatio ===
+    //           'undefined'
+    //         ? 0
+    //         : prChangeRatio[pullRequest] + typeof prChurnRatio === 'undefined'
+    //         ? 0
+    //         : prChurnRatio[pullRequest] + typeof prCommentRatio === 'undefined'
+    //         ? 0
+    //         : prCommentRatio[pullRequest]) / definedValues.length,
+    //     ]),
+    //   );
+    // }
+
+    this.eventEmitter.emit('kpi.calculated', {
+      kpi,
+      release,
+      since,
+      value: prComplexity,
+    });
   }
 
   @OnEvent('kpi.prepared.avgPrComplexity')
@@ -59,9 +79,12 @@ export class PrComplexityService {
         value: {},
       });
     } else {
-      const avgPrComplexity =
+      let avgPrComplexity =
         sum(Object.values(prComplexity)) / Object.values(prComplexity).length;
 
+      if (avgPrComplexity > 1) {
+        avgPrComplexity = 1;
+      }
       this.eventEmitter.emit('kpi.calculated', {
         kpi,
         release,

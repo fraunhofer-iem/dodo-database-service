@@ -1,9 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import exp from 'constants';
 import { min, sum } from 'lodash';
 import { IssueService } from '../../../entities/issues/issue.service';
 import { Issue } from '../../../entities/issues/model/schemas';
-import { CalculationEventPayload, transformMapToObject } from '../lib';
+import {
+  CalculationEventPayload,
+  Intervals,
+  transformMapToObject,
+} from '../lib';
+import { ReleaseCycleService } from '../releaseCycles/releaseCycle.service';
 
 @Injectable()
 export class MeanTimeToResolutionService {
@@ -12,6 +18,7 @@ export class MeanTimeToResolutionService {
   constructor(
     private readonly issueService: IssueService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly releaseCycleService: ReleaseCycleService,
   ) {}
 
   @OnEvent('kpi.prepared.timeToResolution')
@@ -87,11 +94,14 @@ export class MeanTimeToResolutionService {
     const meanTimeToResolution =
       sum(issues.map((issue) => timeToResolution[issue.node_id])) /
       issues.length;
+
+    // undefined if there are no tickets in this release for this label
+    // undefined is excluded in mean calculation automatically
     this.eventEmitter.emit('kpi.calculated', {
       kpi,
       release,
       since,
-      value: meanTimeToResolution,
+      value: isNaN(meanTimeToResolution) ? undefined : meanTimeToResolution,
     });
   }
 
@@ -107,7 +117,8 @@ export class MeanTimeToResolutionService {
         isNaN(value) ? mttr : [value, ...mttr],
       [],
     );
-
+    console.log(meanTimeToResolution);
+    console.log(meanTimeToResolution.length);
     const overallMeanTimeToResolution =
       sum(meanTimeToResolution) / meanTimeToResolution.length;
     this.eventEmitter.emit('kpi.calculated', {
@@ -122,8 +133,18 @@ export class MeanTimeToResolutionService {
   async resolutionInTime(payload: CalculationEventPayload) {
     const { kpi, since, release, data } = payload;
     let { overallMeanTimeToResolution } = data;
-    const { expectedValue } = kpi.params;
+    const avgReleaseCycleLenDays = (
+      await this.releaseCycleService.releaseCycle(
+        Intervals.DAY,
+        kpi.target.owner,
+        kpi.target.repo,
+      )
+    ).avg;
+    console.log('avgDays:', avgReleaseCycleLenDays);
+    const avgReleaseCycleLen = avgReleaseCycleLenDays * 24 * 60 * 60; // timeToResolution is in sec
+    const expectedValue = avgReleaseCycleLen * 2.5;
 
+    const expectedValueInDays = expectedValue / (24 * 60 * 60);
     const resolutionInTime =
       1 - min([((overallMeanTimeToResolution / 2) * 1) / expectedValue, 1]);
     this.logger.log(resolutionInTime);
@@ -132,6 +153,7 @@ export class MeanTimeToResolutionService {
       release,
       since,
       value: resolutionInTime,
+      ev: expectedValueInDays,
     });
   }
 }

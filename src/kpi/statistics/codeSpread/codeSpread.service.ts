@@ -19,22 +19,25 @@ export class CodeSpreadService {
 
     const locPerFile: Map<string, number> = new Map();
     for (const file of release.files) {
-      const fileExtension = file.path.split('.').slice(-1)[0];
-      let excluded = params.excludedFileExtensions.includes(fileExtension);
-      for (const excludedPath of params.excludedPaths) {
-        if (file.path.startsWith(excludedPath)) {
-          excluded = true;
-          break;
+      if (file.encoding !== 'none') {
+        const fileExtension = file.path.split('.').slice(-1)[0];
+        let excluded = params.excludedFileExtensions.includes(fileExtension);
+        for (const excludedPath of params.excludedPaths) {
+          if (file.path.startsWith(excludedPath)) {
+            excluded = true;
+            break;
+          }
+        }
+        if (!excluded) {
+          locPerFile.set(
+            file.path,
+            Buffer.from(file.content as any, file.encoding as any)
+              .toString()
+              .split('\n').length,
+          );
         }
       }
-      if (!excluded) {
-        locPerFile.set(
-          file.path,
-          Buffer.from(file.content as any, file.encoding as any)
-            .toString()
-            .split('\n').length,
-        );
-      }
+      delete file.content;
     }
 
     this.eventEmitter.emit('kpi.calculated', {

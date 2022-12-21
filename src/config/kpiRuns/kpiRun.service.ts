@@ -16,6 +16,8 @@ import { sortBy } from 'lodash';
 import { PrSpreadService } from 'src/kpi/statistics/prSpread/prSpread.service';
 import { PrProcessingEfficiencyService } from 'src/kpi/statistics/prProcessingEfficiency/prProcessingEfficiency.service';
 import { DeveloperSpreadService } from 'src/kpi/statistics/developerSpread/developerSpread.service';
+import { RepositoryService } from 'src/entities/repositories/repository.service';
+import { RepositoryFileService } from 'src/entities/repositoryFiles/repositoryFile.service';
 
 @Injectable()
 export class KpiRunService {
@@ -28,12 +30,52 @@ export class KpiRunService {
     private prSpreadService: PrSpreadService,
     private prProcessingEfficiency: PrProcessingEfficiencyService,
     private devSpread: DeveloperSpreadService,
+    private repositoryService: RepositoryService,
+    private repositoryFileService: RepositoryFileService,
   ) {}
 
   @OnEvent('kpi.registered')
   public async calculate(payload: { kpi: KpiDocument }) {
     const { kpi } = payload;
-    const releases: ReleaseDocument[] = await this.releaseService
+    const repo = await this.repositoryService.read({ repo: kpi.target.repo });
+    // const releaseIDs = repo.releases;
+    // console.log(releaseIDs);
+    const releaseIDs = await this.releaseService
+      .preAggregate({ repo: repo._id }, {})
+      .group({ _id: '$_id' })
+      .exec();
+    console.log(releaseIDs);
+    // This for loop if files have to be fetched separately
+    let releases: ReleaseDocument[] = [];
+
+    // integrate repositoryfile service and fetch every file separately because mongoose size error
+    // for (let releaseID of releaseIDs) {
+    //   const release: ReleaseDocument[] = await this.releaseService
+    //     .preAggregate(
+    //       { _id: releaseID._id },
+    //       {
+    //         repo: true,
+    //         files: true,
+    //       },
+    //     )
+    //     .match({
+    //       'repo.owner': kpi.target.owner,
+    //       'repo.repo': kpi.target.repo ?? { $ne: null },
+    //     })
+    //     .exec();
+    //   console.log(release);
+    //   console.log('funktioniert mit dem einzelnd fetchen');
+    //   console.log('-----------------------------');
+    //   releases.push(...release);
+    //   // const releaseFile = await this.releaseService.preAggregateReleaseFiles({
+    //   //   _id: releaseID._id,
+    //   // });
+    //   // console.log(releaseFile);
+    // }
+    // console.log(releases);
+
+    console.log('#####################');
+    releases = await this.releaseService
       .preAggregate(
         {},
         {
@@ -48,7 +90,31 @@ export class KpiRunService {
       .sort({
         published_at: 1,
       })
+      .allowDiskUse(true)
       .exec();
+    // console.log(releases);
+
+    if (kpi.kpiType.name === 'Lines of Code per File') {
+      for (const release of releases) {
+        for (const fileObj of release.files) {
+          const file = (
+            await this.repositoryFileService.preAggregate(fileObj).exec()
+          )[0];
+          fileObj['content'] = file.content;
+          fileObj['encoding'] = file.encoding;
+        }
+      }
+      console.log('DONE!!!');
+    }
+
+    // const releaseFiles: ReleaseDocument[] =
+    //   await this.releaseService.preAggregateReleaseFiles({
+    //     repo: repo._id,
+    //   });
+    console.log('-----------------------------');
+    // console.log(releaseFiles);
+    // console.log(releaseFiles.length);
+    // console.log(releases.length);
 
     let since = undefined;
     for (let i = 0; i < releases.length; i++) {
@@ -68,7 +134,6 @@ export class KpiRunService {
       correspondingReleases = correspondingReleases.map(
         (release) => release._id,
       );
-
       const children = await this.preAggregate(
         {
           release: { $in: correspondingReleases },
@@ -91,10 +156,10 @@ export class KpiRunService {
       // console.log('DATA');
       // console.log(data);
       console.log('release: ', currentRelease.name);
-      console.log(currentRelease.created_at);
-      console.log(currentRelease.published_at);
-      console.log(kpi.kpiType.id);
-      console.log(kpi.children);
+      console.log('since: ', currentRelease.created_at);
+      console.log('to: ', currentRelease.published_at);
+      console.log('id: ', kpi.kpiType.id);
+      console.log('children: ', kpi.children);
       console.log('---------------------');
 
       // await this.prSpreadService.prCreationDates({
@@ -131,6 +196,7 @@ export class KpiRunService {
     release: Release;
     since: Date;
     value: any;
+    ev?: number | number[];
   }) {
     // console.log('Value before storing:');
     // console.log(payload.value);
@@ -140,6 +206,7 @@ export class KpiRunService {
       since: payload.since ? payload.since.toUTCString() : null,
       to: (payload.release.published_at as any).toUTCString(),
       value: payload.value,
+      ev: payload.ev ? payload.ev : undefined,
     });
   }
 
@@ -155,11 +222,13 @@ export class KpiRunService {
       value: number;
       release: string;
       kpi: Kpi;
+      ev?: number | number[];
     }>((run) => ({
       release: run.release as any,
       kpi: run.kpi,
       to: new Date(run.to),
       value: run.value,
+      ev: run.ev ? run.ev : undefined,
     }));
     // sort the runs as they are not sorted
     hydratedRuns = sortBy(hydratedRuns, [
@@ -202,7 +271,10 @@ export class KpiRunService {
       }
       kpiMap
         .get('' + (run.kpi as KpiDocument)._id)
-        .push([run.to, { label: label, value: run.value }]);
+        .push([
+          run.to,
+          { label: label, value: run.value, ev: run.ev ? run.ev : undefined },
+        ]);
     }
     console.log(kpiMap);
     return transformMapToObject(kpiMap, (entries: any[]) =>

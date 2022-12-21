@@ -48,13 +48,14 @@ export class TicketAssignmentService {
       }
     }
 
+    // is acutally the assignedTicketRate
     const unassignedTicketRate = assignedIssues.length / issues.length;
     console.log(unassignedTicketRate);
     this.eventEmitter.emit('kpi.calculated', {
       kpi,
       release,
       since,
-      value: isNaN(unassignedTicketRate) ? 0 : unassignedTicketRate,
+      value: isNaN(unassignedTicketRate) ? {} : unassignedTicketRate,
     });
   }
 
@@ -83,14 +84,20 @@ export class TicketAssignmentService {
     const { kpi, since, release, data } = payload;
     const { overallResolutionRate, overallUnassignedTicketRate } = data;
 
-    const overallWorkInProgress =
+    // assigenedTicketRate is actually the unassignedTicketRate without renaming
+    // 1 is no WorkInProgress, the higher the better
+    let overallWorkInProgress =
       (1 - overallUnassignedTicketRate) / (1 - overallResolutionRate);
+
+    if (overallWorkInProgress > 1) {
+      overallWorkInProgress = 1;
+    }
 
     this.eventEmitter.emit('kpi.calculated', {
       kpi,
       release,
       since,
-      value: overallWorkInProgress,
+      value: isNaN(overallWorkInProgress) ? {} : overallWorkInProgress,
     });
   }
 }

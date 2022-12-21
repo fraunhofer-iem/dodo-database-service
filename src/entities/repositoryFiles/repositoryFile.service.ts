@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { AnyKeys, FilterQuery, Model } from 'mongoose';
+import { Aggregate, AnyKeys, FilterQuery, Model } from 'mongoose';
 import { documentExists, retrieveDocument } from '../../lib';
 import { RepositoryFile } from './model/RepositoryFile';
 import {
@@ -46,5 +46,15 @@ export class RepositoryFileService {
       throw new Error('RepositoryFile does already exist');
     }
     return this.repoFileModel.create(json);
+  }
+
+  public preAggregate(
+    filter: FilterQuery<RepositoryFileDocument> = undefined,
+  ): Aggregate<any> {
+    const pipeline = this.repoFileModel.aggregate();
+    if (filter) {
+      pipeline.match(filter);
+    }
+    return pipeline;
   }
 }

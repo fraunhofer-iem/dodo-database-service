@@ -19,6 +19,9 @@ export class KpiRun {
 
   @Prop()
   to: string;
+
+  @Prop({ type: Object })
+  ev?: number | number[];
 }
 
 export type KpiRunDocument = KpiRun & Document;

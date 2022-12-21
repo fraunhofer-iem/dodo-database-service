@@ -23,6 +23,8 @@ import { GodClassIndexModule } from '../../kpi/statistics/godClassIndex/godClass
 import { MeanTimeToResolutionModule } from '../../kpi/statistics/meanTimeToResolution/meanTimeToResolution.module';
 import { KpiRunService } from './kpiRun.service';
 import { KpiRun, KpiRunSchema } from './model/schemas';
+import { RepositoryModule } from 'src/entities/repositories/repository.module';
+import { RepositoryFileModule } from 'src/entities/repositoryFiles/repositoryFile.module';
 
 @Module({
   imports: [
@@ -67,6 +69,8 @@ import { KpiRun, KpiRunSchema } from './model/schemas';
     TechnicalDebtModule,
     PrAcceptanceModule,
     PrHandlingModule,
+    RepositoryModule,
+    RepositoryFileModule,
   ],
   providers: [KpiRunService],
   exports: [KpiRunService],

@@ -1,7 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { RepositoryService } from 'src/entities/repositories/repository.service';
-import { CalculationEventPayload } from '../lib';
+import { CalculationEventPayload, Intervals } from '../lib';
+import { ReleaseCycleService } from '../releaseCycles/releaseCycle.service';
 
 @Injectable()
 export class PrProcessingEfficiencyService {
@@ -10,6 +11,7 @@ export class PrProcessingEfficiencyService {
   constructor(
     private repoService: RepositoryService,
     private eventEmitter: EventEmitter2,
+    private releaseCycleService: ReleaseCycleService,
   ) {}
 
   @OnEvent('kpi.prepared.prLatency')
@@ -138,9 +140,20 @@ export class PrProcessingEfficiencyService {
   @OnEvent('kpi.prepared.prProcessingEfficiency')
   public async prProcessingEfficiency(payload: CalculationEventPayload) {
     const { kpi, since, release, data } = payload;
-    const { prLatency, prsInProcess } = data;
+    const { prLatency } = data;
     const { threshold } = kpi.params;
+    const avgReleaseCycleLenDays = (
+      await this.releaseCycleService.releaseCycle(
+        Intervals.DAY,
+        kpi.target.owner,
+        kpi.target.repo,
+      )
+    ).avg;
+    console.log('avgDays:', avgReleaseCycleLenDays);
+    const avgReleaseCycleLen = avgReleaseCycleLenDays * 24 * 60 * 60; // prLatency is in sec
+    const expectedValue = avgReleaseCycleLen * (1 / 3);
 
+    const expectedValueInDays = expectedValue / (24 * 60 * 60);
     const prProcessingEfficiency: { [key: string]: number } = {};
     if (typeof prLatency === 'undefined') {
       this.eventEmitter.emit('kpi.calculated', {
@@ -151,7 +164,7 @@ export class PrProcessingEfficiencyService {
       });
     } else {
       for (const [pullRequest, latency] of Object.entries<number>(prLatency)) {
-        prProcessingEfficiency[pullRequest] = latency / threshold;
+        prProcessingEfficiency[pullRequest] = latency / expectedValue;
       }
 
       this.eventEmitter.emit('kpi.calculated', {
@@ -159,6 +172,7 @@ export class PrProcessingEfficiencyService {
         release,
         since,
         value: prProcessingEfficiency,
+        ev: expectedValueInDays,
       });
     }
   }

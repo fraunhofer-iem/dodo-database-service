@@ -42,13 +42,14 @@ export class PrAcceptanceService {
         ? 1
         : 0,
     );
+    console.log(acceptedPrCount);
     const prAcceptanceRatio = acceptedPrCount / pullRequests.length;
 
     this.eventEmitter.emit('kpi.calculated', {
       kpi,
       release,
       since,
-      value: isNaN(prAcceptanceRatio) ? 0 : prAcceptanceRatio,
+      value: isNaN(prAcceptanceRatio) ? {} : prAcceptanceRatio,
     });
   }
 }

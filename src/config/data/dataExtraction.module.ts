@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { PullRequestModule } from 'src/entities/pullRequests/pullRequest.module';
 import { CommitModule } from '../../entities/commits/commit.module';
 import { DiffModule } from '../../entities/diffs/diff.module';
 import { IssueModule } from '../../entities/issues/issue.module';
@@ -18,6 +19,8 @@ import { DataExtractionService } from './dataExtraction.service';
     ReleaseModule,
     RepositoryFileModule,
     DiffModule,
+    RepositoryModule,
+    PullRequestModule,
   ],
   providers: [DataExtractionService],
   controllers: [DataExtractionController],

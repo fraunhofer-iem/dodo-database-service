@@ -121,6 +121,7 @@ export class PrSpreadService {
         release,
         since,
         value: expectedSpread / actualSpread,
+        ev: expectedSpread,
       });
     }
   }

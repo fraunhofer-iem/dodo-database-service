@@ -25,7 +25,7 @@ export class HealthIndexService {
   @OnEvent('kpi.prepared.repoHealth')
   async repoHealth(payload: CalculationEventPayload) {
     const { kpi, since, release, data } = payload;
-    const {
+    let {
       technicalDebt,
       codeSpread,
       noGodClassIndex,
@@ -33,7 +33,11 @@ export class HealthIndexService {
       prHandlingIndex,
     } = data;
 
-    // here I make sure that undefined values are not being taken into account
+    // check if TD is defined before substraction
+    if (typeof technicalDebt !== 'undefined') {
+      console.log('TD');
+      technicalDebt = 1 - technicalDebt;
+    }
     const allValues = [
       technicalDebt,
       codeSpread,
@@ -41,17 +45,19 @@ export class HealthIndexService {
       overallWorkInProgress,
       prHandlingIndex,
     ];
+    console.log(allValues);
+    // here I make sure that undefined values are not being taken into account
     let definedValues = allValues.filter(
       (value) => typeof value !== 'undefined',
     );
-    definedValues = definedValues.map((value) => {
-      if (value === 'technicalDebt') {
-        console.log('TD');
-        return 1 - value;
-      } else {
-        return value;
-      }
-    });
+    // definedValues = definedValues.map((value) => {
+    //   if (value == 'technicalDebt') {
+    //     console.log('TD');
+    //     return 1 - value;
+    //   } else {
+    //     return value;
+    //   }
+    // });
     let sum = 0;
     for (let value of definedValues) {
       sum += value;

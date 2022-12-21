@@ -36,6 +36,13 @@ export class ReleaseService {
     return release;
   }
 
+  public async releaseExists(id: string) {
+    if (await documentExists(this.releaseModel, { _id: id })) {
+      return true;
+    }
+    return false;
+  }
+
   public async create(json: AnyKeys<Release>) {
     if (await documentExists(this.releaseModel, { node_id: json.node_id })) {
       throw new Error('Release does already exist');
@@ -45,7 +52,11 @@ export class ReleaseService {
 
   public preAggregate(
     filter: FilterQuery<ReleaseDocument> = undefined,
-    options: { repo?: boolean; files?: boolean; commits?: boolean },
+    options: {
+      repo?: boolean;
+      files?: boolean;
+      commits?: boolean;
+    },
   ): Aggregate<any> {
     const pipeline = this.releaseModel.aggregate();
     if (filter) {
@@ -65,6 +76,14 @@ export class ReleaseService {
     });
     if (options.files) {
       pipeline.lookup(filesLookup);
+      pipeline.project({
+        'files.url': 0,
+        'files.encoding': 0,
+        'files.content': 0,
+        'files.sha': 0,
+        'files.type': 0,
+        'files.mode': 0,
+      });
     } else {
       pipeline.project({
         files: 0,
@@ -87,6 +106,24 @@ export class ReleaseService {
     if (options.commits) {
       pipeline.lookup(commitsLookup);
     }
+    return pipeline;
+  }
+
+  public preAggregateReleaseFiles(
+    filter: FilterQuery<ReleaseDocument> = undefined,
+  ): Aggregate<any> {
+    const pipeline = this.releaseModel.aggregate();
+    if (filter) {
+      pipeline.match(filter);
+    }
+    pipeline.project({ commits: 0 }).lookup(filesLookup).project({
+      'files.url': 0,
+      'files.encoding': 0,
+      'files.content': 0,
+      'files.sha': 0,
+      'files.type': 0,
+      'files.mode': 0,
+    });
     return pipeline;
   }
 }
