@@ -7,3 +7,9 @@ export interface Release {
   published_at: string;
   tag_name?: string;
 }
+
+export interface Tag {
+  name: string;
+  commit: { sha: string; url: string };
+  node_id: string;
+}

@@ -15,8 +15,8 @@ export async function* commitQuerier(
       queryCommitPage(
         repoIdent,
         pageNumber,
-        release.name,
-        previousRelease ? previousRelease.name : undefined,
+        release.tag_name,
+        previousRelease ? previousRelease.tag_name : undefined,
         new Date(release.published_at).toISOString(),
       ),
     (commit) => 'author' in commit && commit.author !== null,

@@ -35,6 +35,7 @@ export class PrSpreadService {
       .unwind('$diffs')
       .replaceRoot('$diffs')
       .replaceRoot('$pullRequest')
+      .allowDiskUse(true)
       .exec();
 
     console.log('ich war hier');
@@ -116,11 +117,16 @@ export class PrSpreadService {
 
       const actualSpread = numberOfPRs / Object.keys(prCreationDates).length;
 
+      let value = expectedSpread / actualSpread;
+      if (value > 1) {
+        value = 1;
+      }
+
       this.eventEmitter.emit('kpi.calculated', {
         kpi,
         release,
         since,
-        value: expectedSpread / actualSpread,
+        value: isNaN(value) ? {} : value,
         ev: expectedSpread,
       });
     }

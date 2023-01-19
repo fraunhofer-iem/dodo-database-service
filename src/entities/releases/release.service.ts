@@ -36,6 +36,18 @@ export class ReleaseService {
     return release;
   }
 
+  public async isReleaseStored(
+    filter: FilterQuery<ReleaseDocument>,
+  ): Promise<boolean> {
+    let release: ReleaseDocument;
+    try {
+      release = await retrieveDocument(this.releaseModel, filter);
+    } catch (e) {
+      return false;
+    }
+    return true;
+  }
+
   public async releaseExists(id: string) {
     if (await documentExists(this.releaseModel, { _id: id })) {
       return true;

@@ -93,9 +93,11 @@ export class KpiRunService {
       .allowDiskUse(true)
       .exec();
     // console.log(releases);
+    this.logger.debug('SAFE');
 
     if (kpi.kpiType.name === 'Lines of Code per File') {
       for (const release of releases) {
+        this.logger.debug(`release ${release.name}`);
         for (const fileObj of release.files) {
           const file = (
             await this.repositoryFileService.preAggregate(fileObj).exec()

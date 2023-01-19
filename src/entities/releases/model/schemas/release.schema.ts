@@ -19,6 +19,9 @@ export class Release {
   node_id: string;
 
   @Prop()
+  tag_name?: string;
+
+  @Prop()
   name: string;
 
   @Prop()

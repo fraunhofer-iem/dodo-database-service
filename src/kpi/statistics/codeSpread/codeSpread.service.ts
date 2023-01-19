@@ -19,7 +19,7 @@ export class CodeSpreadService {
 
     const locPerFile: Map<string, number> = new Map();
     for (const file of release.files) {
-      if (file.encoding !== 'none') {
+      if (file.encoding !== 'none' && typeof file.encoding !== 'undefined') {
         const fileExtension = file.path.split('.').slice(-1)[0];
         let excluded = params.excludedFileExtensions.includes(fileExtension);
         for (const excludedPath of params.excludedPaths) {

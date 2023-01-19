@@ -13,3 +13,16 @@ export async function getTag(
     tag: tagName,
   }).then((res) => res.data);
 }
+
+export async function getCommit(
+  repoIdent: RepositoryIdentifier,
+  commitSha: string,
+): Promise<any> {
+  const { owner, repo } = repoIdent;
+
+  return OCTOKIT.request('GET /repos/{owner}/{repo}/commits/{ref}', {
+    owner: owner,
+    repo: repo,
+    ref: commitSha,
+  }).then((res) => res.data);
+}

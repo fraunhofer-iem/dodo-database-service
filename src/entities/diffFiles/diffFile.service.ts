@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { AnyKeys, FilterQuery, Model } from 'mongoose';
+import { Aggregate, AnyKeys, FilterQuery, Model } from 'mongoose';
 import { documentExists, retrieveDocument } from '../../lib';
 import { DiffFile, DiffFileDocument } from './model/schemas';
 
@@ -38,5 +38,16 @@ export class DiffFileService {
       throw new Error('DiffFile does already exist');
     }
     return this.repoFileModel.create(json);
+  }
+
+  public preAggregate(
+    filter: FilterQuery<DiffFileDocument> = undefined,
+  ): Aggregate<any> {
+    const pipeline = this.repoFileModel.aggregate();
+    if (filter) {
+      pipeline.match(filter);
+    }
+    pipeline.project({ patch: 0 });
+    return pipeline;
   }
 }

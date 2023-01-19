@@ -54,6 +54,7 @@ export class CommitService {
       author?: boolean;
       repo?: boolean;
       files?: boolean;
+      fileIDs?: boolean;
       since?: Date | string;
       to?: Date | string;
     },
@@ -91,6 +92,21 @@ export class CommitService {
     }
     if (options.files) {
       pipeline.lookup(filesLookup);
+      pipeline.project({
+        'files.contents_url': 0,
+        'files.blob_url': 0,
+        'files.raw_url': 0,
+        'files.patch': 0,
+        // 'files.url': 0,
+        // 'files.changes': 0,
+        // 'files.deletions': 0,
+        // 'files.additions': 0,
+        // 'files.status': 0,
+        // 'files.filename': 0,
+        // 'files.sha': 0,
+      });
+    } else if (options.fileIDs) {
+      // just leave files array with the object IDs of diffFiles
     } else {
       pipeline.project({ files: 0 });
     }

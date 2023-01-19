@@ -33,6 +33,7 @@ export class PrChurnService {
       )
       .unwind('$diffs')
       .replaceRoot('$diffs')
+      .allowDiskUse(true)
       .exec();
 
     const prChurn: { [key: string]: number } = Object.fromEntries(

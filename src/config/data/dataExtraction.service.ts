@@ -14,6 +14,7 @@ import { RepositoryFileService } from '../../entities/repositoryFiles/repository
 import { DodoTarget } from '../targets/model/schemas';
 import {
   commitQuerier,
+  getCommit,
   getPullRequestFiles,
   getRepoFiles,
   getTag,
@@ -21,8 +22,10 @@ import {
   issueQuerier,
   pullRequestQuerier,
   releaseQuerier,
+  tagQuerier,
 } from './lib';
 import { commitFileQuerier } from './lib/commitFileQuerier';
+import { Release as ReleaseInterface } from 'src/entities/releases/model';
 
 @Injectable()
 export class DataExtractionService {
@@ -130,6 +133,10 @@ export class DataExtractionService {
       const releaseDocument = await this.releaseService.read({
         _id: release._id,
       });
+      if (releaseDocument.commits.length != 0) {
+        this.logger.log(`Already fetched releases of ${release.name} - Skip!`);
+        continue;
+      }
       releaseDocument.commits = [];
       try {
         let commits = false;
@@ -167,6 +174,7 @@ export class DataExtractionService {
         }
         previousRelease = release;
       } catch (e) {
+        console.log(e.message);
         if (e.message == 'HTTP Error: Not found') {
           this.logger.debug('Skip current release - No commits found');
           // delete it then?
@@ -177,43 +185,108 @@ export class DataExtractionService {
     }
   }
 
+  // only for repos which have no releases and just tags
+  public async extractTagsAsReleases(
+    repo: RepositoryDocument,
+    target: DodoTarget,
+  ) {
+    this.logger.debug('Tags');
+    let id = 0;
+    for await (const tag of tagQuerier(target)) {
+      this.logger.log('Tag name:', tag.name);
+      if (await this.releaseService.isReleaseStored({ node_id: tag.node_id })) {
+        this.logger.log('Release (tag) is already stored - continue');
+        continue;
+      } else {
+        try {
+          const commit = await getCommit(repo, tag.commit.sha);
+          console.log(tag);
+          const tagAsRelease: ReleaseInterface = {
+            id: id,
+            url: tag.commit.url,
+            node_id: tag.node_id,
+            name: tag.name,
+            tag_name: tag.name,
+            created_at: commit.commit.author.date,
+            published_at: commit.commit.author.date,
+          };
+          const files = await getRepoFiles(
+            target,
+            tag.commit.sha,
+            tag.name,
+            this.repoFileService,
+          );
+          const releaseDocument = await this.releaseService.create({
+            ...tagAsRelease,
+            repo,
+            files,
+          });
+          this.logger.debug('Release document:');
+          console.log(releaseDocument);
+          this.logger.debug('STORED RELEASE');
+          repo.releases.push(releaseDocument);
+          await repo.save();
+          id += 1;
+        } catch (e) {
+          this.logger.error('Something went wrong:');
+          this.logger.log(e.message);
+          continue;
+        }
+      }
+    }
+  }
+
   public async extractReleases(repo: RepositoryDocument, target: DodoTarget) {
     this.logger.debug('Releases');
     for await (const release of releaseQuerier(target)) {
       this.logger.log(`Release ${release.name}`);
-      try {
-        const tag = await getTag(repo, release.tag_name);
-        const files = await getRepoFiles(
-          target,
-          tag.sha,
-          release.tag_name,
-          this.repoFileService,
+      this.logger.log('Tag name:', release.tag_name);
+      this.logger.log(release);
+      if (
+        await this.releaseService.isReleaseStored({ node_id: release.node_id })
+      ) {
+        this.logger.log(
+          'Release is already stored - push release tag to the release document',
         );
-        const releaseDocument = await this.releaseService.create({
-          ...release,
-          repo,
-          files,
+        const releaseDocument = await this.releaseService.read({
+          node_id: release.node_id,
         });
-        repo.releases.push(releaseDocument);
-        await repo.save();
-      } catch (e) {
-        if (e.message == 'Release does already exist') {
-          this.logger.debug('Skip current release');
-          continue;
-        } else {
-          this.logger.debug(
-            'No sha for the commit - Do not store current release as it contains no data',
+        releaseDocument.tag_name = release.tag_name;
+        await releaseDocument.save();
+      } else {
+        try {
+          const tag = await getTag(repo, release.tag_name);
+          // this.logger.debug('TAG');
+          // this.logger.log(tag);
+          // files were fetched by the tag name and sha already
+          const files = await getRepoFiles(
+            target,
+            tag.sha,
+            release.tag_name,
+            this.repoFileService,
           );
-          continue;
+          const releaseDocument = await this.releaseService.create({
+            ...release,
+            repo,
+            files,
+          });
+          this.logger.debug('Release document:');
+          console.log(releaseDocument);
+          this.logger.debug('STORED RELEASE');
+          repo.releases.push(releaseDocument);
+          await repo.save();
+        } catch (e) {
+          if (e.message == 'Release does already exist') {
+            this.logger.debug('Skip current release');
+            continue;
+          } else {
+            console.log(e.message);
+            this.logger.debug(
+              'No sha for the commit - Do not store current release as it contains no files',
+            );
+            continue;
+          }
         }
-        // const files = [];
-        // const releaseDocument = await this.releaseService.create({
-        //   ...release,
-        //   repo,
-        //   files,
-        // });
-        // repo.releases.push(releaseDocument);
-        // await repo.save();
       }
     }
   }

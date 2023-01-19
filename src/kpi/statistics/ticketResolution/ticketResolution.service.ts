@@ -68,7 +68,7 @@ export class TicketResolutionService {
     const resolutionCapability =
       issuesClosedInThisRelease /
       (allIssuesSinceThisRelease - issuesClosedBeforeThisRelease);
-    // ticketsClosedInRelease / allOpenTickets
+    // ticketsClosedInRelease / allOpenTicketsUntilReleaseEnd
 
     // 0 can only come up if nothing was solved
     // Undefined is if there are no open tickets for this label in this release at all

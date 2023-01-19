@@ -48,8 +48,8 @@ export class TicketAssignmentService {
       }
     }
 
-    // is acutally the assignedTicketRate
-    const unassignedTicketRate = assignedIssues.length / issues.length;
+    // the lower, the better
+    const unassignedTicketRate = 1 - assignedIssues.length / issues.length;
     console.log(unassignedTicketRate);
     this.eventEmitter.emit('kpi.calculated', {
       kpi,
@@ -84,8 +84,7 @@ export class TicketAssignmentService {
     const { kpi, since, release, data } = payload;
     const { overallResolutionRate, overallUnassignedTicketRate } = data;
 
-    // assigenedTicketRate is actually the unassignedTicketRate without renaming
-    // 1 is no WorkInProgress, the higher the better
+    // assignedTickets / notResolvedTickets
     let overallWorkInProgress =
       (1 - overallUnassignedTicketRate) / (1 - overallResolutionRate);
 
@@ -93,11 +92,16 @@ export class TicketAssignmentService {
       overallWorkInProgress = 1;
     }
 
+    // zero: no assigned tickets at all, wip is very high - bad
+    // NaN: nothing left to resolve, no wip at all - should be 1, i.e. good
+    // > one: much assigned, less to solve - good
+    // one: relation of assigned and not resolved is the same - 5 tickets assigend, 5 not resolved, all good
+    // tries to identify
     this.eventEmitter.emit('kpi.calculated', {
       kpi,
       release,
       since,
-      value: isNaN(overallWorkInProgress) ? {} : overallWorkInProgress,
+      value: isNaN(overallWorkInProgress) ? 1 : overallWorkInProgress,
     });
   }
 }

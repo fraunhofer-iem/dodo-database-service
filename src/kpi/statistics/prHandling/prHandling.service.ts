@@ -14,9 +14,13 @@ export class PrHandlingService {
     const { kpi, since, release, data } = payload;
     const { prAcceptanceRatio, prSpread, avgPrComplexity } = data;
 
-    const prHandlingIndex =
+    let prHandlingIndex =
       (prAcceptanceRatio + 2 * prSpread + 3 * (1 - min([1, avgPrComplexity]))) /
       6;
+
+    if (prHandlingIndex > 1) {
+      prHandlingIndex = 1;
+    }
 
     this.eventEmitter.emit('kpi.calculated', {
       kpi,

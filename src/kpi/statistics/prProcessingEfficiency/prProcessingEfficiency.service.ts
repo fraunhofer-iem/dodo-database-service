@@ -36,6 +36,7 @@ export class PrProcessingEfficiencyService {
       .match({
         closed_at: { $ne: null },
       })
+      .allowDiskUse(true)
       .exec();
 
     pullRequests.forEach((element) => {
@@ -74,6 +75,7 @@ export class PrProcessingEfficiencyService {
           },
         },
       )
+      .allowDiskUse(true)
       .unwind('$diffs')
       .replaceRoot('$diffs')
       .replaceRoot('$pullRequest')
@@ -90,30 +92,24 @@ export class PrProcessingEfficiencyService {
           },
         },
       )
+      .allowDiskUse(true)
       .unwind('$diffs')
       .replaceRoot('$diffs')
       .replaceRoot('$pullRequest')
       .exec();
 
-    console.log('ich war in PrsInProcess');
-    let count = 0;
-    pullRequests.forEach((element) => {
-      count += 1;
-      console.log('PullRequest: ', element.number);
-      console.log(element.created_at);
-      console.log(element.closed_at);
-      console.log(element.merged_at);
-    });
-    console.log('how many PRs?: ', count);
-    // console.log('--- --- --- --- ---');
-    // openPRs.forEach((element) => {
+    // console.log('ich war in PrsInProcess');
+    // let count = 0;
+    // pullRequests.forEach((element) => {
+    //   count += 1;
     //   console.log('PullRequest: ', element.number);
     //   console.log(element.created_at);
     //   console.log(element.closed_at);
     //   console.log(element.merged_at);
     // });
+    // console.log('how many PRs?: ', count);
 
-    const prsInProcess: { [key: string]: string[] } = Object.fromEntries(
+    const prsInProcess: { [key: string]: number } = Object.fromEntries(
       pullRequests.map((pullRequest) => [
         pullRequest.url,
         openPRs
@@ -123,11 +119,11 @@ export class PrProcessingEfficiencyService {
               pr.created_at <= pullRequest.created_at &&
               pr.closed_at > pullRequest.created_at,
           )
-          .map((pr) => pr.url),
+          .map((pr) => pr.url).length,
       ]),
     );
 
-    console.log(Object.keys(prsInProcess).length);
+    console.log(prsInProcess);
 
     this.eventEmitter.emit('kpi.calculated', {
       kpi,
